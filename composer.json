@@ -1,0 +1,29 @@
+{
+    "name": "codexsoft/db-first",
+    "license": "MIT",
+    "description": "Database-first approach tool based on Doctrine2",
+    "require": {
+        "php": "^7.2.0",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "codexsoft/code": "dev-master",
+        "doctrine/orm": "^2.6",
+        "doctrine/migrations": "^1.5.0",
+        "symfony/filesystem": "~3.4|~4.0",
+        "martin-georgiev/postgresql-for-doctrine": "0.10.*",
+        "ramsey/uuid-doctrine": "^1.4"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "": ["src/", "vendor/"]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "": ["tests/unit/"]
+        }
+    }
+}
