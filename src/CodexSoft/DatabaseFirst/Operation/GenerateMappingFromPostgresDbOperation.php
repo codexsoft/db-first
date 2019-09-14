@@ -20,7 +20,7 @@ use const CodexSoft\Code\TAB;
  * todo: Write description — what this operation for
  * @method void execute() todo: change void to handle() method return type if other
  */
-class GenerateMappingFromDatabaseOperation extends Operation
+class GenerateMappingFromPostgresDbOperation extends Operation
 {
     use DoctrineOrmSchemaAwareTrait;
 
@@ -124,10 +124,9 @@ class GenerateMappingFromDatabaseOperation extends Operation
             $singularizedModelClass = $this->singularize($metadata->name);
             $tableName = $metadata->table['name'];
             echo sprintf("\n".'Processing table "%s"', $tableName);
-            //echo sprintf("\n".'Processing entity "%s"', $class->name);
-            echo sprintf("\n".'Processing entity "%s"', $singularizedModelClass);
+            echo sprintf("\n".'Entity class "%s"', $singularizedModelClass);
             $file = $this->generateOutputFilePath($metadata);
-            echo sprintf("\n".'File path "%s"', $file);
+            echo sprintf("\n".'Mapping file "%s"', $file);
 
             $customRepoClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.Classes::short($singularizedModelClass).'Repository';
             $metadata->customRepositoryClassName = $customRepoClass;
@@ -140,9 +139,6 @@ class GenerateMappingFromDatabaseOperation extends Operation
             //    $params = $this->generateArgumentsRespectingDefaultValues($metadata->discriminatorColumn,self::DISCRIMINATOR_COLUMN_DEFAULTS);
             //    $code[] = $this->builderVar.'->setDiscriminatorColumn('.implode(', ',$params).');';
             //}
-
-            //$this->metaVar = '$metadata';
-            //$this->builderVar = '$mapper';
 
             if (!$metadata->isIdentifierComposite && $generatorType = $this->_getIdGeneratorTypeString($metadata->generatorType)) {
                 $code[] = $this->metaVar.'->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_' . $generatorType . ');';
@@ -513,9 +509,9 @@ class GenerateMappingFromDatabaseOperation extends Operation
     /**
      * @param string[] $skipColumns
      *
-     * @return GenerateMappingFromDatabaseOperation
+     * @return GenerateMappingFromPostgresDbOperation
      */
-    public function setSkipColumns(array $skipColumns): GenerateMappingFromDatabaseOperation
+    public function setSkipColumns(array $skipColumns): GenerateMappingFromPostgresDbOperation
     {
         $this->skipColumns = $skipColumns;
         return $this;
@@ -528,9 +524,9 @@ class GenerateMappingFromDatabaseOperation extends Operation
     /**
      * @param bool $overwriteExisting
      *
-     * @return GenerateMappingFromDatabaseOperation
+     * @return GenerateMappingFromPostgresDbOperation
      */
-    public function setOverwriteExisting(bool $overwriteExisting): GenerateMappingFromDatabaseOperation
+    public function setOverwriteExisting(bool $overwriteExisting): GenerateMappingFromPostgresDbOperation
     {
         $this->overwriteExisting = $overwriteExisting;
         return $this;
@@ -539,9 +535,9 @@ class GenerateMappingFromDatabaseOperation extends Operation
     /**
      * @param string[] $skipTables
      *
-     * @return GenerateMappingFromDatabaseOperation
+     * @return GenerateMappingFromPostgresDbOperation
      */
-    public function setSkipTables(array $skipTables): GenerateMappingFromDatabaseOperation
+    public function setSkipTables(array $skipTables): GenerateMappingFromPostgresDbOperation
     {
         $this->skipTables = $skipTables;
         return $this;

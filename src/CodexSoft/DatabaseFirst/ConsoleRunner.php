@@ -6,7 +6,7 @@ use CodexSoft\DatabaseFirst\Command\ExecuteClosureCommand;
 use CodexSoft\DatabaseFirst\Command\ExecuteOperationCommand;
 use CodexSoft\DatabaseFirst\Command\ExecuteShellCommand;
 use CodexSoft\DatabaseFirst\Helpers\Database;
-use CodexSoft\OperationsSystem\OperationsProcessor;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -28,37 +28,25 @@ class ConsoleRunner
      *
      * @param string $cliDir
      *
-     * @return \Symfony\Component\Console\Application
+     * @return Application
      */
-    public static function createApplication(DoctrineOrmSchema $ormSchema, string $ormConfigFile, string $cliFile, string $cliDir = null): \Symfony\Component\Console\Application
+    public static function createApplication(DoctrineOrmSchema $ormSchema, string $ormConfigFile, string $cliFile, string $cliDir = null): Application
     {
-        $operationsProcessor = new OperationsProcessor;
-        $cliDir = $cliDir ?: dirname($cliFile);
-        $console = new \Symfony\Component\Console\Application('CodexSoft Database-first CLI');
+        $dbFirst = new DatabaseFirstDomain($ormSchema);
 
+        $cliDir = $cliDir ?: dirname($cliFile);
+        $console = new Application('CodexSoft Database-first CLI');
         $commandList = [
 
-            'repos' => new ExecuteOperationCommand(
-                (new \CodexSoft\DatabaseFirst\Operation\GenerateReposOperation)->setOperationsProcessor($operationsProcessor)->setDoctrineOrmSchema($ormSchema)
-            ),
+            'repos' => new ExecuteOperationCommand($dbFirst->generateRepositories()),
+            'models' => new ExecuteOperationCommand($dbFirst->generateEntities()),
+            'add-migration' => new ExecuteOperationCommand($dbFirst->generateMigration()),
+            'mapping' => new ExecuteOperationCommand($dbFirst->generateMapping()),
 
-            'models' => new ExecuteOperationCommand(
-                (new \CodexSoft\DatabaseFirst\Operation\GenerateEntitiesOperation)->setOperationsProcessor($operationsProcessor)->setDoctrineOrmSchema($ormSchema)
-            ),
-
-            'add-migration' => new ExecuteOperationCommand(
-                (new \CodexSoft\DatabaseFirst\Operation\GenerateMigrationOperation)->setOperationsProcessor($operationsProcessor)->setDoctrineOrmSchema($ormSchema)
-            ),
-
-            'mapping-new' => new ExecuteOperationCommand(
-                (new \CodexSoft\DatabaseFirst\Operation\GenerateMappingFromDatabaseOperation())->setOperationsProcessor($operationsProcessor)->setDoctrineOrmSchema($ormSchema)
-            ),
-
-            'mapping' => new ExecuteShellCommand([
+            'mapping-old' => new ExecuteShellCommand([
                 'php '.$cliDir.'/doctrine.orm.php '.$ormConfigFile.' orm:convert-mapping '
                 .DoctrineOrmSchema::CUSTOM_CODEXSOFT_BUILDER.' '
                 .$ormSchema->getPathToMapping().' '
-                //.'--force --from-database --namespace='.$ormSchema->getNamespaceRepositories().'\\'
                 .'--force --from-database --namespace='.$ormSchema->getNamespaceModels().'\\'
             ]),
 
@@ -83,10 +71,6 @@ class ConsoleRunner
                 'php '.$cliFile.' '.$ormConfigFile.' check',
             ]),
 
-            //'hello' => new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) {
-            //    $output->writeln('Hello world!');
-            //}),
-
             'db-clean' => new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
                 Database::deleteAllUserTables($ormSchema->getEntityManager()->getConnection());
             }),
@@ -94,8 +78,6 @@ class ConsoleRunner
             'db-truncate' => new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
                 Database::truncateAllUserTables($ormSchema->getEntityManager()->getConnection());
             }),
-
-            //'uuid' => \App\Command\GetUuidCommand::class, // ok
         ];
 
         foreach ($commandList as $command => $commandClass) {
@@ -113,14 +95,6 @@ class ConsoleRunner
             };
 
         }
-
-        //Context::create([
-            //new class extends AbstractDomain {}
-            //(new \App\TheDomain), // just to provide now() and other shourtcuts functionality... todo: remove!
-            //new \CodexSoft\OperationsSystem\OperationsProcessor,
-        //]);
-
-        //\App\Shortcuts::register();
 
         return $console;
     }
