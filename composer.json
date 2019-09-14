@@ -6,12 +6,12 @@
         "php": "^7.2.0",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "codexsoft/code": "dev-master",
         "doctrine/orm": "^2.6",
         "doctrine/migrations": "^1.5.0",
         "symfony/filesystem": "~3.4|~4.0",
         "martin-georgiev/postgresql-for-doctrine": "0.10.*",
-        "ramsey/uuid-doctrine": "^1.4"
+        "codexsoft/operations": "dev-master",
+        "codexsoft/code": "dev-master"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master"
