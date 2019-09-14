@@ -54,6 +54,7 @@ class ConsoleRunner
                 'php '.$cliDir.'/doctrine.orm.php '.$ormConfigFile.' orm:convert-mapping '
                 .DoctrineOrmSchema::CUSTOM_CODEXSOFT_BUILDER.' '
                 .$ormSchema->getPathToMapping().' '
+                //.'--force --from-database --namespace='.$ormSchema->getNamespaceRepositories().'\\'
                 .'--force --from-database --namespace='.$ormSchema->getNamespaceModels().'\\'
             ]),
 

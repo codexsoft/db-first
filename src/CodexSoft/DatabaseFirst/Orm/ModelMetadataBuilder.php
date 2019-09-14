@@ -240,10 +240,11 @@ class ModelMetadataBuilder extends ClassMetadataBuilder
      *
      * @throws \ReflectionException
      */
+    //public function __construct(ClassMetadataInfo $cm, string $customRepo)
     public function __construct(ClassMetadataInfo $cm)
     {
 
-        parent::__construct( $cm );
+        parent::__construct($cm);
         $entityClassName = $cm->getName();
 
         //$this->setCustomRepositoryClass($this->getRepositoryClassFor($entityClassName));

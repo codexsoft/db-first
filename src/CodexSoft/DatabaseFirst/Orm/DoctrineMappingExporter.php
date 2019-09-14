@@ -2,6 +2,7 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
+use CodexSoft\Code\Helpers\Classes;
 use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 use \MartinGeorgiev\Doctrine\DBAL\Types as MartinGeorgievTypes;
 use Doctrine\DBAL\Types\Type;
@@ -34,7 +35,6 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
     /** @var string where should custom hooks for mapping be placed */
     protected $extraPath = '/../Extra'; // todo: $dbConfig must be set.
 
-    //protected $entitiesNamespace = Constants::NAMESPACE_MODELS;
     protected $entitiesNamespace; // todo: $dbConfig must be set.
     protected $parentEntitiesNamespace;
 
@@ -196,6 +196,8 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
 
         $lines[] = '';
         $lines[] = $builderVar.' = new '.$this->shortClass( ModelMetadataBuilder::class).'('.$metaVar.');';
+        $customRepoClass = (string) str($metadata->namespace)->removeRight('Model')->append('Repository\\'.Classes::short($this->singularizedEntityClassName.'Repository'));
+        $lines[] = $builderVar.'->setCustomRepositoryClass(\''.$customRepoClass.'\');';
         $lines[] = $builderVar."->setTable('{$metadata->table['name']}');";
 
         //if ($metadata->discriminatorColumn) {
