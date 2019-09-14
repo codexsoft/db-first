@@ -501,7 +501,7 @@ class GenerateEntitiesOperation extends Operation
                 TAB.TAB.'}',
                 '',
                 TAB.TAB.'/** @noinspection PhpUnhandledExceptionInspection */',
-                TAB.TAB."throw new \\Exception('{$exceptionMessageVar}');",
+                TAB.TAB."throw new \\Exception({$exceptionMessageVar});",
                 TAB.'}',
                 TAB."return \$this->$fieldName;",
                 '}',
