@@ -1,6 +1,5 @@
 <?php
 
-
 namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Helpers\Classes;
@@ -108,20 +107,20 @@ class GenerateReposOperation extends Operation
 
         foreach ($metadatas as $metadata) {
             $tableComment = Doctrine::getCommentForTable($em->getConnection(), $metadata->table['name']);
-            $this->logger->info("Processing entity {$metadata->name}");
+            $this->getLogger()->info("Processing entity {$metadata->name}");
 
             $collectionShortClass = Classes::short($metadata->name).'Repository';
             $repoTraitFileName = $reposTraitPath.'/'.$collectionShortClass.'Trait.php';
 
             if ($this->generateRepoTraits) {
-                $this->logger->info('Generating repo trait...');
+                $this->getLogger()->info('Generating repo trait...');
                 $content = $this->generateRepositoryBaseTrait($metadata, $collectionShortClass);
                 $fs->dumpFile($repoTraitFileName,$content);
             }
 
             $repoFilename = $reposPath.'/'.$collectionShortClass.'.php';
             if (file_exists($repoFilename)) {
-                $this->logger->warning("Repo file $repoFilename already exists, skipped...");
+                $this->getLogger()->warning("Repo file $repoFilename already exists, skipped...");
                 continue;
             }
 

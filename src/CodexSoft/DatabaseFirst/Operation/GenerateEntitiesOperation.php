@@ -4,6 +4,7 @@
 namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Helpers\Classes;
+use CodexSoft\Code\Shortcuts;
 use CodexSoft\DatabaseFirst\Helpers\Doctrine;
 use CodexSoft\OperationsSystem\Operation;
 use Doctrine\Common\Inflector\Inflector;
@@ -103,6 +104,7 @@ class GenerateEntitiesOperation extends Operation
      */
     protected function handle()
     {
+        Shortcuts::register();
         $this->em = $this->doctrineOrmSchema->getEntityManager();
 
         $cmf = new DisconnectedClassMetadataFactory();

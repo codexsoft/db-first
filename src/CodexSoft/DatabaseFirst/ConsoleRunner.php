@@ -6,6 +6,7 @@ use CodexSoft\DatabaseFirst\Command\ExecuteClosureCommand;
 use CodexSoft\DatabaseFirst\Command\ExecuteOperationCommand;
 use CodexSoft\DatabaseFirst\Command\ExecuteShellCommand;
 use CodexSoft\DatabaseFirst\Helpers\Database;
+use CodexSoft\OperationsSystem\OperationsProcessor;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -25,25 +26,28 @@ class ConsoleRunner
      *
      * @param string $cliFile
      *
+     * @param string $cliDir
+     *
      * @return \Symfony\Component\Console\Application
      */
-    public static function createApplication(DoctrineOrmSchema $ormSchema, string $ormConfigFile, string $cliFile): \Symfony\Component\Console\Application
+    public static function createApplication(DoctrineOrmSchema $ormSchema, string $ormConfigFile, string $cliFile, string $cliDir = null): \Symfony\Component\Console\Application
     {
-        $cliDir = dirname($cliFile);
+        $operationsProcessor = new OperationsProcessor;
+        $cliDir = $cliDir ?: dirname($cliFile);
         $console = new \Symfony\Component\Console\Application('CodexSoft Database-first CLI');
 
         $commandList = [
 
             'repos' => new ExecuteOperationCommand(
-                (new \CodexSoft\DatabaseFirst\Operation\GenerateReposOperation)->setDoctrineOrmSchema($ormSchema)
+                (new \CodexSoft\DatabaseFirst\Operation\GenerateReposOperation)->setOperationsProcessor($operationsProcessor)->setDoctrineOrmSchema($ormSchema)
             ),
 
             'models' => new ExecuteOperationCommand(
-                (new \CodexSoft\DatabaseFirst\Operation\GenerateEntitiesOperation)->setDoctrineOrmSchema($ormSchema)
+                (new \CodexSoft\DatabaseFirst\Operation\GenerateEntitiesOperation)->setOperationsProcessor($operationsProcessor)->setDoctrineOrmSchema($ormSchema)
             ),
 
             'add-migration' => new ExecuteOperationCommand(
-                (new \CodexSoft\DatabaseFirst\Operation\GenerateMigrationOperation)->setDoctrineOrmSchema($ormSchema)
+                (new \CodexSoft\DatabaseFirst\Operation\GenerateMigrationOperation)->setOperationsProcessor($operationsProcessor)->setDoctrineOrmSchema($ormSchema)
             ),
 
             'mapping' => new ExecuteShellCommand([

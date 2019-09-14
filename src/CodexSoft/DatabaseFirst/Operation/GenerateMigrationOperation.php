@@ -58,7 +58,7 @@ class GenerateMigrationOperation extends Operation
         $fs->dumpFile($fileName.'.php', implode("\n", $code));
         $fs->dumpFile($fileName.'.sql', '-- write migration SQL code here');
 
-        $this->logger->info("Generated new migration class to $fileName");
+        $this->getLogger()->info("Generated new migration class to $fileName");
     }
 
     private function generateVersionNumber(\DateTimeInterface $now = null): string

@@ -48,7 +48,6 @@ abstract class AbstractSelectQuery
      */
     protected function executeSql($fetchMode = null): array
     {
-        //$em = AbstractDomain::fromContext()->getEntityManager();
         $connection = $this->entityManager->getConnection();
         $query = $connection->prepare($this->_sql);
 
