@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 
 /**
- * Command for generating new blank migration classes
+ * @deprecated use CodexSoft\OperationsSystem\Command\ExecuteOperationCommand
  */
 class ExecuteOperationCommand extends Command
 {

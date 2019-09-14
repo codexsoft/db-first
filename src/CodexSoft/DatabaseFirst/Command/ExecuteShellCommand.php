@@ -12,8 +12,9 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+
 /**
- * Command for generating new blank migration classes
+ * @deprecated use CodexSoft\Code\Command\ExecuteShellCommand
  */
 class ExecuteShellCommand extends Command
 {
