@@ -501,7 +501,7 @@ class GenerateEntitiesOperation extends Operation
                 TAB.TAB.'}',
                 '',
                 TAB.TAB.'/** @noinspection PhpUnhandledExceptionInspection */',
-                TAB.TAB.'if (!$this->$fieldName instanceof \\'.$variableType.') {',
+                TAB.TAB.'if (!$this->'.$fieldName.' instanceof '.$variableType.') {',
                 TAB.TAB.TAB."throw new \\Exception('{$exceptionMessageVar}');",
                 TAB.TAB.'}',
                 //TAB.TAB.'\\'.Assertion::class."::isInstanceOf(\$this->$fieldName,{$variableType}::class, $exceptionMessageVar);",
