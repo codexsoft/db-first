@@ -50,6 +50,10 @@ class ConsoleRunner
                 (new \CodexSoft\DatabaseFirst\Operation\GenerateMigrationOperation)->setOperationsProcessor($operationsProcessor)->setDoctrineOrmSchema($ormSchema)
             ),
 
+            'mapping-new' => new ExecuteOperationCommand(
+                (new \CodexSoft\DatabaseFirst\Operation\GenerateMappingFromDatabaseOperation())->setOperationsProcessor($operationsProcessor)->setDoctrineOrmSchema($ormSchema)
+            ),
+
             'mapping' => new ExecuteShellCommand([
                 'php '.$cliDir.'/doctrine.orm.php '.$ormConfigFile.' orm:convert-mapping '
                 .DoctrineOrmSchema::CUSTOM_CODEXSOFT_BUILDER.' '
