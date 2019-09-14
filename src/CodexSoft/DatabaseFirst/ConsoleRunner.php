@@ -2,10 +2,10 @@
 
 namespace CodexSoft\DatabaseFirst;
 
-use CodexSoft\DatabaseFirst\Command\ExecuteClosureCommand;
-use CodexSoft\DatabaseFirst\Command\ExecuteOperationCommand;
-use CodexSoft\DatabaseFirst\Command\ExecuteShellCommand;
+use CodexSoft\Code\Command\ExecuteClosureCommand;
+use CodexSoft\Code\Command\ExecuteShellCommand;
 use CodexSoft\DatabaseFirst\Helpers\Database;
+use CodexSoft\OperationsSystem\Command\ExecuteOperationCommand;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
