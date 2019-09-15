@@ -18,7 +18,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Query\Expr\Comparison;
 use CodexSoft\Code\Constants;
 
-abstract class Expresso
+abstract class Dql
 {
 
     /** @var int */
@@ -119,7 +119,7 @@ abstract class Expresso
      */
     public static function requireAll( QueryBuilder $qb, array $conditions): Andx
     {
-        $andX = Expresso::andX($qb,$conditions);
+        $andX = Dql::andX($qb,$conditions);
         $andX->count() && $qb->where($andX);
         return $andX;
     }
@@ -132,7 +132,7 @@ abstract class Expresso
      */
     public static function requireAny( QueryBuilder $qb, array $conditions): Orx
     {
-        $orX = Expresso::orX($qb,$conditions);
+        $orX = Dql::orX($qb,$conditions);
         $orX->count() && $qb->where($orX);
         return $orX;
     }
@@ -588,8 +588,7 @@ abstract class Expresso
             $value2 = "'".Carbon::instance($value2)->format(Constants::FORMAT_YMD_HIS)."'";
         }
 
-        return Expresso::dql($qb,"TIMESTAMPDIFF($part, $value1, $value2)");
-        //return Expresso::dql($qb,'TIMESTAMPDIFF('.$part.', '.$value1.', \''.$value2.'\')');
+        return Dql::dql($qb,"TIMESTAMPDIFF($part, $value1, $value2)");
     }
 
     /**

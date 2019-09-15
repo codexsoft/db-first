@@ -185,7 +185,7 @@ class GenerateReposOperation extends Operation
             '',
             'use '.$this->doctrineOrmSchema->getNamespaceModels().';',
             'use '.\Doctrine\ORM\Query\Expr::class.';',
-            'use '.\CodexSoft\DatabaseFirst\Orm\Expresso::class.';',
+            'use '.\CodexSoft\DatabaseFirst\Orm\Dql::class.';',
             '',
             '/**',
             ' */',
@@ -193,7 +193,7 @@ class GenerateReposOperation extends Operation
             '{',
         ];
 
-        $importedExpressoClass = Classes::short(\CodexSoft\DatabaseFirst\Orm\Expresso::class);
+        $importedDqlHelperClass = Classes::short(\CodexSoft\DatabaseFirst\Orm\Dql::class);
 
         $result .= implode(self::LS, $code);
 
@@ -321,9 +321,9 @@ class GenerateReposOperation extends Operation
                     '    $'.$associationMappingName.'Id = '.$targetEntityShortNamespaced.'::extractId($'.$nameOrId.');',
                     '    /** @var \\'.EntityRepository::class.' $this */',
                     '    $qb = $this->createQueryBuilder(\'base\');',
-                    '    $qb->innerJoin('.$targetEntityShortNamespaced.'::class, \'joined\', Expr\Join::WITH, '.$importedExpressoClass.'::andX($qb,[',
-                    '        '.$importedExpressoClass.'::dql($qb,'.$namespacedShortName.'::_'.$associationMappingName.'(\'base\').\' = joined\'),',
-                    '        '.$importedExpressoClass.'::eq($qb,'.$targetEntityShortNamespaced.'::_id(\'joined\'),$'.$associationMappingName.'Id),',
+                    '    $qb->innerJoin('.$targetEntityShortNamespaced.'::class, \'joined\', Expr\Join::WITH, '.$importedDqlHelperClass.'::andX($qb,[',
+                    '        '.$importedDqlHelperClass.'::dql($qb,'.$namespacedShortName.'::_'.$associationMappingName.'(\'base\').\' = joined\'),',
+                    '        '.$importedDqlHelperClass.'::eq($qb,'.$targetEntityShortNamespaced.'::_id(\'joined\'),$'.$associationMappingName.'Id),',
                     '    ]));',
                     '    /** @noinspection PhpUnhandledExceptionInspection */',
                     '    return $qb->setMaxResults(1)->getQuery()->getOneOrNullResult();',
@@ -386,9 +386,9 @@ class GenerateReposOperation extends Operation
                     '    $'.$associationMappingName.'Id = '.$targetEntityShortNamespaced.'::extractId($'.$nameOrId.');',
                     '    /** @var \\'.EntityRepository::class.' $this */',
                     '    $qb = $this->createQueryBuilder(\'base\');',
-                    '    $qb->innerJoin('.$targetEntityShortNamespaced.'::class, \'joined\', Expr\Join::WITH, '.$importedExpressoClass.'::andX($qb,[',
-                    '        '.$importedExpressoClass.'::dql($qb,'.$namespacedShortName.'::_'.$associationMappingName.'(\'base\').\' = joined\'),',
-                    '        '.$importedExpressoClass.'::eq($qb,'.$targetEntityShortNamespaced.'::_id(\'joined\'),$'.$associationMappingName.'Id),',
+                    '    $qb->innerJoin('.$targetEntityShortNamespaced.'::class, \'joined\', Expr\Join::WITH, '.$importedDqlHelperClass.'::andX($qb,[',
+                    '        '.$importedDqlHelperClass.'::dql($qb,'.$namespacedShortName.'::_'.$associationMappingName.'(\'base\').\' = joined\'),',
+                    '        '.$importedDqlHelperClass.'::eq($qb,'.$targetEntityShortNamespaced.'::_id(\'joined\'),$'.$associationMappingName.'Id),',
                     '    ]));',
                     '    return $qb->getQuery()->getOneOrNullResult();',
                     '}',
@@ -454,8 +454,8 @@ class GenerateReposOperation extends Operation
             '    /** @var \\'.QueryBuilder::class.' $qb */',
             '    $qb = $this->createQueryBuilder(\'base\');',
             '    $qb->indexBy(\'base\', \'base.id\');',
-            '    '.$importedExpressoClass.'::requireAll($qb, [',
-            '        '.$importedExpressoClass.'::in($qb, \'base.id\', $ids),',
+            '    '.$importedDqlHelperClass.'::requireAll($qb, [',
+            '        '.$importedDqlHelperClass.'::in($qb, \'base.id\', $ids),',
             '    ]);',
             '    return $qb->getQuery()->getResult();',
             '}',
