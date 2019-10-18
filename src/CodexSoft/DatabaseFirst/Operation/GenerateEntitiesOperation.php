@@ -548,13 +548,25 @@ class GenerateEntitiesOperation extends Operation
         $variableName = Inflector::camelize($fieldName);
 
         $methodTypeHint = null;
-        $types          = Type::getTypesMap();
+        //$methodTypeHint = $typeHint;
+        //$types          = Type::getTypesMap();
         $variableType   = $typeHint ? $this->getType($typeHint) : null;
 
-        if ($typeHint && !isset($types[$typeHint])) {
-            $variableType   =  '\\' . ltrim($variableType, '\\');
-            $methodTypeHint =  '\\' . $typeHint . ' ';
+        if ($typeHint) {
+            if (\class_exists($typeHint)) {
+                $variableType   =  '\\' . ltrim($variableType, '\\');
+                $methodTypeHint =  '\\' . $typeHint . ' ';
+            } elseif (\array_key_exists($typeHint, $this->typeAlias)) {
+                $methodTypeHint = $this->typeAlias[$typeHint];
+            } elseif ($variableType) {
+                $methodTypeHint = $variableType;
+            }
         }
+
+        //if ($typeHint && !isset($types[$typeHint])) {
+        //    $variableType   =  '\\' . ltrim($variableType, '\\');
+        //    $methodTypeHint =  '\\' . $typeHint . ' ';
+        //}
 
         //$mappedBy = null;
         //$inversedBy = null;
@@ -621,15 +633,17 @@ class GenerateEntitiesOperation extends Operation
         //    logger()->error( 'Not properly configured mapping for '.$fieldName );
         //}
 
+        $isNullable = $defaultValue === 'null';
+
         $lines = [
             '/**',
             ' * Set '.$variableName,
             ' * '.$fieldComment,
             ' * ',
-            ' * @param '.($defaultValue === 'null' ? $variableType.'|null' : $variableType).' $'.$variableName,
+            ' * @param '.($isNullable ? $variableType.'|null' : $variableType).' $'.$variableName,
             ' * @return static',
             ' */',
-            'public function '.$methodName.'('.$methodTypeHint.' $'.$variableName.$variableDefault.')',
+            'public function '.$methodName.'('.(($isNullable && $methodTypeHint) ? '?' : '').$methodTypeHint.' $'.$variableName.$variableDefault.')',
             '{',
             TAB.'$this->'.$fieldName.' = $'.$variableName.';',
             TAB.'return $this;',
