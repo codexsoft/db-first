@@ -71,6 +71,7 @@ class GenerateEntitiesOperation extends Operation
         Type::JSON_ARRAY   => 'array',
         Type::SIMPLE_ARRAY => 'array',
         Type::GUID         => 'string',
+        'ltree'            => 'array', // todo: this should made configurable!
     ];
 
     /** @var string A string pattern used to match entities that should be processed. */
