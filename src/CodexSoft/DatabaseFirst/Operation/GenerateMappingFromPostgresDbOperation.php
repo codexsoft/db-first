@@ -175,6 +175,8 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 
             foreach ($metadata->associationMappings as $associationMappingName => $associationMapping) {
 
+                echo "\nfound $associationMappingName";
+
                 if ($associationMapping['type'] & ClassMetadataInfo::TO_ONE) {
                     try {
                         $associationColumnName = $metadata->getSingleAssociationJoinColumnName($associationMappingName);
@@ -186,7 +188,8 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                     }
                 }
 
-                $this->generateAssociationCode($associationMappingName, $associationMapping, $tableName);
+                array_push($code, ...$this->generateAssociationCode($associationMappingName, $associationMapping, $tableName));
+                //$this->generateAssociationCode($associationMappingName, $associationMapping, $tableName);
             }
 
             array_push($code, ...[
@@ -307,7 +310,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
         return $code;
     }
 
-    protected function generateAssociationCode(string $associationMappingName, array $associationMapping, string $fieldTableName)
+    protected function generateAssociationCode(string $associationMappingName, array $associationMapping, string $fieldTableName): array
     {
         //$fieldTableName = $metadata->getTableName();
 
@@ -491,6 +494,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 
         }
 
+        return $fieldLines;
     }
 
     protected function generateType(string $type)
