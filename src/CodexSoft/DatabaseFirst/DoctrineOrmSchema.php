@@ -23,6 +23,7 @@ class DoctrineOrmSchema extends AbstractModuleSchema
     private $namespaceMapping;
     private $namespaceMappingGenerated;
     private $namespaceMappingExtra;
+    private $namespaceModelsAwareTraits;
 
     /** @var string|null */
     private $migrationBaseClass;
@@ -46,6 +47,9 @@ class DoctrineOrmSchema extends AbstractModuleSchema
 
     /** @var EntityManager */
     private $entityManager;
+
+    /** @var string */
+    private $pathToModelAwareTraits;
 
     /**
      * todo: this should be used when generating mapping, repos and models!
@@ -381,6 +385,44 @@ class DoctrineOrmSchema extends AbstractModuleSchema
     public function getSkipTables(): array
     {
         return $this->skipTables;
+    }
+
+    /**
+     * @param mixed $namespaceModelsAwareTraits
+     *
+     * @return DoctrineOrmSchema
+     */
+    public function setNamespaceModelsAwareTraits($namespaceModelsAwareTraits)
+    {
+        $this->namespaceModelsAwareTraits = $namespaceModelsAwareTraits;
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNamespaceModelsAwareTraits()
+    {
+        return $this->namespaceModelsAwareTraits ?: $this->getNamespaceModels().'\\AwareTraits';
+    }
+
+    /**
+     * @param string $pathToModelAwareTraits
+     *
+     * @return DoctrineOrmSchema
+     */
+    public function setPathToModelAwareTraits(string $pathToModelAwareTraits): DoctrineOrmSchema
+    {
+        $this->pathToModelAwareTraits = $pathToModelAwareTraits;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPathToModelAwareTraits(): string
+    {
+        return $this->pathToModelAwareTraits ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceModelsAwareTraits());
     }
 
 }

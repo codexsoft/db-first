@@ -39,8 +39,14 @@ class GenerateEntitiesOperation extends Operation
      */
     protected $fieldVisibility = 'private';
 
-    /** @var bool  */
+    /** @var bool */
     protected $overwriteModelClasses = false;
+
+    /** @var bool */
+    protected $generateModelAwareTraits = true;
+
+    /** @var bool */
+    protected $overwriteModelAwareTraits = false;
 
     /** @var array comments for all columns in db, in format [ <table>.<column> => <comment> ] */
     protected $columnComments = [];
@@ -76,28 +82,6 @@ class GenerateEntitiesOperation extends Operation
 
     /** @var string A string pattern used to match entities that should be processed. */
     private $metadataFilter;
-
-    /**
-     * @param string $metadataFilter
-     *
-     * @return GenerateEntitiesOperation
-     */
-    public function setMetadataFilter(string $metadataFilter): GenerateEntitiesOperation
-    {
-        $this->metadataFilter = $metadataFilter;
-        return $this;
-    }
-
-    /**
-     * @param bool $overwriteModelClasses
-     *
-     * @return GenerateEntitiesOperation
-     */
-    public function setOverwriteModelClasses(bool $overwriteModelClasses): GenerateEntitiesOperation
-    {
-        $this->overwriteModelClasses = $overwriteModelClasses;
-        return $this;
-    }
 
     /**
      * @return void
@@ -142,6 +126,12 @@ class GenerateEntitiesOperation extends Operation
             if ($this->overwriteModelClasses || !file_exists($modelClassFile)) {
                 $fs->dumpFile($modelClassFile, $this->generateEntityClassCode($metadata));
             }
+
+            $modelAwareTraitFile = $ds->getPathToModelAwareTraits().'/'.$this->getClassName($metadata).'AwareTrait.php';
+            if ($this->generateModelAwareTraits && ($this->overwriteModelAwareTraits || !file_exists($modelAwareTraitFile))) {
+                $fs->dumpFile($modelAwareTraitFile, $this->generateEntityAwareTraitClassCode($metadata));
+            }
+
         }
     }
 
@@ -184,6 +174,45 @@ class GenerateEntitiesOperation extends Operation
 
         return implode("\n", $lines);
 
+    }
+
+    private function generateEntityAwareTraitClassCode(ClassMetadata $metadata): string
+    {
+        $ds = $this->doctrineOrmSchema;
+        $shortEntityClassName = $this->getClassName($metadata);
+        $fqnEntityClassName = '\\'.$metadata->name;
+        $fieldName = lcfirst($shortEntityClassName);
+
+        $lines = [
+            '<?php',
+            '',
+            'namespace '.$ds->getNamespaceModelsAwareTraits().';',
+            '',
+            "use {$fqnEntityClassName};",
+            '',
+            "trait {$shortEntityClassName}AwareTrait",
+            '{',
+            TAB,
+            TAB,
+            TAB."/** @var $shortEntityClassName */",
+            TAB."private \${$fieldName};",
+            TAB.'',
+            TAB.'/**',
+            TAB." * @param $shortEntityClassName \$$fieldName",
+            TAB.' *',
+            TAB.' * @return static',
+            TAB.' */',
+            TAB."public function set{$shortEntityClassName}({$shortEntityClassName} \${$fieldName}): self",
+            TAB.'{',
+            TAB."    \$this->{$fieldName} = \${$fieldName};",
+            TAB.'    return $this;',
+            TAB.'}',
+            TAB.'',
+            '}',
+
+        ];
+
+        return implode("\n", $lines);
     }
 
     private function generateEntityTraitClassCode(ClassMetadata $metadata): string
@@ -758,6 +787,50 @@ class GenerateEntitiesOperation extends Operation
         }
 
         return true;
+    }
+
+    /**
+     * @param string $metadataFilter
+     *
+     * @return GenerateEntitiesOperation
+     */
+    public function setMetadataFilter(string $metadataFilter): GenerateEntitiesOperation
+    {
+        $this->metadataFilter = $metadataFilter;
+        return $this;
+    }
+
+    /**
+     * @param bool $overwriteModelClasses
+     *
+     * @return GenerateEntitiesOperation
+     */
+    public function setOverwriteModelClasses(bool $overwriteModelClasses): GenerateEntitiesOperation
+    {
+        $this->overwriteModelClasses = $overwriteModelClasses;
+        return $this;
+    }
+
+    /**
+     * @param bool $generateModelAwareTraits
+     *
+     * @return GenerateEntitiesOperation
+     */
+    public function setGenerateModelAwareTraits(bool $generateModelAwareTraits): GenerateEntitiesOperation
+    {
+        $this->generateModelAwareTraits = $generateModelAwareTraits;
+        return $this;
+    }
+
+    /**
+     * @param bool $overwriteModelAwareTraits
+     *
+     * @return GenerateEntitiesOperation
+     */
+    public function setOverwriteModelAwareTraits(bool $overwriteModelAwareTraits): GenerateEntitiesOperation
+    {
+        $this->overwriteModelAwareTraits = $overwriteModelAwareTraits;
+        return $this;
     }
 
 }
