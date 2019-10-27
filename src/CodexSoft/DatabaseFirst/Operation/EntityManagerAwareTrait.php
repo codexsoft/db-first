@@ -4,6 +4,9 @@ namespace CodexSoft\DatabaseFirst\Operation;
 
 use Doctrine\ORM\EntityManager;
 
+/**
+ * @deprecated
+ */
 trait EntityManagerAwareTrait
 {
 

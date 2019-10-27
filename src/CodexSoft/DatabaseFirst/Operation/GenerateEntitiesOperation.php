@@ -30,77 +30,11 @@ class GenerateEntitiesOperation extends Operation
 
     const ID = '91922eda-b329-423b-aaa9-7832f3d7c6dd';
 
-    private $generateWithRepoAccess = true;
-
-    /**
-     * Visibility of the field
-     *
-     * @var string
-     */
-    protected $fieldVisibility = 'private';
-
-    /** @var bool */
-    protected $overwriteModelClasses = false;
-
-    /** @var bool */
-    protected $generateModelAwareTraits = true;
-
-    /** @var bool */
-    protected $overwriteModelAwareTraits = false;
-
     /** @var array comments for all columns in db, in format [ <table>.<column> => <comment> ] */
     protected $columnComments = [];
 
     /** @var EntityManager */
     protected $em;
-
-    protected $dbToPhpType = [
-        'json'             => 'array',
-        'json[]'           => 'array',
-        'jsonb'            => 'array',
-        'jsonb[]'          => 'array',
-        'text[]'           => 'string[]',
-        'smallint[]'       => 'integer[]',
-        'integer[]'        => 'integer[]',
-        'bigint[]'         => 'integer[]',
-        'varchar[]'        => 'string[]',
-        Type::DATETIMETZ   => '\DateTime',
-        Type::DATETIME     => '\DateTime',
-        Type::DATE         => '\DateTime',
-        Type::TIME         => '\DateTime',
-        Type::OBJECT       => '\stdClass',
-        Type::BIGINT       => 'integer',
-        Type::SMALLINT     => 'integer',
-        Type::TEXT         => 'string',
-        Type::BLOB         => 'string',
-        Type::DECIMAL      => 'string',
-        Type::JSON_ARRAY   => 'array',
-        Type::SIMPLE_ARRAY => 'array',
-        Type::GUID         => 'string',
-        'ltree'            => 'array', // todo: this should made configurable!
-    ];
-
-    /** @var string A string pattern used to match entities that should be processed. */
-    private $metadataFilter;
-
-    /**
-     * @param array $dbToPhpType
-     *
-     * @return GenerateEntitiesOperation
-     */
-    public function setDbToPhpType(array $dbToPhpType): GenerateEntitiesOperation
-    {
-        $this->dbToPhpType = $dbToPhpType;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getDbToPhpType(): array
-    {
-        return $this->dbToPhpType;
-    }
 
     /**
      * @return void
@@ -114,7 +48,8 @@ class GenerateEntitiesOperation extends Operation
         $cmf = new DisconnectedClassMetadataFactory();
         $cmf->setEntityManager($this->em);
         $metadatas = $cmf->getAllMetadata();
-        $metadatas = MetadataFilter::filter($metadatas, $this->metadataFilter);
+        //$metadatas = MetadataFilter::filter($metadatas, $this->metadataFilter);
+        $metadatas = MetadataFilter::filter($metadatas, $this->doctrineOrmSchema->metadataFilter);
 
         if (!count($metadatas)) {
             throw $this->genericException('No Metadata Classes to process.');
@@ -142,12 +77,12 @@ class GenerateEntitiesOperation extends Operation
             );
 
             $modelClassFile = $ds->getPathToModels().'/'.$this->getClassName($metadata).'.php';
-            if ($this->overwriteModelClasses || !file_exists($modelClassFile)) {
+            if ($this->doctrineOrmSchema->overwriteModelClasses || !file_exists($modelClassFile)) {
                 $fs->dumpFile($modelClassFile, $this->generateEntityClassCode($metadata));
             }
 
             $modelAwareTraitFile = $ds->getPathToModelAwareTraits().'/'.$this->getClassName($metadata).'AwareTrait.php';
-            if ($this->generateModelAwareTraits && ($this->overwriteModelAwareTraits || !file_exists($modelAwareTraitFile))) {
+            if ($this->doctrineOrmSchema->generateModelAwareTraits && ($this->doctrineOrmSchema->overwriteModelAwareTraits || !file_exists($modelAwareTraitFile))) {
                 $fs->dumpFile($modelAwareTraitFile, $this->generateEntityAwareTraitClassCode($metadata));
             }
 
@@ -182,7 +117,7 @@ class GenerateEntitiesOperation extends Operation
             " * {$tableComment}",
             ' * '.$entityClassName,
             //$this->generateWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.' $em = null)' : ' *',
-            $this->generateWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.' $em)' : ' *',
+            $this->doctrineOrmSchema->generateModelWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.' $em)' : ' *',
             ' * @Doctrine\ORM\Mapping\Entity(repositoryClass="'.$customRepoClass.'")',
             ' */',
             "class $entityClassName",
@@ -285,8 +220,8 @@ class GenerateEntitiesOperation extends Operation
      */
     protected function getType($type): string
     {
-        if (isset($this->dbToPhpType[$type])) {
-            return $this->dbToPhpType[$type];
+        if (isset($this->doctrineOrmSchema->dbToPhpType[$type])) {
+            return $this->doctrineOrmSchema->dbToPhpType[$type];
         }
 
         return $type;
@@ -324,7 +259,7 @@ class GenerateEntitiesOperation extends Operation
             //}
 
             $lines[] = $this->generateFieldMappingPropertyDocBlock($fieldMapping, $metadata);
-            $lines[] = TAB.$this->fieldVisibility.' $'.$fieldMapping['fieldName']
+            $lines[] = TAB.$this->doctrineOrmSchema->modelTraitFieldVisibility.' $'.$fieldMapping['fieldName']
                 .(isset($fieldMapping['options']['default']) ? ' = '.var_export($fieldMapping['options']['default'], true) : null) . ";\n";
         }
 
@@ -346,7 +281,7 @@ class GenerateEntitiesOperation extends Operation
             //}
 
             $lines[] = $this->generateAssociationMappingPropertyDocBlock($associationMapping, $metadata);
-            $lines[] = TAB.$this->fieldVisibility.' $'.$associationMapping['fieldName']
+            $lines[] = TAB.$this->doctrineOrmSchema->modelTraitFieldVisibility.' $'.$associationMapping['fieldName']
                 .($associationMapping['type'] === 'manyToMany' ? ' = array()' : null).";\n";
         }
 
@@ -452,7 +387,7 @@ class GenerateEntitiesOperation extends Operation
 
         foreach ($methodNames as $methodName) {
             $uMethodName = $methodName;
-            $comment = $this->columnComments[$metadata->getTableName().'.'.$uMethodName];
+            $comment = $this->columnComments[$metadata->getTableName().'.'.$uMethodName] ?? '';
             $lines[] = '';
             $lines[] = '/**';
             if ($comment) {
@@ -604,10 +539,14 @@ class GenerateEntitiesOperation extends Operation
             if (\class_exists($typeHint)) {
                 $variableType   =  '\\' . ltrim($variableType, '\\');
                 $methodTypeHint =  '\\' . $typeHint . ' ';
-            } elseif (\array_key_exists($typeHint, $this->dbToPhpType)) {
-                $methodTypeHint = $this->dbToPhpType[$typeHint];
+            } elseif (\array_key_exists($typeHint, $this->doctrineOrmSchema->dbToPhpType)) {
+                $methodTypeHint = $this->doctrineOrmSchema->dbToPhpType[$typeHint];
             } elseif ($variableType) {
                 $methodTypeHint = $variableType;
+            }
+
+            if ($methodTypeHint === 'integer') {
+                $methodTypeHint = 'int';
             }
         }
 
@@ -806,50 +745,6 @@ class GenerateEntitiesOperation extends Operation
         }
 
         return true;
-    }
-
-    /**
-     * @param string $metadataFilter
-     *
-     * @return GenerateEntitiesOperation
-     */
-    public function setMetadataFilter(string $metadataFilter): GenerateEntitiesOperation
-    {
-        $this->metadataFilter = $metadataFilter;
-        return $this;
-    }
-
-    /**
-     * @param bool $overwriteModelClasses
-     *
-     * @return GenerateEntitiesOperation
-     */
-    public function setOverwriteModelClasses(bool $overwriteModelClasses): GenerateEntitiesOperation
-    {
-        $this->overwriteModelClasses = $overwriteModelClasses;
-        return $this;
-    }
-
-    /**
-     * @param bool $generateModelAwareTraits
-     *
-     * @return GenerateEntitiesOperation
-     */
-    public function setGenerateModelAwareTraits(bool $generateModelAwareTraits): GenerateEntitiesOperation
-    {
-        $this->generateModelAwareTraits = $generateModelAwareTraits;
-        return $this;
-    }
-
-    /**
-     * @param bool $overwriteModelAwareTraits
-     *
-     * @return GenerateEntitiesOperation
-     */
-    public function setOverwriteModelAwareTraits(bool $overwriteModelAwareTraits): GenerateEntitiesOperation
-    {
-        $this->overwriteModelAwareTraits = $overwriteModelAwareTraits;
-        return $this;
     }
 
 }

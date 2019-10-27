@@ -35,30 +35,8 @@ class GenerateReposOperation extends Operation
      */
     private $columnComments = [];
 
-    /** @var string A parent class for repository. */
-    private $parentClass = EntityRepository::class;
-
     /** @var string Which interface repo implements */
     private $repoInterface;
-
-    /** @var string A string pattern used to match entities that should be processed. */
-    private $metadataFilter;
-
-    private $generateRepoTraits = true;
-
-    /** @var bool  */
-    private $overwriteRepoClasses = false;
-
-    /**
-     * @param bool $overwriteRepoClasses
-     *
-     * @return GenerateReposOperation
-     */
-    public function setOverwriteRepoClasses(bool $overwriteRepoClasses): GenerateReposOperation
-    {
-        $this->overwriteRepoClasses = $overwriteRepoClasses;
-        return $this;
-    }
 
     /**
      * @return void
@@ -75,14 +53,14 @@ class GenerateReposOperation extends Operation
         $cmf = new DisconnectedClassMetadataFactory();
         $cmf->setEntityManager( $em );
         $metadatas = $cmf->getAllMetadata();
-        $metadatas = MetadataFilter::filter($metadatas, $this->metadataFilter);
+        $metadatas = MetadataFilter::filter($metadatas, $this->doctrineOrmSchema->metadataFilter);
         /** @var ClassMetadata[] $metadatas */
 
         //$reposPath = realpath($this->reposPath);
         $reposPath = $this->doctrineOrmSchema->getPathToRepositories();
         $reposTraitPath = $reposPath.'/Generated'; // todo: get from config?
 
-        $parentClass = $this->parentClass;
+        $parentClass = $this->doctrineOrmSchema->parentRepositoryClass;
         //$repoNamespace = $this->repoNamespace;
         $repoNamespace = $this->doctrineOrmSchema->getNamespaceRepositories();
         $repoInterface = $this->repoInterface;
@@ -112,7 +90,7 @@ class GenerateReposOperation extends Operation
             $collectionShortClass = Classes::short($metadata->name).'Repository';
             $repoTraitFileName = $reposTraitPath.'/'.$collectionShortClass.'Trait.php';
 
-            if ($this->generateRepoTraits) {
+            if ($this->doctrineOrmSchema->generateRepoTraits) {
                 $this->getLogger()->info('Generating repo trait...');
                 $content = $this->generateRepositoryBaseTrait($metadata, $collectionShortClass);
                 $fs->dumpFile($repoTraitFileName,$content);
@@ -149,7 +127,7 @@ class GenerateReposOperation extends Operation
                 '}',
             ];
 
-            if ($this->overwriteRepoClasses || !file_exists($repoFilename)) {
+            if ($this->doctrineOrmSchema->overwriteRepoClasses || !file_exists($repoFilename)) {
                 file_put_contents($repoFilename, implode(self::LS, $repoCode));
             }
 
@@ -471,17 +449,6 @@ class GenerateReposOperation extends Operation
     }
 
     /**
-     * @param string $parentClass
-     *
-     * @return GenerateReposOperation
-     */
-    public function setParentClass(string $parentClass): GenerateReposOperation
-    {
-        $this->parentClass = $parentClass;
-        return $this;
-    }
-
-    /**
      * @param string $repoInterface
      *
      * @return GenerateReposOperation
@@ -489,28 +456,6 @@ class GenerateReposOperation extends Operation
     public function setRepoInterface(string $repoInterface): GenerateReposOperation
     {
         $this->repoInterface = $repoInterface;
-        return $this;
-    }
-
-    /**
-     * @param string $metadataFilter
-     *
-     * @return GenerateReposOperation
-     */
-    public function setMetadataFilter(string $metadataFilter): GenerateReposOperation
-    {
-        $this->metadataFilter = $metadataFilter;
-        return $this;
-    }
-
-    /**
-     * @param bool $generateRepoTraits
-     *
-     * @return GenerateReposOperation
-     */
-    public function setGenerateRepoTraits(bool $generateRepoTraits): GenerateReposOperation
-    {
-        $this->generateRepoTraits = $generateRepoTraits;
         return $this;
     }
 
