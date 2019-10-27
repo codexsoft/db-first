@@ -32,7 +32,7 @@ class ConsoleRunner
      */
     public static function createApplication(DoctrineOrmSchema $ormSchema, string $ormConfigFile, string $cliFile, string $cliDir = null): Application
     {
-        $dbFirst = new DatabaseFirstDomain($ormSchema);
+        $dbFirst = new DatabaseFirst($ormSchema);
 
         $cliDir = $cliDir ?: dirname($cliFile);
         $console = new Application('CodexSoft Database-first CLI');

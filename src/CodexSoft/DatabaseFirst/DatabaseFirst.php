@@ -4,22 +4,18 @@ namespace CodexSoft\DatabaseFirst;
 
 use CodexSoft\Code\Traits\Loggable;
 use CodexSoft\DatabaseFirst\Operation;
-use CodexSoft\OperationsSystem\OperationsProcessor;
-use CodexSoft\OperationsSystem\Traits\OperationsProcessorAwareTrait;
 use Psr\Log\NullLogger;
 
-class DatabaseFirstDomain
+class DatabaseFirst
 {
 
     use Operation\DoctrineOrmSchemaAwareTrait;
-    use OperationsProcessorAwareTrait;
     use Loggable;
 
     public function __construct(DoctrineOrmSchema $doctrineOrmSchema)
     {
         $this->doctrineOrmSchema = $doctrineOrmSchema;
         $this->logger = new NullLogger;
-        $this->operationsProcessor = new OperationsProcessor;
     }
 
     /**
@@ -29,7 +25,6 @@ class DatabaseFirstDomain
     {
         return (new Operation\GenerateEntitiesOperation)
             ->setLogger($this->logger)
-            ->setOperationsProcessor($this->operationsProcessor)
             ->setDoctrineOrmSchema($this->doctrineOrmSchema);
     }
 
@@ -40,7 +35,6 @@ class DatabaseFirstDomain
     {
         return (new Operation\GenerateMigrationOperation)
             ->setLogger($this->logger)
-            ->setOperationsProcessor($this->operationsProcessor)
             ->setDoctrineOrmSchema($this->doctrineOrmSchema);
     }
 
@@ -51,7 +45,6 @@ class DatabaseFirstDomain
     {
         return (new Operation\GenerateReposOperation)
             ->setLogger($this->logger)
-            ->setOperationsProcessor($this->operationsProcessor)
             ->setDoctrineOrmSchema($this->doctrineOrmSchema);
     }
 
@@ -59,7 +52,6 @@ class DatabaseFirstDomain
     {
         return (new Operation\GenerateMappingFromPostgresDbOperation)
             ->setLogger($this->logger)
-            ->setOperationsProcessor($this->operationsProcessor)
             ->setDoctrineOrmSchema($this->doctrineOrmSchema);
     }
 
