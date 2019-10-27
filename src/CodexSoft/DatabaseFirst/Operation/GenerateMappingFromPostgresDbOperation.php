@@ -235,12 +235,6 @@ class GenerateMappingFromPostgresDbOperation extends Operation
             $code[] = TAB.'->scale('.var_export($field['scale'],true).')';
         }
 
-        //if (array_key_exists('options',$field)) {
-        //    foreach ((array) $field['options'] as $option => $value) {
-        //        $code[] = TAB."->option('".$option."',".var_export($value,true).')';
-        //    }
-        //}
-
         if (array_key_exists('options',$field)) {
             foreach ((array) $field['options'] as $option => $value) {
 
@@ -251,7 +245,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                         case Type::SMALLINT:
                         case Type::INTEGER:
                         case Type::BIGINT:
-                            $fieldLines[] = TAB."->option('".$option."',".( (int) $value ).')';
+                            $code[] = TAB."->option('".$option."',".( (int) $value ).')';
                             break;
 
                         case Type::DATE:
@@ -260,7 +254,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                             break;
 
                         case Type::FLOAT:
-                            $fieldLines[] = TAB."->option('".$option."',".var_export((float) $value,true).')';
+                            $code[] = TAB."->option('".$option."',".var_export((float) $value,true).')';
                             break;
 
                         case Type::JSON:
@@ -278,18 +272,18 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                         case '_int8':
                         case '_text':
                             if ($value === [] || $value === '{}' || $value === '[]') {
-                                $fieldLines[] = TAB."->option('".$option."', [])";
+                                $code[] = TAB."->option('".$option."', [])";
                             } else {
-                                $fieldLines[] = TAB."->option('".$option."',".var_export( $value, true ).')';
+                                $code[] = TAB."->option('".$option."',".var_export( $value, true ).')';
                             }
                             break;
 
                         default:
-                            $fieldLines[] = TAB."->option('".$option."',".var_export($value,true).')';
+                            $code[] = TAB."->option('".$option."',".var_export($value,true).')';
                     }
 
                 } else {
-                    $fieldLines[] = TAB."->option('".$option."',".var_export($value,true).')';
+                    $code[] = TAB."->option('".$option."',".var_export($value,true).')';
                 }
 
             }

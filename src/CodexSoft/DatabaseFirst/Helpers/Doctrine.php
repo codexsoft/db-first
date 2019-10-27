@@ -474,6 +474,7 @@ WHERE
     {
         $fieldComment = '';
         if (\array_key_exists($fieldName, $metadata->fieldMappings)) {
+            //echo "\n SEE: ".var_export($metadata->fieldMappings[$fieldName], true);
             $fieldComment = $metadata->fieldMappings[$fieldName]['options']['comment'] ?? '';
         } elseif (\array_key_exists($fieldName, $metadata->associationMappings)) {
             $associationMapping = $metadata->associationMappings[$fieldName];

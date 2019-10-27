@@ -70,6 +70,7 @@ class GenerateEntitiesOperation extends Operation
         }
 
         $this->columnComments = Doctrine::getAllColumnsComments($this->em->getConnection());
+        //die(var_export($this->columnComments));
         foreach ($metadatas as $metadata) {
             $fs->dumpFile(
                 $ds->getPathToModelsTraits().'/'.$this->getClassName($metadata).'Trait.php',
