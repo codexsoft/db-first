@@ -43,12 +43,12 @@ class ConsoleRunner
             'add-migration' => new ExecuteOperationCommand($dbFirst->generateMigration()),
             'mapping' => new ExecuteOperationCommand($dbFirst->generateMapping()),
 
-            'mapping-old' => new ExecuteShellCommand([
-                'php '.$cliDir.'/doctrine.orm.php '.$ormConfigFile.' orm:convert-mapping '
-                .DoctrineOrmSchema::CUSTOM_CODEXSOFT_BUILDER.' '
-                .$ormSchema->getPathToMapping().' '
-                .'--force --from-database --namespace='.$ormSchema->getNamespaceModels().'\\'
-            ]),
+            //'mapping-old' => new ExecuteShellCommand([
+            //    'php '.$cliDir.'/doctrine.orm.php '.$ormConfigFile.' orm:convert-mapping '
+            //    .DoctrineOrmSchema::CUSTOM_CODEXSOFT_BUILDER.' '
+            //    .$ormSchema->getPathToMapping().' '
+            //    .'--force --from-database --namespace='.$ormSchema->getNamespaceModels().'\\'
+            //]),
 
             'migrate' => new ExecuteShellCommand([
                 'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate',

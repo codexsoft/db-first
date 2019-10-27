@@ -148,6 +148,20 @@ abstract class AbstractPgSqlEntityManagerBuilder
 
     }
 
+    /**
+     * @param EntityManagerInterface $entityManager
+     * @param string $typeName
+     * @param string $typeClass
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function addCustomType(EntityManagerInterface $entityManager, string $typeName, string $typeClass)
+    {
+        Type::addType($typeName, $typeClass);
+        $platform = $entityManager->getConnection()->getDatabasePlatform();
+        $platform->registerDoctrineTypeMapping($typeName, $typeName);
+    }
+
     public function tuneEventManager(EventManager $eventManager): void
     {
         $eventManager->addEventSubscriber(new DoctrineLifecycleEventSubscriber);

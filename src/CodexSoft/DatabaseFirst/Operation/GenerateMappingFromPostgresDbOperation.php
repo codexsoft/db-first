@@ -13,6 +13,7 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Mapping\Driver\DatabaseDriver;
 use Doctrine\ORM\Tools\DisconnectedClassMetadataFactory;
 use Symfony\Component\Filesystem\Filesystem;
+use function CodexSoft\Code\str;
 use const CodexSoft\Code\TAB;
 
 /**
@@ -26,16 +27,9 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 
     public const ID = 'e163ac5f-ec34-470e-b8ee-450eb8886453';
 
-    protected const JOIN_DEFAULTS = [
-        'name' => '',
-        'referencedColumnName' => '',
-        'nullable' => true,
-        'unique' => false,
-        'onDelete' => null,
-        'columnDefinition' => null,
-    ];
+    protected const ERROR_PREFIX = 'GenerateMappingFromDatabaseOperation cannot be completed: ';
 
-    protected const DOCTRINE_TYPES_MAP = [
+    protected $doctrineTypesMap = [
         'array' => 'TARRAY',
         'simple_array' => 'SIMPLE_ARRAY',
         'json_array' => 'JSON_ARRAY',
@@ -63,7 +57,14 @@ class GenerateMappingFromPostgresDbOperation extends Operation
         'dateinterval' => 'DATEINTERVAL',
     ];
 
-    protected const ERROR_PREFIX = 'GenerateMappingFromDatabaseOperation cannot be completed: ';
+    protected $joinDefaultArguments = [
+        'name' => '',
+        'referencedColumnName' => '',
+        'nullable' => true,
+        'unique' => false,
+        'onDelete' => null,
+        'columnDefinition' => null,
+    ];
 
     /** @var bool  */
     protected $cascadePersistAllRelationships = true;
@@ -71,8 +72,13 @@ class GenerateMappingFromPostgresDbOperation extends Operation
     /** @var bool  */
     protected $cascadeRefreshAllRelationships = true;
 
-    /** @var string[] */
-    private $skipTables = [];
+    /**
+     * supports wildcard ending like doctrine_*
+     * @var string[]
+     */
+    private $skipTables = [
+        'doctrine_migration_versions'
+    ];
 
     /** @var string[] */
     private $skipColumns = [];
@@ -85,6 +91,9 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 
     /** @var string  */
     private $builderVar = '$mapper';
+
+    //private $metadataBuilderClass = \CodexSoft\DatabaseFirst\Orm\ModelMetadataInheritanceBuilder::class;
+    private $metadataBuilderClass = \Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder::class;
 
     /**
      * @return void
@@ -123,7 +132,22 @@ class GenerateMappingFromPostgresDbOperation extends Operation
         foreach ($allMetadata as $metadata) {
             $singularizedModelClass = $this->singularize($metadata->name);
             $tableName = $metadata->table['name'];
+
             echo sprintf("\n".'Processing table "%s"', $tableName);
+
+            if (\in_array($tableName, $this->skipTables, true)) {
+                $this->getLogger()->notice(sprintf("\n".'Skipping table "%s"', $tableName));
+                //echo sprintf("\n".'Skipping table "%s"', $tableName);
+                continue;
+            }
+
+            foreach ($this->skipTables as $tableToSkip) {
+                if (str($tableToSkip)->endsWith('*') && str($tableName)->startsWith((string) str($tableToSkip)->removeRight('*'))) {
+                    echo sprintf("\n".'Skipping table "%s" because of %s', $tableName, $tableToSkip);
+                    continue 2;
+                }
+            }
+
             echo sprintf("\n".'Entity class "%s"', $singularizedModelClass);
             $file = $this->generateOutputFilePath($metadata);
             echo sprintf("\n".'Mapping file "%s"', $file);
@@ -144,22 +168,25 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                 $code[] = $this->metaVar.'->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_' . $generatorType . ');';
             }
 
+            $builderShortClass = Classes::short($this->metadataBuilderClass);
+
             $code = [
                 '<?php',
                 '',
                 'use '.\Doctrine\DBAL\Types\Type::class.';',
                 'use '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.';',
-                'use '.\CodexSoft\DatabaseFirst\Orm\ModelMetadataBuilder::class.';',
+                "use \\{$this->metadataBuilderClass};",
                 '',
+                //"/** @var \$metadata \\$builderShortClass */",
                 '/** @var $metadata '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.' */',
                 '',
                 '/** @noinspection PhpUnhandledExceptionInspection */',
-                '$metadata->setInheritanceType(ClassMetadataInfo::INHERITANCE_TYPE_NONE);',
-                '$metadata->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_SEQUENCE);',
+                "{$this->metaVar}->setInheritanceType(ClassMetadataInfo::INHERITANCE_TYPE_NONE);", // inheritance now is not supported
+                "{$this->metaVar}->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_SEQUENCE);",
                 '',
-                '$mapper = new ModelMetadataBuilder($metadata);',
-                '$mapper->setCustomRepositoryClass(\''.$customRepoClass.'\');',
-                '$mapper->setTable(\''.$tableName.'\');',
+                "{$this->builderVar} = new $builderShortClass({$this->metaVar});",
+                "{$this->builderVar}->setCustomRepositoryClass('$customRepoClass');",
+                "{$this->builderVar}->setTable('$tableName');",
             ];
 
             foreach ($metadata->fieldMappings as $field) {
@@ -176,6 +203,11 @@ class GenerateMappingFromPostgresDbOperation extends Operation
             foreach ($metadata->associationMappings as $associationMappingName => $associationMapping) {
 
                 echo "\nfound $associationMappingName";
+
+                if (\in_array($tableName.'.'.$associationMappingName, $this->skipColumns, true)) {
+                    echo "\nskipped $tableName.$associationMappingName";
+                    continue;
+                }
 
                 if ($associationMapping['type'] & ClassMetadataInfo::TO_ONE) {
                     try {
@@ -288,7 +320,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                         case '_int8':
                         case '_text':
                             if ($value === [] || $value === '{}' || $value === '[]') {
-                                $fieldLines[] = TAB."->option('".$option."',[])";
+                                $fieldLines[] = TAB."->option('".$option."', [])";
                             } else {
                                 $fieldLines[] = TAB."->option('".$option."',".var_export( $value, true ).')';
                             }
@@ -390,7 +422,8 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                 foreach( (array) $associationMapping['joinColumns'] as $joinColumn ) {
 
                     //$params = $this->joinColumnParametersHelper( $joinColumn );
-                    $params = $this->generateArgumentsRespectingDefaultValues($joinColumn,self::JOIN_DEFAULTS);
+                    //$params = $this->generateArgumentsRespectingDefaultValues($joinColumn,self::JOIN_DEFAULTS);
+                    $params = $this->generateArgumentsRespectingDefaultValues($joinColumn, $this->joinDefaultArguments);
                     $fieldLines[] = TAB.'->addJoinColumn('.implode(', ',$params).')';
 
                 }
@@ -456,7 +489,8 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                     foreach ((array) $joinTable['inverseJoinColumns'] as $joinColumn) {
 
                         //$params = $this->joinColumnParametersHelper( $joinColumn );
-                        $params = $this->generateArgumentsRespectingDefaultValues($joinColumn,self::JOIN_DEFAULTS);
+                        //$params = $this->generateArgumentsRespectingDefaultValues($joinColumn,self::JOIN_DEFAULTS);
+                        $params = $this->generateArgumentsRespectingDefaultValues($joinColumn, $this->joinDefaultArguments);
                         $fieldLines[] = TAB.'->addInverseJoinColumn('.implode(', ',$params).')';
 
                     }
@@ -466,7 +500,8 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                     foreach ((array) $joinTable['joinColumns'] as $joinColumn) {
 
                         //$params = $this->joinColumnParametersHelper( $joinColumn );
-                        $params = $this->generateArgumentsRespectingDefaultValues($joinColumn,self::JOIN_DEFAULTS);
+                        //$params = $this->generateArgumentsRespectingDefaultValues($joinColumn,self::JOIN_DEFAULTS);
+                        $params = $this->generateArgumentsRespectingDefaultValues($joinColumn, $this->joinDefaultArguments);
                         $fieldLines[] = TAB.'->addJoinColumn('.implode(', ',$params).')';
 
                     }
@@ -500,8 +535,14 @@ class GenerateMappingFromPostgresDbOperation extends Operation
     protected function generateType(string $type)
     {
 
-        if ( array_key_exists($type, self::DOCTRINE_TYPES_MAP) )
-            return 'Type::'.self::DOCTRINE_TYPES_MAP[$type];
+        if (\array_key_exists($type, $this->doctrineTypesMap)) {
+            return 'Type::'.$this->doctrineTypesMap[$type];
+        }
+
+        //if (\array_key_exists($type, self::DOCTRINE_TYPES_MAP)) {
+        //    return 'Type::'.self::DOCTRINE_TYPES_MAP[$type];
+        //}
+
         return var_export($type,true);
     }
 
@@ -594,6 +635,66 @@ class GenerateMappingFromPostgresDbOperation extends Operation
         }
 
         return $exportValues;
+    }
+
+    /**
+     * @param bool $cascadePersistAllRelationships
+     *
+     * @return GenerateMappingFromPostgresDbOperation
+     */
+    public function setCascadePersistAllRelationships(bool $cascadePersistAllRelationships): GenerateMappingFromPostgresDbOperation
+    {
+        $this->cascadePersistAllRelationships = $cascadePersistAllRelationships;
+        return $this;
+    }
+
+    /**
+     * @param bool $cascadeRefreshAllRelationships
+     *
+     * @return GenerateMappingFromPostgresDbOperation
+     */
+    public function setCascadeRefreshAllRelationships(bool $cascadeRefreshAllRelationships): GenerateMappingFromPostgresDbOperation
+    {
+        $this->cascadeRefreshAllRelationships = $cascadeRefreshAllRelationships;
+        return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getSkipTables(): array
+    {
+        return $this->skipTables;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getSkipColumns(): array
+    {
+        return $this->skipColumns;
+    }
+
+    /**
+     * @param string $metaVar
+     *
+     * @return GenerateMappingFromPostgresDbOperation
+     */
+    public function setMetaVar(string $metaVar): GenerateMappingFromPostgresDbOperation
+    {
+        $this->metaVar = $metaVar;
+        return $this;
+    }
+
+    /**
+     * @param string $builderVar
+     *
+     * @return GenerateMappingFromPostgresDbOperation
+     */
+    public function setBuilderVar(string $builderVar): GenerateMappingFromPostgresDbOperation
+    {
+        $this->builderVar = $builderVar;
+        return $this;
     }
 
 }

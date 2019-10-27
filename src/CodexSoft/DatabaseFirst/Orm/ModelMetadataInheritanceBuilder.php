@@ -9,7 +9,7 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 
-class ModelMetadataBuilder extends ClassMetadataBuilder
+class ModelMetadataInheritanceBuilder extends ClassMetadataBuilder
 {
 
     public const DISCRIMINATOR_COLUMN = 'type';
@@ -116,7 +116,7 @@ class ModelMetadataBuilder extends ClassMetadataBuilder
     /**
      * @param $fieldName
      *
-     * @return ModelMetadataBuilder
+     * @return ModelMetadataInheritanceBuilder
      */
     public function removeAssociation( $fieldName) {
         unset( $this->getClassMetadata()->associationMappings[$fieldName] );

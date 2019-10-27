@@ -54,7 +54,7 @@ class GenerateEntitiesOperation extends Operation
     /** @var EntityManager */
     protected $em;
 
-    protected $typeAlias = [
+    protected $dbToPhpType = [
         'json'             => 'array',
         'json[]'           => 'array',
         'jsonb'            => 'array',
@@ -82,6 +82,25 @@ class GenerateEntitiesOperation extends Operation
 
     /** @var string A string pattern used to match entities that should be processed. */
     private $metadataFilter;
+
+    /**
+     * @param array $dbToPhpType
+     *
+     * @return GenerateEntitiesOperation
+     */
+    public function setDbToPhpType(array $dbToPhpType): GenerateEntitiesOperation
+    {
+        $this->dbToPhpType = $dbToPhpType;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDbToPhpType(): array
+    {
+        return $this->dbToPhpType;
+    }
 
     /**
      * @return void
@@ -266,8 +285,8 @@ class GenerateEntitiesOperation extends Operation
      */
     protected function getType($type): string
     {
-        if (isset($this->typeAlias[$type])) {
-            return $this->typeAlias[$type];
+        if (isset($this->dbToPhpType[$type])) {
+            return $this->dbToPhpType[$type];
         }
 
         return $type;
@@ -585,8 +604,8 @@ class GenerateEntitiesOperation extends Operation
             if (\class_exists($typeHint)) {
                 $variableType   =  '\\' . ltrim($variableType, '\\');
                 $methodTypeHint =  '\\' . $typeHint . ' ';
-            } elseif (\array_key_exists($typeHint, $this->typeAlias)) {
-                $methodTypeHint = $this->typeAlias[$typeHint];
+            } elseif (\array_key_exists($typeHint, $this->dbToPhpType)) {
+                $methodTypeHint = $this->dbToPhpType[$typeHint];
             } elseif ($variableType) {
                 $methodTypeHint = $variableType;
             }

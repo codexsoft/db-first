@@ -115,7 +115,7 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
     {
 
         // skip some tables
-        if ( \in_array( $metadata->table['name'], ModelMetadataBuilder::SKIP_TABLES, true ) ) {
+        if ( \in_array( $metadata->table['name'], ModelMetadataInheritanceBuilder::SKIP_TABLES, true ) ) {
             return null;
         }
 
@@ -129,8 +129,8 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
 
         $this->helpers = [];
         $this->singularizedEntityClassName = $this->singularizer($metadata->name);
-        $this->entityHasParent = ModelMetadataBuilder::hasParentEntity($this->singularizedEntityClassName);
-        $this->entityHasChildren = ModelMetadataBuilder::hasChildEntities($this->singularizedEntityClassName);
+        $this->entityHasParent = ModelMetadataInheritanceBuilder::hasParentEntity($this->singularizedEntityClassName);
+        $this->entityHasChildren = ModelMetadataInheritanceBuilder::hasChildEntities($this->singularizedEntityClassName);
 
         //$this->entitiesNamespace = $this->domainSchema->getNamespaceModels();
         $this->entitiesNamespace = 'App\\Model'; // todo!!! how to set this?
@@ -147,7 +147,7 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
             '',
             'use '.Type::class.';',
             'use '.ClassMetadataInfo::class.';',
-            'use '.ModelMetadataBuilder::class.';',
+            'use '.ModelMetadataInheritanceBuilder::class.';',
             //'use '.$this->entitiesNamespace.';',
             '',
             '/** @var '.$metaVar.' '.ClassMetadataInfo::class.' */',
@@ -172,7 +172,7 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
         }
 
         if ( $this->entityHasParent ) {
-            $parentClasses = ModelMetadataBuilder::calculateParentClasses($this->singularizedEntityClassName);
+            $parentClasses = ModelMetadataInheritanceBuilder::calculateParentClasses($this->singularizedEntityClassName);
             $lines[] = $metaVar.'->setParentClasses([';
             foreach((array)$parentClasses as $parentClass) {
                 $lines[] = TAB.$this->simplifyFullQualifiedModelName( $parentClass ).'::class,';
@@ -182,7 +182,7 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
 
         if ( $this->entityHasChildren ) {
             $lines[] = $metaVar.'->setSubclasses([';
-            foreach( (array) ModelMetadataBuilder::calculateChildClasses($this->singularizedEntityClassName) as $childClass ) {
+            foreach((array) ModelMetadataInheritanceBuilder::calculateChildClasses($this->singularizedEntityClassName) as $childClass ) {
                 //$lines[] = TAB.$childClass.'::class,';
                 $lines[] = TAB.$this->simplifyFullQualifiedModelName( $childClass ).'::class,';
             }
@@ -195,7 +195,7 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
         }
 
         $lines[] = '';
-        $lines[] = $builderVar.' = new '.$this->shortClass( ModelMetadataBuilder::class).'('.$metaVar.');';
+        $lines[] = $builderVar.' = new '.$this->shortClass( ModelMetadataInheritanceBuilder::class).'('.$metaVar.');';
         $customRepoClass = (string) str($metadata->namespace)->removeRight('Model')->append('Repository\\'.Classes::short($this->singularizedEntityClassName.'Repository'));
         $lines[] = $builderVar.'->setCustomRepositoryClass(\''.$customRepoClass.'\');';
         $lines[] = $builderVar."->setTable('{$metadata->table['name']}');";
@@ -207,8 +207,8 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
 
         if ( !$metadata->discriminatorMap ) {
             // если среди корней CTI-иерархий имеется исследуемая сущность
-            if ( array_key_exists($this->singularizedEntityClassName,ModelMetadataBuilder::MAPPING) ) {
-                $metadata->discriminatorMap = ModelMetadataBuilder::MAPPING[$this->singularizedEntityClassName];
+            if ( array_key_exists($this->singularizedEntityClassName,ModelMetadataInheritanceBuilder::MAPPING) ) {
+                $metadata->discriminatorMap = ModelMetadataInheritanceBuilder::MAPPING[$this->singularizedEntityClassName];
             }
         }
 
@@ -221,7 +221,7 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
         // but using custom metadata it is possible
         if ($metadata->discriminatorMap) {
             $lines[] = '// todo: these stub lines should be reviewed and moved to your mapping hook';
-            $lines[] = '// '.$builderVar.'->setDiscriminatorColumn(\''.ModelMetadataBuilder::DISCRIMINATOR_COLUMN.'\',Type::SMALLINT)';
+            $lines[] = '// '.$builderVar.'->setDiscriminatorColumn(\''.ModelMetadataInheritanceBuilder::DISCRIMINATOR_COLUMN.'\',Type::SMALLINT)';
             foreach ((array) $metadata->discriminatorMap as $discriminatorMapName => $discriminatorMapClass ) {
                 $lines[] = '// '.TAB.'->addDiscriminatorMapClass('.var_export( $discriminatorMapName, true ).", \\".$this->singularizer( $discriminatorMapClass ).'::class )';
             }
@@ -258,13 +258,13 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
 
             $fieldTableName = $metadata->getTableName();
             $fieldColumnName = $metadata->getColumnName($field['fieldName']);
-            if (\in_array($fieldTableName.'.'.$fieldColumnName, ModelMetadataBuilder::SKIP_COLUMNS, true)) {
+            if (\in_array($fieldTableName.'.'.$fieldColumnName, ModelMetadataInheritanceBuilder::SKIP_COLUMNS, true)) {
                 continue;
             }
 
             // если среди корней CTI-иерархий имеется исследуемая сущность
-            if ( array_key_exists($this->singularizedEntityClassName,ModelMetadataBuilder::MAPPING) ) {
-                if ( $field['fieldName'] === ModelMetadataBuilder::DISCRIMINATOR_COLUMN ) {
+            if ( array_key_exists($this->singularizedEntityClassName,ModelMetadataInheritanceBuilder::MAPPING) ) {
+                if ( $field['fieldName'] === ModelMetadataInheritanceBuilder::DISCRIMINATOR_COLUMN ) {
                     continue;
                 }
             }
@@ -274,22 +274,22 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
             //        continue;
             //}
 
-            if($this->injectHelperByField($metadata,$field['fieldName'],'createdAt','createdBy',ModelMetadataBuilder::HELPER_CREATION)) {
+            if($this->injectHelperByField($metadata,$field['fieldName'],'createdAt','createdBy',ModelMetadataInheritanceBuilder::HELPER_CREATION)) {
                 continue;
             }
 
-            if($this->injectHelperByField($metadata,$field['fieldName'],'updatedAt','updatedBy',ModelMetadataBuilder::HELPER_UPDATES)) {
+            if($this->injectHelperByField($metadata,$field['fieldName'],'updatedAt','updatedBy',ModelMetadataInheritanceBuilder::HELPER_UPDATES)) {
                 continue;
             }
 
-            if($this->injectHelperByField($metadata,$field['fieldName'],'deletedAt','deletedBy',ModelMetadataBuilder::HELPER_DELETES)) {
+            if($this->injectHelperByField($metadata,$field['fieldName'],'deletedAt','deletedBy',ModelMetadataInheritanceBuilder::HELPER_DELETES)) {
                 continue;
             }
 
             // skip id column if extends
             if ( $field['fieldName'] === 'id' ) {
                 if ( !$this->entityHasParent ) {
-                    $this->helpers[] = ModelMetadataBuilder::HELPER_ID;
+                    $this->helpers[] = ModelMetadataInheritanceBuilder::HELPER_ID;
 
                 } else if ($this->addCommentsToExport) {
                     $fieldLines[] = '';
@@ -403,7 +403,7 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
             if ($associationMapping['type'] & ClassMetadataInfo::TO_ONE) {
                 try {
                     $associationColumnName = $metadata->getSingleAssociationJoinColumnName($associationMappingName);
-                    if (\in_array($fieldTableName.'.'.$associationColumnName, ModelMetadataBuilder::SKIP_COLUMNS, true)) {
+                    if (\in_array($fieldTableName.'.'.$associationColumnName, ModelMetadataInheritanceBuilder::SKIP_COLUMNS, true)) {
                         continue;
                     }
                 } catch (\Doctrine\ORM\Mapping\MappingException $e) {
@@ -411,21 +411,21 @@ class DoctrineMappingExporter extends BaseDoctrineMappingExporter
                 }
             }
 
-            if($this->injectHelperByAssoc($metadata,$associationMapping['fieldName'],'createdAt','createdBy',ModelMetadataBuilder::HELPER_CREATION)) {
+            if($this->injectHelperByAssoc($metadata,$associationMapping['fieldName'],'createdAt','createdBy',ModelMetadataInheritanceBuilder::HELPER_CREATION)) {
                 continue;
             }
 
-            if($this->injectHelperByAssoc($metadata,$associationMapping['fieldName'],'updatedAt','updatedBy',ModelMetadataBuilder::HELPER_UPDATES)) {
+            if($this->injectHelperByAssoc($metadata,$associationMapping['fieldName'],'updatedAt','updatedBy',ModelMetadataInheritanceBuilder::HELPER_UPDATES)) {
                 continue;
             }
 
-            if($this->injectHelperByAssoc($metadata,$associationMapping['fieldName'],'deletedAt','deletedBy',ModelMetadataBuilder::HELPER_DELETES)) {
+            if($this->injectHelperByAssoc($metadata,$associationMapping['fieldName'],'deletedAt','deletedBy',ModelMetadataInheritanceBuilder::HELPER_DELETES)) {
                 continue;
             }
 
             if ( $associationMapping['fieldName'] === 'id' ) {
                 if ( !$this->entityHasParent ) {
-                    $this->helpers[] = ModelMetadataBuilder::HELPER_ID;
+                    $this->helpers[] = ModelMetadataInheritanceBuilder::HELPER_ID;
                 } else if ($this->addCommentsToExport) {
                     $fieldLines[] = '';
                     $fieldLines[] = '// skipped id assoc, as it is has parent entity';

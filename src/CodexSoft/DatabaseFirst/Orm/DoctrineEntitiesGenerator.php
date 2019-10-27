@@ -448,13 +448,13 @@ public function <methodName>(<methodTypeHint>$<variableName>)
             echo "\n TRAIT/SINGLE ".$filteredMetadata->name;
 
             // если колонка-дискриминатор присутствует в исследуемой сущности...
-            if ( \array_key_exists(ModelMetadataBuilder::DISCRIMINATOR_COLUMN, $filteredMetadata->fieldMappings) ) {
+            if ( \array_key_exists(ModelMetadataInheritanceBuilder::DISCRIMINATOR_COLUMN, $filteredMetadata->fieldMappings) ) {
 
                 // если среди корней CTI-иерархий имеется исследуемая сущность
-                if ( \array_key_exists($filteredMetadata->name,ModelMetadataBuilder::MAPPING) ) {
+                if ( \array_key_exists($filteredMetadata->name,ModelMetadataInheritanceBuilder::MAPPING) ) {
 
                     // убираем из списка полей для генерации трейта поле дискриминатора
-                    unset($filteredMetadata->fieldMappings[ModelMetadataBuilder::DISCRIMINATOR_COLUMN]);
+                    unset($filteredMetadata->fieldMappings[ModelMetadataInheritanceBuilder::DISCRIMINATOR_COLUMN]);
 
                 }
 
@@ -484,22 +484,22 @@ public function <methodName>(<methodTypeHint>$<variableName>)
                 /** @noinspection PhpUndefinedFieldInspection */
                 foreach( (array) $filteredMetadata->dbfirst_mapping_helpers as $helper) {
 
-                    $code[] = TAB.'use \\'.ModelMetadataBuilder::HELPER_TO_TRAIT[$helper].';';
+                    $code[] = TAB.'use \\'.ModelMetadataInheritanceBuilder::HELPER_TO_TRAIT[$helper].';';
 
                     switch($helper) {
-                        case ModelMetadataBuilder::HELPER_CREATION:
+                        case ModelMetadataInheritanceBuilder::HELPER_CREATION:
                             unset($filteredMetadata->fieldMappings['createdAt']);
                             unset($filteredMetadata->associationMappings['createdBy']);
                             break;
-                        case ModelMetadataBuilder::HELPER_UPDATES:
+                        case ModelMetadataInheritanceBuilder::HELPER_UPDATES:
                             unset($filteredMetadata->fieldMappings['updatedAt']);
                             unset($filteredMetadata->associationMappings['updatedBy']);
                             break;
-                        case ModelMetadataBuilder::HELPER_DELETES:
+                        case ModelMetadataInheritanceBuilder::HELPER_DELETES:
                             unset($filteredMetadata->fieldMappings['deletedAt']);
                             unset($filteredMetadata->associationMappings['deletedBy']);
                             break;
-                        case ModelMetadataBuilder::HELPER_ID:
+                        case ModelMetadataInheritanceBuilder::HELPER_ID:
                             unset($filteredMetadata->fieldMappings['id']);
                             unset($filteredMetadata->associationMappings['id']);
                             break;
