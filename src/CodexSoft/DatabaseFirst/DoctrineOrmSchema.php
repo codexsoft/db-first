@@ -4,13 +4,10 @@ namespace CodexSoft\DatabaseFirst;
 
 use CodexSoft\Code\AbstractModuleSchema;
 use CodexSoft\Code\Helpers\Strings;
-use CodexSoft\DatabaseFirst\Operation\EntityManagerAwareTrait;
 use Doctrine\ORM\EntityManager;
 
 class DoctrineOrmSchema extends AbstractModuleSchema
 {
-
-    use EntityManagerAwareTrait; // todo: decide: EntityManagerAwareTrait or private $entityManager!
 
     public const CUSTOM_CODEXSOFT_BUILDER = 'codexsoft_builder';
 
@@ -27,8 +24,6 @@ class DoctrineOrmSchema extends AbstractModuleSchema
 
     /** @var string|null */
     private $migrationBaseClass;
-
-    private $baseMigrationClass;
 
     /** @var string */
     private $pathToMigrations;
@@ -270,7 +265,7 @@ class DoctrineOrmSchema extends AbstractModuleSchema
      */
     public function getMigrationBaseClass(): ?string
     {
-        return $this->migrationBaseClass;
+        return $this->migrationBaseClass ?: $this->getNamespaceMigrations().'\\AbstractBaseMigration';
     }
 
     /**

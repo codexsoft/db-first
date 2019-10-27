@@ -27,15 +27,17 @@ class GenerateMigrationOperation extends Operation
         $fileName = $dbConfig->getPathToMigrations().'/Version'.$version;
         $fs = new Filesystem;
 
-        $baseMigrationFile = $dbConfig->getPathToMigrations().'/AbstractBaseMigration.php';
-        $defaultBaseMigrationClass = $dbConfig->getNamespaceMigrations().'\\AbstractBaseMigration';
+        $baseMigrationClass = $dbConfig->getMigrationBaseClass();
+        $baseMigrationClassShort = Classes::short($baseMigrationClass);
+
+        $baseMigrationFile = $dbConfig->getPathToMigrations().'/'.$baseMigrationClassShort.'.php';
         if (!file_exists($baseMigrationFile)) {
             $fs->dumpFile($baseMigrationFile, implode("\n", [
                 '<?php',
                 '',
                 'namespace '.$dbConfig->getNamespaceMigrations().';',
                 '',
-                'class '.Classes::short($defaultBaseMigrationClass).' extends \\'.\CodexSoft\DatabaseFirst\Migration\BaseMigration::class,
+                'class '.$baseMigrationClassShort.' extends \\'.\CodexSoft\DatabaseFirst\Migration\BaseMigration::class,
                 '{',
                 '    public static function getContainingDirectory(): string',
                 '    {',
@@ -48,9 +50,12 @@ class GenerateMigrationOperation extends Operation
         $code = [
             '<?php',
             '',
+            '/**',
+            ' * Auto-generated Migration: Please modify to your needs!',
+            ' */',
             'namespace '.$dbConfig->getNamespaceMigrations().';',
             '',
-            'class Version'.$version.' extends \\'.($dbConfig->getMigrationBaseClass() ?: $defaultBaseMigrationClass),
+            'class Version'.$version.' extends \\'.$baseMigrationClass,
             '{',
             '}',
         ];
