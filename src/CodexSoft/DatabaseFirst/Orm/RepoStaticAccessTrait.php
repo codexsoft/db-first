@@ -8,8 +8,6 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
-use App\Domain\Model\Traits\HasIdTrait;
-use CodexSoft\DatabaseFirst\Exceptions\UnableToLockEntityException;
 use CodexSoft\Code\Helpers\Classes;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -21,20 +19,17 @@ use Doctrine\ORM\EntityManagerInterface;
 trait RepoStaticAccessTrait
 {
 
+    use KnownEntityManagerTrait;
+
     /**
      * @param EntityManagerInterface $em
      *
      * @return \Doctrine\ORM\EntityRepository
      */
-    public static function repo(EntityManagerInterface $em)
+    public static function repo(EntityManagerInterface $em = null)
     {
-
-        //if ($em === null) {
-        //    $em = AbstractDomain::fromContext()->getEntityManager();
-        //}
-
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $em->getRepository(static::class);
+        return static::knownEntityManager($em)->getRepository(static::class);
     }
 
     /**
@@ -44,30 +39,24 @@ trait RepoStaticAccessTrait
      *
      * @return static
      */
-    public static function byId($id, EntityManagerInterface $em)
+    public static function byId($id, EntityManagerInterface $em = null)
     {
-
-        if ($id instanceof static) {
-            return $id;
-        }
-
-        $model = self::repo($em)->find((int) $id);
-        if (!$model instanceof static) {
+        $foundEntity = static::byIdOrNull($id, $em);
+        if (!$foundEntity instanceof static) {
             throw new \RuntimeException(Classes::short(__CLASS__).' with ID='.$id.' not found!');
         }
 
-        return $model;
-
+        return $foundEntity;
     }
 
     /**
-     * @param array $ids
+     * @param int[] $ids
      *
      * @param EntityManagerInterface $em
      *
      * @return static[]
      */
-    public static function byIds(array $ids, EntityManagerInterface $em)
+    public static function byIds(array $ids, EntityManagerInterface $em = null)
     {
         $repository = static::repo($em);
         if (method_exists($repository,'getByIdsIndexedById')) {
@@ -84,7 +73,7 @@ trait RepoStaticAccessTrait
      *
      * @return static|null
      */
-    public static function byIdOrNull($id, EntityManagerInterface $em)
+    public static function byIdOrNull($id, EntityManagerInterface $em = null)
     {
 
         if ($id instanceof static) {
@@ -111,26 +100,12 @@ trait RepoStaticAccessTrait
      */
     public static function extractId($idOrEntity): int
     {
-
-        if (\is_string($idOrEntity) && \is_numeric($idOrEntity)) {
-            return (int) $idOrEntity;
+        $id = static::extractIdOrNull($idOrEntity);
+        if ($id === null) {
+            throw new \RuntimeException("ID '$idOrEntity' is not entity nor numeric value");
         }
 
-        if (\is_int($idOrEntity)) {
-            return $idOrEntity;
-        }
-
-        if ($idOrEntity instanceof static) {
-            // todo: is entity always implements HasIdTrait? Maybe check that it has getter?
-            /** @var HasIdTrait $idOrEntity */
-            if ($idOrEntity->getId() === null) {
-                throw new \RuntimeException('Entity of class '.static::class.' has not ID yet!');
-            }
-            return $idOrEntity->getId();
-        }
-
-        throw new \RuntimeException('ID is not entity nor numeric value');
-
+        return $id;
     }
 
     /**
@@ -140,77 +115,53 @@ trait RepoStaticAccessTrait
      */
     public static function extractIdOrNull($idOrEntity): ?int
     {
-        try {
-            $id = self::extractId($idOrEntity);
-        } catch (\RuntimeException $e) {
-            return null;
+        if (\is_string($idOrEntity) && \is_numeric($idOrEntity)) {
+            return (int) $idOrEntity;
         }
-        return $id;
-    }
 
-
-    /**
-     * @return static
-     * @throws UnableToLockEntityException
-     */
-    public function lockForUpdate()
-    {
-        try {
-            //return $this->lockForUpdateViaLock();
-            return $this->lockForUpdateViaFind();
-        } catch (\Throwable $e) {
-            throw new UnableToLockEntityException('Failed to lock entity for update',0,$e);
+        if (\is_int($idOrEntity)) {
+            return $idOrEntity;
         }
-    }
 
-    /** @noinspection PhpDocMissingThrowsInspection */
-    /**
-     * @param EntityManagerInterface $em
-     *
-     * @return static
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\PessimisticLockException
-     */
-    public function lockForUpdateViaLock(EntityManagerInterface $em)
-    {
-        /** @noinspection PhpUnhandledExceptionInspection */
-        $em->lock($this,\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
-        return $this;
+        if ($idOrEntity instanceof static) {
+            // todo: is entity always implements has getId()? Maybe check that it has getter?
+            if ($idOrEntity->getId() === null) {
+                throw new \RuntimeException('Entity of class '.static::class.' has not ID yet!');
+            }
+            return $idOrEntity->getId();
+        }
+
+        return null;
     }
 
     /**
-     * @param EntityManagerInterface|\Doctrine\ORM\EntityManager $em
+     * @param EntityManagerInterface|null $em
      *
-     * @return static|object
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\TransactionRequiredException
+     * @return int|null
+     * @throws \Doctrine\DBAL\DBALException
+     *
+     * todo: all models should have method _db_table_()
      */
-    public function lockForUpdateViaFind(EntityManagerInterface $em)
+    public static function randomId(EntityManagerInterface $em = null): ?int
     {
-        //$em = AbstractDomain::fromContext()->getEntityManager();
-        // todo: IS IT REALLY ALWAYS REFRESH ENTITY? It seems to be conditional: vendor/doctrine/orm/lib/Doctrine/ORM/EntityManager.php:424
-        // todo: models should have method getId()
-        $locked = $em->find(static::class, $this->getId(), \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
-        return $locked;
-    }
-
-    public static function randomId(EntityManagerInterface $em): ?int
-    {
-        // todo: models should have method _db_table_()
         $table = static::_db_table_();
         /** @noinspection SqlResolve */
         //$stmt = AbstractDomain::fromContext()->getEntityManager()->getConnection()->query("SELECT id FROM $table ORDER BY RANDOM()");
-        $stmt = $em->getConnection()->query("SELECT id FROM $table ORDER BY RANDOM()");
-        $stmt->execute();
+        $stmt = self::knownEntityManager($em)->getConnection()->query('SELECT id FROM :tableName ORDER BY RANDOM() LIMIT 1');
+        $stmt->execute([
+            ':tableName' => $table,
+        ]);
         $id = $stmt->fetchColumn();
         return (int) $id;
     }
 
     /**
+     * @param EntityManagerInterface|null $em
+     *
      * @return static|null
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public static function randomEntity(EntityManagerInterface $em): ?self
+    public static function randomEntity(EntityManagerInterface $em = null): ?self
     {
         $id = static::randomId();
         return static::byId($id, $em);

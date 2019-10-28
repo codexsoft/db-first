@@ -183,8 +183,17 @@ class GenerateEntitiesOperation extends Operation
             "trait {$entityClassName}Trait",
             '{',
             TAB,
-            TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\RepoStaticAccessTrait::class.';',
+
+            //$this->doctrineOrmSchema->generateModelWithRepoAccess || $this->doctrineOrmSchema->generateModelWithLockHelpers
+            //? TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\KnownEntityManagerTrait::class.';' : '',
+
+            $this->doctrineOrmSchema->generateModelWithRepoAccess
+            ? TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\RepoStaticAccessTrait::class.';' : '',
+
+            $this->doctrineOrmSchema->generateModelWithLockHelpers
+                ? TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\LockableEntityTrait::class.';' : '',
             '',
+            $this->generateEntityKnownEntityManager(),
             $this->generateEntityFieldMappingProperties($metadata),
             $this->generateEntityAssociationMappingProperties($metadata),
             $this->generateEntityStubMethods($metadata),
@@ -240,6 +249,21 @@ class GenerateEntitiesOperation extends Operation
         }
 
         return null;
+    }
+
+    protected function generateEntityKnownEntityManager(): string
+    {
+        $lines = [];
+        if ($this->doctrineOrmSchema->knownEntityManagerContainerClass) {
+            $lines[] = TAB.'protected static $knownEntityManagerContainerClass = \\'.$this->doctrineOrmSchema->knownEntityManagerContainerClass.'::class;';
+        }
+        if ($this->doctrineOrmSchema->knownEntityManagerRouterClass) {
+            $lines[] = TAB.'protected static $knownEntityManagerRouterClass = \\'.$this->doctrineOrmSchema->knownEntityManagerRouterClass.'::class;';
+        }
+        if ($lines) {
+            $lines[] = '';
+        }
+        return implode("\n", $lines);
     }
 
     /**

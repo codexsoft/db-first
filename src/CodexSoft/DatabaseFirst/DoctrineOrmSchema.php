@@ -121,6 +121,11 @@ class DoctrineOrmSchema extends AbstractModuleSchema
      */
     public $generateModelWithRepoAccess = true;
 
+    /**
+     * @var bool
+     */
+    public $generateModelWithLockHelpers = false;
+
     /** @var string A string pattern used to match entities that should be processed. */
     public $metadataFilter;
 
@@ -172,6 +177,12 @@ class DoctrineOrmSchema extends AbstractModuleSchema
 
     /** @var bool  */
     public $overwriteRepoClasses = false;
+
+    /** @var string */
+    public $knownEntityManagerContainerClass;
+
+    /** @var string */
+    public $knownEntityManagerRouterClass;
 
 
     public function __construct(string $databaseNamespace = null)
@@ -718,6 +729,39 @@ class DoctrineOrmSchema extends AbstractModuleSchema
     public function setGenerateRepoTraits(bool $generateRepoTraits): DoctrineOrmSchema
     {
         $this->generateRepoTraits = $generateRepoTraits;
+        return $this;
+    }
+
+    /**
+     * @param bool $generateModelWithLockHelpers
+     *
+     * @return DoctrineOrmSchema
+     */
+    public function setGenerateModelWithLockHelpers(bool $generateModelWithLockHelpers): DoctrineOrmSchema
+    {
+        $this->generateModelWithLockHelpers = $generateModelWithLockHelpers;
+        return $this;
+    }
+
+    /**
+     * @param string $knownEntityManagerContainerClass
+     *
+     * @return DoctrineOrmSchema
+     */
+    public function setKnownEntityManagerContainerClass(string $knownEntityManagerContainerClass): DoctrineOrmSchema
+    {
+        $this->knownEntityManagerContainerClass = $knownEntityManagerContainerClass;
+        return $this;
+    }
+
+    /**
+     * @param string $knownEntityManagerRouterClass
+     *
+     * @return DoctrineOrmSchema
+     */
+    public function setKnownEntityManagerRouterClass(string $knownEntityManagerRouterClass): DoctrineOrmSchema
+    {
+        $this->knownEntityManagerRouterClass = $knownEntityManagerRouterClass;
         return $this;
     }
 
