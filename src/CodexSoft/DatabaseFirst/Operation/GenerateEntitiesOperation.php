@@ -561,6 +561,7 @@ class GenerateEntitiesOperation extends Operation
         //$types          = Type::getTypesMap();
         $variableType   = $typeHint ? $this->getType($typeHint) : null;
 
+        // todo: refactor this dirty type-hinting code
         if ($typeHint) {
             // mapping file for another entity should be already exist, but model class can be absent yet
             $mappingFile = $this->doctrineOrmSchema->getPathToMapping().'/'.str_replace( '\\', '.', $typeHint).'.php';
@@ -576,6 +577,11 @@ class GenerateEntitiesOperation extends Operation
             if ($methodTypeHint === 'integer') {
                 $methodTypeHint = 'int';
             }
+
+            if ($methodTypeHint === 'boolean') {
+                $methodTypeHint = 'bool';
+            }
+
         }
 
         //if ($typeHint && !isset($types[$typeHint])) {
