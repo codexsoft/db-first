@@ -100,7 +100,7 @@ abstract class AbstractPgSqlEntityManagerBuilder
     public function build(): EntityManagerInterface
     {
 
-        self::addCustomTypes();
+        static::addCustomTypes();
 
         $config = ($this->configuration instanceof \Doctrine\ORM\Configuration)
             ? $this->configuration
@@ -142,7 +142,7 @@ abstract class AbstractPgSqlEntityManagerBuilder
     {
         $platform = $entityManager->getConnection()->getDatabasePlatform();
 
-        foreach( self::CUSTOM_DOMAINS as $domainName => $domainType ) {
+        foreach( static::CUSTOM_DOMAINS as $domainName => $domainType ) {
             $platform->registerDoctrineTypeMapping($domainName, $domainType);
         }
 
