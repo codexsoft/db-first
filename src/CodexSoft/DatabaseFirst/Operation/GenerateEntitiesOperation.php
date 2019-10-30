@@ -519,6 +519,7 @@ class GenerateEntitiesOperation extends Operation
             return TAB.implode("\n".TAB, $getMethodTemplate);
         }
 
+        // todo: provide return type (nullable in some cases)
         // scalar
         $lines = [
             '/**',
@@ -561,7 +562,9 @@ class GenerateEntitiesOperation extends Operation
         $variableType   = $typeHint ? $this->getType($typeHint) : null;
 
         if ($typeHint) {
-            if (\class_exists($typeHint)) {
+            // mapping file for another entity should be already exist, but model class can be absent yet
+            $mappingFile = $this->doctrineOrmSchema->getPathToMapping().'/'.str_replace( '\\', '.', $typeHint).'.php';
+            if (\class_exists($typeHint) || \file_exists($mappingFile)) {
                 $variableType   =  '\\' . ltrim($variableType, '\\');
                 $methodTypeHint =  '\\' . $typeHint . ' ';
             } elseif (\array_key_exists($typeHint, $this->doctrineOrmSchema->dbToPhpType)) {
