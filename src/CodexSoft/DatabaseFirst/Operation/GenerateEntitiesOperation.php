@@ -664,7 +664,7 @@ class GenerateEntitiesOperation extends Operation
             ' * @param '.($isNullable ? $variableType.'|null' : $variableType).' $'.$variableName,
             ' * @return static',
             ' */',
-            'public function '.$methodName.'('.(($isNullable && $methodTypeHint) ? '?' : '').$methodTypeHint.' $'.$variableName.$variableDefault.')',
+            'public function '.$methodName.'('.(($isNullable && $methodTypeHint) ? '?' : '').$methodTypeHint.' $'.$variableName.$variableDefault.'): self',
             '{',
             TAB.'$this->'.$fieldName.' = $'.$variableName.';',
             TAB.'return $this;',
