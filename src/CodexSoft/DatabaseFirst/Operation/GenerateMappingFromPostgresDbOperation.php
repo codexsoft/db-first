@@ -147,6 +147,14 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                 "{$this->builderVar}->setTable('$tableName');",
             ];
 
+            if (!ksort($metadata->fieldMappings)) {
+                throw new \RuntimeException("Failed to sort fieldMappings for entity $metadata->name");
+            }
+
+            if (!ksort($metadata->associationMappings)) {
+                throw new \RuntimeException("Failed to sort associationMappings for entity $metadata->name");
+            }
+
             foreach ($metadata->fieldMappings as $field) {
 
                 $fieldColumnName = $metadata->getColumnName($field['fieldName']);
