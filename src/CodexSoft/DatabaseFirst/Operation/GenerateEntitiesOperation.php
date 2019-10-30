@@ -137,6 +137,7 @@ class GenerateEntitiesOperation extends Operation
         $shortEntityClassName = $this->getClassName($metadata);
         $fqnEntityClassName = '\\'.$metadata->name;
         $fieldName = lcfirst($shortEntityClassName);
+        $fieldNameOrId = $fieldName.'OrId';
 
         $lines = [
             '<?php',
@@ -148,7 +149,6 @@ class GenerateEntitiesOperation extends Operation
             "trait {$shortEntityClassName}AwareTrait",
             '{',
             TAB,
-            TAB,
             TAB."/** @var $shortEntityClassName */",
             TAB."private \${$fieldName};",
             TAB.'',
@@ -159,6 +159,18 @@ class GenerateEntitiesOperation extends Operation
             TAB.' */',
             TAB."public function set{$shortEntityClassName}({$shortEntityClassName} \${$fieldName}): self",
             TAB.'{',
+            TAB."    \$this->{$fieldName} = \${$fieldName};",
+            TAB.'    return $this;',
+            TAB.'}',
+            TAB.'',
+            TAB.'/**',
+            TAB." * @param $shortEntityClassName|int \${$fieldNameOrId}",
+            TAB.' *',
+            TAB.' * @return static',
+            TAB.' */',
+            TAB."public function set{$shortEntityClassName}OrId(\${$fieldNameOrId}): self",
+            TAB.'{',
+            TAB."    \${$fieldName} = $shortEntityClassName::byId(\${$fieldNameOrId});",
             TAB."    \$this->{$fieldName} = \${$fieldName};",
             TAB.'    return $this;',
             TAB.'}',
