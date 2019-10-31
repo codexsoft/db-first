@@ -118,7 +118,7 @@ class GenerateEntitiesOperation extends Operation
             " * {$tableComment}",
             ' * '.$entityClassName,
             //$this->generateWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.' $em = null)' : ' *',
-            $this->doctrineOrmSchema->generateModelWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.' $em)' : ' *',
+            $this->doctrineOrmSchema->generateModelWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.'|null $em)' : ' *',
             ' * @Doctrine\ORM\Mapping\Entity(repositoryClass="'.$customRepoClass.'")',
             ' */',
             "class $entityClassName",
