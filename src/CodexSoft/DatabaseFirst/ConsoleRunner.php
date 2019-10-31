@@ -64,6 +64,11 @@ class ConsoleRunner
                 'php '.$cliFile.' '.$ormConfigFile.' repos',
             ]),
 
+            'db-remake' => new ExecuteShellCommand([
+                'php '.$cliFile.' '.$ormConfigFile.' db-clean',
+                'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate --no-interaction',
+            ]),
+
             'regenerate' => new ExecuteShellCommand([
                 'php '.$cliFile.' '.$ormConfigFile.' db-clean',
                 'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate --no-interaction',
