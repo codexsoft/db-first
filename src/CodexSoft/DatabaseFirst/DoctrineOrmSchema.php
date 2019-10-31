@@ -101,10 +101,16 @@ class DoctrineOrmSchema extends AbstractModuleSchema
     public $cascadeRefreshAllRelationships = true;
 
     /** @var bool */
+    public $generateModelAwareTraits = true;
+
+    /** @var bool */
     public $overwriteModelAwareTraits = false;
 
     /** @var bool */
-    public $generateModelAwareTraits = true;
+    public $generateSetMethodForModelAwareTraits = false;
+
+    /** @var bool */
+    public $generateSetOrIdMethodForModelAwareTraits = true;
 
     /** @var bool */
     public $overwriteModelClasses = false;
@@ -762,6 +768,28 @@ class DoctrineOrmSchema extends AbstractModuleSchema
     public function setKnownEntityManagerRouterClass(string $knownEntityManagerRouterClass): DoctrineOrmSchema
     {
         $this->knownEntityManagerRouterClass = $knownEntityManagerRouterClass;
+        return $this;
+    }
+
+    /**
+     * @param bool $generateSetOrIdMethodForModelAwareTraits
+     *
+     * @return DoctrineOrmSchema
+     */
+    public function setGenerateSetOrIdMethodForModelAwareTraits(bool $generateSetOrIdMethodForModelAwareTraits): DoctrineOrmSchema
+    {
+        $this->generateSetOrIdMethodForModelAwareTraits = $generateSetOrIdMethodForModelAwareTraits;
+        return $this;
+    }
+
+    /**
+     * @param bool $generateSetMethodForModelAwareTraits
+     *
+     * @return DoctrineOrmSchema
+     */
+    public function setGenerateSetMethodForModelAwareTraits(bool $generateSetMethodForModelAwareTraits): DoctrineOrmSchema
+    {
+        $this->generateSetMethodForModelAwareTraits = $generateSetMethodForModelAwareTraits;
         return $this;
     }
 

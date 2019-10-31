@@ -137,9 +137,48 @@ class GenerateEntitiesOperation extends Operation
         $shortEntityClassName = $this->getClassName($metadata);
         $fqnEntityClassName = '\\'.$metadata->name;
         $fieldName = lcfirst($shortEntityClassName);
-        $fieldNameOrId = $fieldName.'OrId';
 
-        $lines = [
+        //$lines = [
+        //    '<?php',
+        //    '',
+        //    'namespace '.$ds->getNamespaceModelsAwareTraits().';',
+        //    '',
+        //    "use {$fqnEntityClassName};",
+        //    '',
+        //    "trait {$shortEntityClassName}AwareTrait",
+        //    '{',
+        //    TAB,
+        //    TAB."/** @var $shortEntityClassName */",
+        //    TAB."private \${$fieldName};",
+        //    TAB.'',
+        //    TAB.'/**',
+        //    TAB." * @param $shortEntityClassName \$$fieldName",
+        //    TAB.' *',
+        //    TAB.' * @return static',
+        //    TAB.' */',
+        //    TAB."public function set{$shortEntityClassName}({$shortEntityClassName} \${$fieldName}): self",
+        //    TAB.'{',
+        //    TAB."    \$this->{$fieldName} = \${$fieldName};",
+        //    TAB.'    return $this;',
+        //    TAB.'}',
+        //    TAB.'',
+        //    TAB.'/**',
+        //    TAB." * @param $shortEntityClassName|int \${$fieldNameOrId}",
+        //    TAB.' *',
+        //    TAB.' * @return static',
+        //    TAB.' */',
+        //    TAB."public function set{$shortEntityClassName}OrId(\${$fieldNameOrId}): self",
+        //    TAB.'{',
+        //    TAB."    \${$fieldName} = $shortEntityClassName::byId(\${$fieldNameOrId});",
+        //    TAB."    \$this->{$fieldName} = \${$fieldName};",
+        //    TAB.'    return $this;',
+        //    TAB.'}',
+        //    TAB.'',
+        //    '}',
+        //
+        //];
+
+        \array_push($lines, ...[
             '<?php',
             '',
             'namespace '.$ds->getNamespaceModelsAwareTraits().';',
@@ -151,33 +190,46 @@ class GenerateEntitiesOperation extends Operation
             TAB,
             TAB."/** @var $shortEntityClassName */",
             TAB."private \${$fieldName};",
-            TAB.'',
-            TAB.'/**',
-            TAB." * @param $shortEntityClassName \$$fieldName",
-            TAB.' *',
-            TAB.' * @return static',
-            TAB.' */',
-            TAB."public function set{$shortEntityClassName}({$shortEntityClassName} \${$fieldName}): self",
-            TAB.'{',
-            TAB."    \$this->{$fieldName} = \${$fieldName};",
-            TAB.'    return $this;',
-            TAB.'}',
-            TAB.'',
-            TAB.'/**',
-            TAB." * @param $shortEntityClassName|int \${$fieldNameOrId}",
-            TAB.' *',
-            TAB.' * @return static',
-            TAB.' */',
-            TAB."public function set{$shortEntityClassName}OrId(\${$fieldNameOrId}): self",
-            TAB.'{',
-            TAB."    \${$fieldName} = $shortEntityClassName::byId(\${$fieldNameOrId});",
-            TAB."    \$this->{$fieldName} = \${$fieldName};",
-            TAB.'    return $this;',
-            TAB.'}',
+        ]);
+
+        if ($this->doctrineOrmSchema->generateSetMethodForModelAwareTraits) {
+            \array_push($lines, ...[
+                TAB.'',
+                TAB.'/**',
+                TAB." * @param $shortEntityClassName \$$fieldName",
+                TAB.' *',
+                TAB.' * @return static',
+                TAB.' */',
+                TAB."public function set{$shortEntityClassName}({$shortEntityClassName} \${$fieldName}): self",
+                TAB.'{',
+                TAB."    \$this->{$fieldName} = \${$fieldName};",
+                TAB.'    return $this;',
+                TAB.'}',
+            ]);
+        }
+
+        if ($this->doctrineOrmSchema->generateSetOrIdMethodForModelAwareTraits) {
+            $fieldNameOrId = $fieldName.'OrId';
+            \array_push($lines, ...[
+                TAB.'',
+                TAB.'/**',
+                TAB." * @param $shortEntityClassName|int \${$fieldNameOrId}",
+                TAB.' *',
+                TAB.' * @return static',
+                TAB.' */',
+                TAB."public function set{$shortEntityClassName}OrId(\${$fieldNameOrId}): self",
+                TAB.'{',
+                TAB."    \${$fieldName} = $shortEntityClassName::byId(\${$fieldNameOrId});",
+                TAB."    \$this->{$fieldName} = \${$fieldName};",
+                TAB.'    return $this;',
+                TAB.'}',
+            ]);
+        }
+
+        \array_push($lines, ...[
             TAB.'',
             '}',
-
-        ];
+        ]);
 
         return implode("\n", $lines);
     }
