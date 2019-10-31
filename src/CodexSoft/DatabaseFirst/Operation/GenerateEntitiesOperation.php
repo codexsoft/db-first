@@ -178,6 +178,8 @@ class GenerateEntitiesOperation extends Operation
         //
         //];
 
+        $lines = [];
+
         \array_push($lines, ...[
             '<?php',
             '',
