@@ -122,6 +122,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
             //    $code[] = $this->builderVar.'->setDiscriminatorColumn('.implode(', ',$params).');';
             //}
 
+            // todo: this code will be rewritten, think!
             if (!$metadata->isIdentifierComposite && $generatorType = $this->_getIdGeneratorTypeString($metadata->generatorType)) {
                 $code[] = $this->metaVar.'->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_' . $generatorType . ');';
             }
@@ -136,7 +137,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                 "use \\{$this->doctrineOrmSchema->metadataBuilderClass};",
                 '',
                 //"/** @var \$metadata \\$builderShortClass */",
-                '/** @var $metadata '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.' */',
+                '/** @var '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.' '.$this->metaVar.' */',
                 '',
                 '/** @noinspection PhpUnhandledExceptionInspection */',
                 "{$this->metaVar}->setInheritanceType(ClassMetadataInfo::INHERITANCE_TYPE_NONE);", // inheritance now is not supported
