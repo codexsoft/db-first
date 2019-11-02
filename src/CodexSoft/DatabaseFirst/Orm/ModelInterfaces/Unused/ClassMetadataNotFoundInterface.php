@@ -1,11 +1,11 @@
 <?php
 
-namespace CodexSoft\DatabaseFirst\Orm\ModelInterfaces;
+namespace CodexSoft\DatabaseFirst\Orm\ModelInterfaces\Unused;
 
 use Doctrine\ORM\Event\OnClassMetadataNotFoundEventArgs;
 
 /**
- * Сущности, имплементирующие этот интерфейс, будут обработаны в event LifecycleEventSubscriber-е.
+ * @deprecated something not usable
  */
 interface ClassMetadataNotFoundInterface
 {
