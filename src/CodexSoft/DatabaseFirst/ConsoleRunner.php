@@ -38,6 +38,7 @@ class ConsoleRunner
         $console = new Application('CodexSoft Database-first CLI');
         $commandList = [
 
+            'remove-not-mapped' => new ExecuteOperationCommand($dbFirst->removeEntitiesAndReposNotExistingInMapping()),
             'repos' => new ExecuteOperationCommand($dbFirst->generateRepositories()),
             'models' => new ExecuteOperationCommand($dbFirst->generateEntities()),
             'add-migration' => new ExecuteOperationCommand($dbFirst->generateMigration()),

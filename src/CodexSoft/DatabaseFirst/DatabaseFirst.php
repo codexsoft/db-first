@@ -55,4 +55,11 @@ class DatabaseFirst
             ->setDoctrineOrmSchema($this->doctrineOrmSchema);
     }
 
+    public function removeEntitiesAndReposNotExistingInMapping(): Operation\RemoveNotExistingInMappingEntitiesOperation
+    {
+        return (new Operation\RemoveNotExistingInMappingEntitiesOperation)
+            ->setLogger($this->logger)
+            ->setDoctrineOrmSchema($this->doctrineOrmSchema);
+    }
+
 }
