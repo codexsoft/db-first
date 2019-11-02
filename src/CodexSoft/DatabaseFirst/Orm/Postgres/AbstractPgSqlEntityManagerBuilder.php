@@ -2,7 +2,7 @@
 
 namespace CodexSoft\DatabaseFirst\Orm\Postgres;
 
-use CodexSoft\DatabaseFirst\Orm\DoctrineLifecycleEventSubscriber;
+use CodexSoft\DatabaseFirst\Orm\DoctrineEntityLifecycleEventSubscriber;
 use \MartinGeorgiev\Doctrine\DBAL\Types as MartinGeorgievTypes;
 use CodexSoft\DatabaseFirst\Orm\Postgres\Types\BigIntCastingToIntType;
 use Doctrine\Common\Cache\CacheProvider;
@@ -164,7 +164,7 @@ abstract class AbstractPgSqlEntityManagerBuilder
 
     public function tuneEventManager(EventManager $eventManager): void
     {
-        $eventManager->addEventSubscriber(new DoctrineLifecycleEventSubscriber);
+        $eventManager->addEventSubscriber(new DoctrineEntityLifecycleEventSubscriber);
     }
 
     /**
