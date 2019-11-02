@@ -2,14 +2,14 @@
 
 namespace CodexSoft\DatabaseFirst\Orm\ModelInterfaces;
 
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\ORM\Event\OnClassMetadataNotFoundEventArgs;
 
 /**
  * Сущности, имплементирующие этот интерфейс, будут обработаны в event LifecycleEventSubscriber-е.
  */
-interface PostPersistInterface
+interface ClassMetadataNotFoundInterface
 {
 
-    public function onPostPersist(LifecycleEventArgs $args): void;
+    public function onClassMetadataNotFound(OnClassMetadataNotFoundEventArgs $args): void;
 
 }

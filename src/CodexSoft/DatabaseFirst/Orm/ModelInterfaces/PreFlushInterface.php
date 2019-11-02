@@ -2,14 +2,14 @@
 
 namespace CodexSoft\DatabaseFirst\Orm\ModelInterfaces;
 
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\ORM\Event\PreFlushEventArgs;
 
 /**
  * Сущности, имплементирующие этот интерфейс, будут обработаны в event LifecycleEventSubscriber-е.
  */
-interface PostPersistInterface
+interface PreFlushInterface
 {
 
-    public function onPostPersist(LifecycleEventArgs $args): void;
+    function onPreFlush(PreFlushEventArgs $args): void;
 
 }

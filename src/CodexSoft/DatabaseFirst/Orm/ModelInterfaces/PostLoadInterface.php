@@ -2,13 +2,14 @@
 
 namespace CodexSoft\DatabaseFirst\Orm\ModelInterfaces;
 
+use Doctrine\ORM\Event\LifecycleEventArgs;
+
 /**
  * Сущности, имплементирующие этот интерфейс, будут обработаны в event LifecycleEventSubscriber-е.
- * Interface PostLoadingInterface
  */
-interface PostLoadingInterface
+interface PostLoadInterface
 {
 
-    public function onPostLoad(): void;
+    public function onPostLoad(LifecycleEventArgs $args): void;
 
 }

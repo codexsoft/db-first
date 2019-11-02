@@ -2,14 +2,14 @@
 
 namespace CodexSoft\DatabaseFirst\Orm\ModelInterfaces;
 
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\ORM\Event\OnClearEventArgs;
 
 /**
  * Сущности, имплементирующие этот интерфейс, будут обработаны в event LifecycleEventSubscriber-е.
  */
-interface PostPersistInterface
+interface OnClearInterface
 {
 
-    public function onPostPersist(LifecycleEventArgs $args): void;
+    function onClear(OnClearEventArgs $args): void;
 
 }

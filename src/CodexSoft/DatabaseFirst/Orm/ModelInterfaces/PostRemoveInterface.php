@@ -7,9 +7,9 @@ use Doctrine\ORM\Event\LifecycleEventArgs;
 /**
  * Сущности, имплементирующие этот интерфейс, будут обработаны в event LifecycleEventSubscriber-е.
  */
-interface PostPersistInterface
+interface PostRemoveInterface
 {
 
-    public function onPostPersist(LifecycleEventArgs $args): void;
+    public function onPostRemove(LifecycleEventArgs $args): void;
 
 }
