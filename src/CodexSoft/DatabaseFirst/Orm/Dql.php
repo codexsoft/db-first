@@ -735,4 +735,57 @@ abstract class Dql
     {
         return number_format($coord, 6, '.', '');
     }
+
+    /**
+     * @uses \MartinGeorgiev\Doctrine\ORM\Query\AST\Functions\IsContainedBy
+     * @param QueryBuilder $qb
+     * @param $left
+     * @param $right
+     *
+     * @return string
+     */
+    public static function isContainedBy(QueryBuilder $qb, $left, $right): string
+    {
+        return Dql::dql($qb, 'IS_CONTAINED_BY('.$left.', '.$right.') = TRUE');
+    }
+
+    /**
+     * @uses \MartinGeorgiev\Doctrine\ORM\Query\AST\Functions\IsContainedBy
+     * @param QueryBuilder $qb
+     * @param $left
+     * @param $right
+     *
+     * @return string
+     */
+    public static function isNotContainedBy(QueryBuilder $qb, $left, $right): string
+    {
+        return Dql::dql($qb, 'IS_CONTAINED_BY('.$left.', '.$right.') = FALSE');
+    }
+
+    /**
+     * @uses \MartinGeorgiev\Doctrine\ORM\Query\AST\Functions\Contains
+     * @param QueryBuilder $qb
+     * @param $left
+     * @param $right
+     *
+     * @return string
+     */
+    public static function contains(QueryBuilder $qb, $left, $right): string
+    {
+        return Dql::dql($qb, 'CONTAINS('.$left.', '.$right.') = TRUE');
+    }
+
+    /**
+     * @uses \MartinGeorgiev\Doctrine\ORM\Query\AST\Functions\Contains
+     * @param QueryBuilder $qb
+     * @param $left
+     * @param $right
+     *
+     * @return string
+     */
+    public static function notContains(QueryBuilder $qb, $left, $right): string
+    {
+        return Dql::dql($qb, 'CONTAINS('.$left.', '.$right.') = FALSE');
+    }
+
 }
