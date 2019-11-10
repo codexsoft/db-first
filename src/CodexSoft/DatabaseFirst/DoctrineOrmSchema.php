@@ -190,6 +190,9 @@ class DoctrineOrmSchema extends AbstractModuleSchema
     /** @var string */
     public $knownEntityManagerRouterClass;
 
+    /** @var string */
+    public $dqlHelperClass = \CodexSoft\DatabaseFirst\Orm\Dql::class;
+
 
     public function __construct(string $databaseNamespace = null)
     {
@@ -790,6 +793,17 @@ class DoctrineOrmSchema extends AbstractModuleSchema
     public function setGenerateSetMethodForModelAwareTraits(bool $generateSetMethodForModelAwareTraits): DoctrineOrmSchema
     {
         $this->generateSetMethodForModelAwareTraits = $generateSetMethodForModelAwareTraits;
+        return $this;
+    }
+
+    /**
+     * @param string $dqlHelperClass
+     *
+     * @return DoctrineOrmSchema
+     */
+    public function setDqlHelperClass(string $dqlHelperClass): DoctrineOrmSchema
+    {
+        $this->dqlHelperClass = $dqlHelperClass;
         return $this;
     }
 

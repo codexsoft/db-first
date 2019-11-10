@@ -4,6 +4,7 @@ namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Helpers\Classes;
 use CodexSoft\DatabaseFirst\Helpers\Doctrine;
+use CodexSoft\DatabaseFirst\Orm\Dql;
 use CodexSoft\OperationsSystem\Operation;
 use CodexSoft\OperationsSystem\Exception\OperationException;
 use Doctrine\ORM\EntityRepository;
@@ -37,6 +38,18 @@ class GenerateReposOperation extends Operation
 
     /** @var string Which interface repo implements */
     private $repoInterface;
+
+    /**
+     * @throws OperationException
+     */
+    protected function validateInputData(): void
+    {
+        $this->assert(\class_exists($this->doctrineOrmSchema->dqlHelperClass),
+            $this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not exists');
+
+        $this->assert(\is_subclass_of($this->doctrineOrmSchema->dqlHelperClass, Dql::class),
+            $this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not extend '.Dql::class);
+    }
 
     /**
      * @return void
@@ -163,7 +176,7 @@ class GenerateReposOperation extends Operation
             '',
             'use '.$this->doctrineOrmSchema->getNamespaceModels().';',
             'use '.\Doctrine\ORM\Query\Expr::class.';',
-            'use '.\CodexSoft\DatabaseFirst\Orm\Dql::class.';',
+            'use '.$this->doctrineOrmSchema->dqlHelperClass.';',
             '',
             '/**',
             ' */',
@@ -171,7 +184,7 @@ class GenerateReposOperation extends Operation
             '{',
         ];
 
-        $importedDqlHelperClass = Classes::short(\CodexSoft\DatabaseFirst\Orm\Dql::class);
+        $importedDqlHelperClass = Classes::short($this->doctrineOrmSchema->dqlHelperClass);
 
         $result .= implode(self::LS, $code);
 
