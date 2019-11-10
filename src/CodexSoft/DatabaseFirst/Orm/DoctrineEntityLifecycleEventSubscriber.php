@@ -13,7 +13,7 @@ use Doctrine\ORM\Event\LifecycleEventArgs;
 use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\PostPersistInterface;
 use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\PostLoadInterface;
 use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\PrePersistInterface;
-use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\ValidateableInterface;
+//use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\ValidateableInterface;
 
 /**
  * executes entity callbacks if defined
@@ -99,9 +99,9 @@ class DoctrineEntityLifecycleEventSubscriber implements EventSubscriber
     {
         $entity = $args->getEntity();
 
-        if ($entity instanceof ValidateableInterface) {
-            $entity->validate();
-        }
+        //if ($entity instanceof ValidateableInterface) {
+        //    $entity->validate();
+        //}
 
         if ($entity instanceof PrePersistInterface) {
             $entity->onPrePersist($args);
