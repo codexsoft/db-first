@@ -648,6 +648,10 @@ class GenerateEntitiesOperation extends Operation
                 $methodTypeHint = 'bool';
             }
 
+            if (\in_array($methodTypeHint, ['integer[]', 'string[]', 'float[]', 'boolean[]'])) {
+                $methodTypeHint = 'array';
+            }
+
         }
 
         //if ($typeHint && !isset($types[$typeHint])) {
