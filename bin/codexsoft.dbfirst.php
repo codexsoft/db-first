@@ -1,6 +1,6 @@
 <?php
 
-use CodexSoft\Code\Helpers\Cli;
+use CodexSoft\Cli\Cli;
 use CodexSoft\DatabaseFirst\ConsoleRunner;
 use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 

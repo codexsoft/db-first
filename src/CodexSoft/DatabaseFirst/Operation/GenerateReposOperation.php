@@ -47,7 +47,7 @@ class GenerateReposOperation extends Operation
         $this->assert(\class_exists($this->doctrineOrmSchema->dqlHelperClass),
             $this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not exists');
 
-        $this->assert(\is_subclass_of($this->doctrineOrmSchema->dqlHelperClass, Dql::class),
+        $this->assert($this->doctrineOrmSchema->dqlHelperClass === Dql::class || \is_subclass_of($this->doctrineOrmSchema->dqlHelperClass, Dql::class),
             $this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not extend '.Dql::class);
     }
 
