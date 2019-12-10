@@ -3,6 +3,7 @@
 namespace CodexSoft\DatabaseFirst\Orm\Postgres;
 
 use CodexSoft\DatabaseFirst\Orm\DoctrineEntityLifecycleEventSubscriber;
+use Doctrine\DBAL\Types\Types;
 use \MartinGeorgiev\Doctrine\DBAL\Types as MartinGeorgievTypes;
 use CodexSoft\DatabaseFirst\Orm\Postgres\Types\BigIntCastingToIntType;
 use Doctrine\Common\Cache\CacheProvider;
@@ -201,7 +202,7 @@ abstract class AbstractPgSqlEntityManagerBuilder
             Type::overrideType(UuidType::NAME, UuidType::class);
         }
 
-        Type::overrideType( Type::BIGINT, BigIntCastingToIntType::class );
+        Type::overrideType( Types::BIGINT, BigIntCastingToIntType::class );
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace CodexSoft\DatabaseFirst\Operation;
 
-use CodexSoft\Code\Helpers\Classes;
+use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\Helpers\Doctrine;
 use CodexSoft\DatabaseFirst\Orm\Dql;
 use CodexSoft\OperationsSystem\Operation;

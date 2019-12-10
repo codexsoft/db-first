@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: dx
- * Date: 27.04.18
- * Time: 0:24
- */
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
@@ -16,10 +10,11 @@ use Doctrine\ORM\Query\Expr\Literal;
 use Doctrine\ORM\Query\Expr\Orx;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Query\Expr\Comparison;
-use CodexSoft\Code\Constants;
 
 abstract class Dql
 {
+
+    private const FORMAT_YMD_HIS = 'Y-m-d H:i:s';
 
     /** @var int */
     static private $counter = 0;
@@ -581,11 +576,11 @@ abstract class Dql
     private static function timeStampDiff( QueryBuilder $qb, $value1, $value2, $part = 'SECOND'): string
     {
         if ($value1 instanceof \DateTime) {
-            $value1 = "'".Carbon::instance($value1)->format(Constants::FORMAT_YMD_HIS)."'";
+            $value1 = "'".Carbon::instance($value1)->format(self::FORMAT_YMD_HIS)."'";
         }
 
         if ($value2 instanceof \DateTime) {
-            $value2 = "'".Carbon::instance($value2)->format(Constants::FORMAT_YMD_HIS)."'";
+            $value2 = "'".Carbon::instance($value2)->format(self::FORMAT_YMD_HIS)."'";
         }
 
         return Dql::dql($qb,"TIMESTAMPDIFF($part, $value1, $value2)");

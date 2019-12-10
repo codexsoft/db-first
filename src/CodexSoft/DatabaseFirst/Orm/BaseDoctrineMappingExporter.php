@@ -7,7 +7,8 @@ use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Tools\Export\Driver\AbstractExporter;
-use const CodexSoft\Code\TAB;
+
+use const CodexSoft\Shortcut\TAB;
 
 /**
  * Created by PhpStorm.
@@ -17,7 +18,7 @@ use const CodexSoft\Code\TAB;
  */
 
 /**
- * @deprecated should be rewrited?
+ * @deprecated mapping is generated now via mapping command (should be rewrited or deleted)?
  */
 abstract class BaseDoctrineMappingExporter extends AbstractExporter
 {

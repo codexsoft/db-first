@@ -7,7 +7,6 @@ use Doctrine\ORM\EntityManagerInterface;
 
 trait KnownEntityManagerTrait
 {
-
     /**
      * @param EntityManagerInterface|null $em
      *
@@ -32,7 +31,6 @@ trait KnownEntityManagerTrait
         }
 
         if (\property_exists(static::class, 'knownEntityManagerRouterClass')) {
-            /** @noinspection PhpUndefinedFieldInspection */
             $emRouterClass = static::$knownEntityManagerRouterClass;
 
             /** @var KnownEntityManagerRouterInterface $emRouterClass */

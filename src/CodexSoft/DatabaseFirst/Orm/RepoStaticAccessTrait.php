@@ -8,7 +8,7 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
-use CodexSoft\Code\Helpers\Classes;
+use CodexSoft\Code\Classes\Classes;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -28,7 +28,6 @@ trait RepoStaticAccessTrait
      */
     public static function repo(EntityManagerInterface $em = null)
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
         return static::knownEntityManager($em)->getRepository(static::class);
     }
 

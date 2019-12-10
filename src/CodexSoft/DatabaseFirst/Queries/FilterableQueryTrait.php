@@ -3,13 +3,15 @@
 namespace CodexSoft\DatabaseFirst\Queries;
 
 use CodexSoft\Code\Helpers\DateAndTime;
-use CodexSoft\Code\Constants;
 
 trait FilterableQueryTrait
 {
 
     /** @var array */
     private $filters = [];
+
+    /** @var string */
+    private $filterDateTimeZone = 'UTC';
 
     /**
      * @param array $filters
@@ -22,12 +24,23 @@ trait FilterableQueryTrait
         return $this;
     }
 
+    /**
+     * @param string $filterDateTimeZone
+     *
+     * @return static
+     */
+    public function setFilterDateTimeZone(string $filterDateTimeZone): self
+    {
+        $this->filterDateTimeZone = $filterDateTimeZone;
+        return $this;
+    }
+
     private function normalizeFilters(): void
     {
         $normalizedFilters = [];
         foreach ($this->filters as $filter => $value) {
             if ($value instanceof \DateTime) {
-                $normalizedFilters[$filter] = DateAndTime::convertUtcDateTimeToLocalString($value, Constants::TZ_UTC);
+                $normalizedFilters[$filter] = DateAndTime::convertUtcDateTimeToLocalString($value, $this->filterDateTimeZone);
             } else {
                 $normalizedFilters[$filter] = $value;
             }

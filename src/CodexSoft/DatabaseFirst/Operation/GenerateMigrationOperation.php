@@ -2,7 +2,7 @@
 
 namespace CodexSoft\DatabaseFirst\Operation;
 
-use CodexSoft\Code\Helpers\Classes;
+use CodexSoft\Code\Classes\Classes;
 use CodexSoft\OperationsSystem\Operation;
 use Symfony\Component\Filesystem\Filesystem;
 

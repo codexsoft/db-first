@@ -2,8 +2,7 @@
 namespace CodexSoft\DatabaseFirst\Operation;
 
 use \MartinGeorgiev\Doctrine\DBAL\Types as MartinGeorgievTypes;
-use CodexSoft\Code\Helpers\Classes;
-use CodexSoft\Code\Shortcuts;
+use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 use CodexSoft\OperationsSystem\Exception\OperationException;
 use CodexSoft\OperationsSystem\Operation;
@@ -13,8 +12,10 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Mapping\Driver\DatabaseDriver;
 use Doctrine\ORM\Tools\DisconnectedClassMetadataFactory;
 use Symfony\Component\Filesystem\Filesystem;
-use function CodexSoft\Code\str;
-use const CodexSoft\Code\TAB;
+
+use function Stringy\create as str;
+
+use const CodexSoft\Shortcut\TAB;
 
 /**
  * Class GenerateMappingOperation
@@ -68,7 +69,6 @@ class GenerateMappingFromPostgresDbOperation extends Operation
         $this->builderVar = $this->doctrineOrmSchema->builderVar;
         $this->metaVar = $this->doctrineOrmSchema->metaVar;
 
-        Shortcuts::register();
         $em = $this->doctrineOrmSchema->getEntityManager();
         $databaseDriver = new DatabaseDriver($em->getConnection()->getSchemaManager());
 

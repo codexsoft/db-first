@@ -2,7 +2,7 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
-use CodexSoft\Code\Helpers\Classes;
+use CodexSoft\Code\Classes\Classes;
 use CodexSoft\Code\Traits\Loggable;
 use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 use CodexSoft\DatabaseFirst\Helpers\Doctrine;
@@ -14,14 +14,15 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Mapping\MappingException;
 use Doctrine\ORM\Tools\EntityGenerator;
-use const CodexSoft\Code\TAB;
-use function CodexSoft\Code\str;
+use function Stringy\create as str;
+
+use const CodexSoft\Shortcut\TAB;
 
 /**
  * todo table comment (it seems it will be very hacky in doctrine...)
  * todo association comment (it seems it will be very hacky in doctrine...)
  * todo: consider split MODE_SINGLE_CLASS, MODE_CLASS_USING_TRAIT, MODE_TRAIT_FOR_CLASS into 3 commands
- * @deprecated
+ * @deprecated entities are now generated via `models` command
  */
 class DoctrineEntitiesGenerator extends EntityGenerator
 {

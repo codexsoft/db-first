@@ -3,8 +3,7 @@
 
 namespace CodexSoft\DatabaseFirst\Operation;
 
-use CodexSoft\Code\Helpers\Classes;
-use CodexSoft\Code\Shortcuts;
+use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\Helpers\Doctrine;
 use CodexSoft\OperationsSystem\Operation;
 use Doctrine\Common\Inflector\Inflector;
@@ -17,8 +16,10 @@ use Doctrine\ORM\Mapping\MappingException;
 use Doctrine\ORM\Tools\Console\MetadataFilter;
 use Doctrine\ORM\Tools\DisconnectedClassMetadataFactory;
 use Symfony\Component\Filesystem\Filesystem;
-use function CodexSoft\Code\str;
-use const CodexSoft\Code\TAB;
+
+use function Stringy\create as str;
+
+use const CodexSoft\Shortcut\TAB;
 
 /**
  * @method void execute()
@@ -42,7 +43,6 @@ class GenerateEntitiesOperation extends Operation
      */
     protected function handle()
     {
-        Shortcuts::register();
         $this->em = $this->doctrineOrmSchema->getEntityManager();
 
         $cmf = new DisconnectedClassMetadataFactory();

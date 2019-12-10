@@ -2,14 +2,15 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
-use CodexSoft\Code\Helpers\Classes;
+use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 use \MartinGeorgiev\Doctrine\DBAL\Types as MartinGeorgievTypes;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
-use function CodexSoft\Code\str;
-use const CodexSoft\Code\TAB;
+use function Stringy\create as str;
+
+use const CodexSoft\Shortcut\TAB;
 
 /**
  * Created by PhpStorm.
@@ -19,7 +20,7 @@ use const CodexSoft\Code\TAB;
  */
 
 /**
- * @deprecated should be rewrited?
+ * @deprecated mapping is generated now via mapping command (should be rewrited or deleted)
  */
 class DoctrineMappingExporter extends BaseDoctrineMappingExporter
 {

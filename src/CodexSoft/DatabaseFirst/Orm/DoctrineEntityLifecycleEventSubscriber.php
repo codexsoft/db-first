@@ -8,12 +8,10 @@ use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\PreRemoveInterface;
 use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\PreUpdateInterface;
 use Doctrine\ORM\Events;
 use Doctrine\Common\EventSubscriber;
-//use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\PostPersistInterface;
 use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\PostLoadInterface;
 use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\PrePersistInterface;
-//use CodexSoft\DatabaseFirst\Orm\ModelInterfaces\ValidateableInterface;
 
 /**
  * executes entity callbacks if defined

@@ -2,11 +2,11 @@
 
 namespace CodexSoft\DatabaseFirst\Migration;
 
-use CodexSoft\Code\Helpers\Arrays;
-use CodexSoft\Code\Helpers\Classes;
+use CodexSoft\Code\Arrays\Arrays;
+use CodexSoft\Code\Classes\Classes;
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema;
-use function CodexSoft\Code\str;
+use function Stringy\create as str;
 
 /**
  * Auto-generated Migration: Please modify to your needs!

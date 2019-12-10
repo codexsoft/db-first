@@ -1,15 +1,10 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: dx
- * Date: 22.08.17
- * Time: 19:25
- */
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
 use CodexSoft\DatabaseFirst\Exceptions\UnableToLockEntityException;
 use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -38,7 +33,6 @@ trait LockableEntityTrait
         }
     }
 
-    /** @noinspection PhpDocMissingThrowsInspection */
     /**
      * @param EntityManagerInterface $em
      *
@@ -54,7 +48,7 @@ trait LockableEntityTrait
     }
 
     /**
-     * @param EntityManagerInterface|\Doctrine\ORM\EntityManager $em
+     * @param EntityManagerInterface|EntityManager $em
      *
      * @return static|object locked entity
      * @throws \Doctrine\ORM\ORMException

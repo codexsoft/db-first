@@ -2,13 +2,16 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
-use CodexSoft\Code\Helpers\Classes;
-use CodexSoft\Code\Helpers\Strings;
+use CodexSoft\Code\Classes\Classes;
+use CodexSoft\Code\Strings\Strings;
 use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 
+/**
+ * @deprecated mapping and entity files are now generated via `mapping` and `models` commands
+ */
 class ModelMetadataInheritanceBuilder extends ClassMetadataBuilder
 {
 

@@ -3,8 +3,7 @@
 
 namespace CodexSoft\DatabaseFirst\Operation;
 
-use CodexSoft\Code\Helpers\Files;
-use CodexSoft\Code\Shortcuts;
+use CodexSoft\Code\Files\Files;
 use CodexSoft\OperationsSystem\Operation;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
@@ -12,7 +11,8 @@ use Doctrine\ORM\Tools\Console\MetadataFilter;
 use Doctrine\ORM\Tools\DisconnectedClassMetadataFactory;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
-use function CodexSoft\Code\str;
+
+use function Stringy\create as str;
 
 /**
  * @method void execute()
@@ -33,7 +33,6 @@ class RemoveNotExistingInMappingEntitiesOperation extends Operation
      */
     protected function handle()
     {
-        Shortcuts::register();
         $this->em = $this->doctrineOrmSchema->getEntityManager();
 
         $cmf = new DisconnectedClassMetadataFactory();

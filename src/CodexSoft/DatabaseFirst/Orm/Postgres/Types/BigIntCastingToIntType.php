@@ -20,7 +20,7 @@
 namespace CodexSoft\DatabaseFirst\Orm\Postgres\Types;
 
 use Doctrine\DBAL\Types\IntegerType;
-use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 
 /**
  * Type that maps a database BIGINT to a PHP string.
@@ -35,7 +35,7 @@ class BigIntCastingToIntType extends IntegerType
      */
     public function getName()
     {
-        return Type::BIGINT;
+        return Types::BIGINT;
     }
 
 }

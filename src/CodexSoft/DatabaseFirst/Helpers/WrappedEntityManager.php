@@ -2,6 +2,7 @@
 
 namespace CodexSoft\DatabaseFirst\Helpers;
 
+use CodexSoft\DatabaseFirst\Orm\Postgres\AbstractPgSqlEntityManagerBuilder;
 use Doctrine\DBAL\Driver\PDOConnection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -105,13 +106,14 @@ class WrappedEntityManager
     /**
      * Helper to re-open broken entityManger with same parameters (if broken)
      *
+     * @param AbstractPgSqlEntityManagerBuilder $builder
      * @param bool $onlyIfClosed
      *
      * @return EntityManagerInterface
      */
-    public function reopenEntityManager(bool $onlyIfClosed = false): EntityManagerInterface
+    public function reopenEntityManager(AbstractPgSqlEntityManagerBuilder $builder, bool $onlyIfClosed = false): EntityManagerInterface
     {
-        $reopenedEm = Doctrine::reopenEntityManager($this->entityManager, $onlyIfClosed);
+        $reopenedEm = Doctrine::reopenEntityManager($this->entityManager, $builder, $onlyIfClosed);
         $this->entityManager = $reopenedEm;
         return $reopenedEm;
     }

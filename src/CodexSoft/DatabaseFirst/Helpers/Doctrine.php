@@ -2,24 +2,43 @@
 
 namespace CodexSoft\DatabaseFirst\Helpers;
 
+use CodexSoft\DatabaseFirst\Orm\Postgres\AbstractPgSqlEntityManagerBuilder;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\QueryBuilder;
-use CodexSoft\Code\Helpers\Arrays;
-use CodexSoft\Code\Helpers\Strings;
-use CodexSoft\Code\Helpers\Traits;
-use CodexSoft\Code\Constants;
-use App\Domain\Model\Traits\HasIdTrait;
-use CodexSoft\Domain\AbstractDomain;
-use function App\logger;
-use function CodexSoft\Code\str;
+use CodexSoft\Code\Arrays\Arrays;
+use CodexSoft\Code\Strings\Strings;
+use Psr\Log\LoggerInterface;
+
+use Psr\Log\NullLogger;
+
+use function Stringy\create as str;
 
 class Doctrine
 {
 
+    private const FORMAT_YMD_HIS = 'Y-m-d H:i:s';
+
     public const NULL = 'CASE WHEN 1=1 THEN :null ELSE :null END';
+
+    public const SQL_FORMATTER_SIMPLE = 1;
+    public const SQL_FORMATTER_COMPLEX = 2;
+    public const SQL_FORMATTER_DEFAULT = self::SQL_FORMATTER_SIMPLE;
+
+    /** @var LoggerInterface */
+    private static $logger;
+
+    private static function getLogger(): LoggerInterface
+    {
+        if (!self::$logger instanceof LoggerInterface) {
+            self::$logger = new NullLogger();
+        }
+
+        return self::$logger;
+    }
 
     /**
      * @param array|Collection $collectionA
@@ -50,6 +69,15 @@ class Doctrine
 
     }
 
+    /**
+     * @param EntityManagerInterface $em
+     * @param $object
+     * @param array $attributes
+     *
+     * @return array
+     * @throws \Doctrine\ORM\Mapping\MappingException
+     * @throws \Doctrine\ORM\ORMException
+     */
     public static function prepareAttributes(EntityManagerInterface $em, $object, array $attributes)
     {
         foreach ($attributes as $fieldName => &$fieldValue) {
@@ -60,7 +88,7 @@ class Doctrine
             $association = $em->getClassMetadata(get_class($object))
                 ->getAssociationMapping($fieldName);
 
-            if (is_null($fieldValue)) {
+            if ($fieldValue === null) {
                 continue;
             }
 
@@ -72,30 +100,50 @@ class Doctrine
         return $attributes;
     }
 
+    /**
+     * @param EntityManagerInterface $em
+     * @param $object
+     * @param array $attributes
+     *
+     * @throws \Doctrine\ORM\Mapping\MappingException
+     * @throws \Doctrine\ORM\ORMException
+     */
     public static function fillEntityFromArray(EntityManagerInterface $em, &$object, array $attributes)
     {
         $attributes = self::prepareAttributes($em, $object, $attributes);
 
         foreach ($attributes as $name => $value) {
             $methodName = 'set'.str($name)->upperCamelize();
-            if (method_exists($object, $methodName)) {
+            if (\method_exists($object, $methodName)) {
                 $object->{$methodName}($value);
             }
         }
     }
 
-    public static function dqlExplain(QueryBuilder $qb): string
+    public static function dqlExplain(QueryBuilder $qb, int $formatter = self::SQL_FORMATTER_DEFAULT): string
     {
 
         $query = $qb->getQuery();
         $dql = $query->getDQL();
         $sql = $query->getSQL();
 
-        $sqlFormatted = class_exists('SqlFormatter') ? \SqlFormatter::format($sql, false) : self::simplyFormatSQL($sql);
-        $dqlFormatted = class_exists('SqlFormatter') ? \SqlFormatter::format($dql, false) : self::simplyFormatSQL($dql);
+        switch ($formatter) {
+
+            case self::SQL_FORMATTER_COMPLEX:
+                $sqlFormatted = SqlFormatter::format($sql, false);
+                $dqlFormatted = SqlFormatter::format($dql, false);
+                break;
+
+            case self::SQL_FORMATTER_SIMPLE:
+            default:
+                $sqlFormatted = self::simplyFormatSQL($sql);
+                $dqlFormatted = self::simplyFormatSQL($dql);
+                break;
+        }
+
         $dqlParams = Doctrine::showDQLParams($qb);
 
-        return implode("\n", [
+        return \implode("\n", [
             '- DQL - - - - - - - - - - - - - - - - - - - - - - - - - - - ',
             '',
             $dqlFormatted,
@@ -115,8 +163,12 @@ class Doctrine
      * for debug purposes, acts if DQL_DEBUG_MODE=true in .env
      *
      * @param QueryBuilder $qb
+     * @param int $formatter
+     *
+     * @noinspection PhpUnusedLocalVariableInspection
+     * @noinspection OnlyWritesOnParameterInspection
      */
-    public static function dqlForXDebug(QueryBuilder $qb): void
+    public static function dqlForXDebug(QueryBuilder $qb, int $formatter = self::SQL_FORMATTER_DEFAULT): void
     {
 
         if (false === (bool) \getenv('DQL_XDEBUG_MODE')) {
@@ -124,7 +176,7 @@ class Doctrine
         }
 
         $query = $qb->getQuery();
-        $dqlData = self::dqlExplain($qb);
+        $dqlData = self::dqlExplain($qb, $formatter);
         try {
             $result = $query->getResult();
         } catch (\Throwable $exception) {
@@ -135,7 +187,7 @@ class Doctrine
             }
         }
 
-    } // set debug stop point here
+    } // tip: set debug stop point here
 
     private static function simplyFormatSQL($sql): string
     {
@@ -157,13 +209,15 @@ class Doctrine
      * for debug purposes, acts if DQL_DEBUG_MODE=true in .env
      *
      * @param QueryBuilder $qb
+     * @param int $formatter
      */
-    public static function dqlExplainAndDie(QueryBuilder $qb): void
+    public static function dqlExplainAndDie(QueryBuilder $qb, int $formatter = self::SQL_FORMATTER_DEFAULT): void
     {
         if (false === (bool) \getenv('DQL_DEBUG_MODE')) {
             return;
         }
-        die(self::dqlExplain($qb));
+
+        die(self::dqlExplain($qb, $formatter));
     }
 
     public static function showDQLParams(QueryBuilder $qb): string
@@ -188,7 +242,7 @@ class Doctrine
                 if (\method_exists($value, 'getId')) {
                     $stringifiedValue .= ' (id = '.\var_export($value->getId(), true).')';
                 } elseif ($value instanceof \DateTime) {
-                    $stringifiedValue .= ' ('.$value->format(Constants::FORMAT_YMD_HIS).' '.$value->getTimezone()->getName().')';
+                    $stringifiedValue .= ' ('.$value->format(self::FORMAT_YMD_HIS).' '.$value->getTimezone()->getName().')';
                 }
             } elseif (\is_array($value)) {
                 $stringifiedValue = \print_r($value, true);
@@ -198,7 +252,6 @@ class Doctrine
 
             $string .= "\n".++$i.'. '.$parameter->getName().' = '.$stringifiedValue;
         }
-        //$string .= "\n";
 
         return $string;
 
@@ -207,32 +260,6 @@ class Doctrine
     public static function getIds(QueryBuilder $qb, string $alias): array
     {
         return \array_column($qb->select($alias.'.id')->getQuery()->getScalarResult(), 'id');
-    }
-
-    public static function ensureEntityHasId(...$objects): void
-    {
-        $domain = AbstractDomain::fromContext();
-
-        $entitiesToPersist = [];
-
-        foreach ($objects as $object) {
-            if (!\is_object($object)) {
-                continue;
-            }
-
-            /** @var HasIdTrait $object */
-            if (Traits::isUsedBy($object, HasIdTrait::class) && !$object->getId()) {
-                $entitiesToPersist[] = $object;
-            }
-
-        }
-
-        if (!\count($entitiesToPersist)) {
-            return;
-        }
-
-        $domain->persistAndFlushArray($entitiesToPersist);
-
     }
 
     /**
@@ -347,9 +374,9 @@ class Doctrine
      * ! Set up database schema via migrations before running database-based tests
      * ! Add clear_tables routine before running tests, using database
      *
-     * @param \Doctrine\DBAL\Connection $connection
+     * @param Connection $connection
      */
-    public static function truncateAllTables(\Doctrine\DBAL\Connection $connection): void
+    public static function truncateAllTables(Connection $connection): void
     {
 
         $userName = $connection->getUsername();
@@ -363,10 +390,10 @@ class Doctrine
     /**
      * to improve performance, add optional attribute to specify tables to truncate
      *
-     * @param \Doctrine\DBAL\Connection $connection
+     * @param Connection $connection
      * @param string|string[] $tables
      */
-    public static function truncateSpecificTables(\Doctrine\DBAL\Connection $connection, $tables): void
+    public static function truncateSpecificTables(Connection $connection, $tables): void
     {
 
         if (!$tables) {
@@ -388,10 +415,10 @@ class Doctrine
     /**
      * Deletes all tables in database using delete_tables routine
      *
-     * @param \Doctrine\DBAL\Connection $connection
+     * @param Connection $connection
      * @param array $customDomainsList
      */
-    public static function deleteAllTablesAndDomains(\Doctrine\DBAL\Connection $connection, array $customDomainsList = []): void
+    public static function deleteAllTablesAndDomains(Connection $connection, array $customDomainsList = []): void
     {
 
         $userName = $connection->getUsername();
@@ -430,11 +457,11 @@ class Doctrine
      *   users.id => Целочисленный идентификатор Пользователя
      * ]
      *
-     * @param \Doctrine\DBAL\Connection $connection
+     * @param Connection $connection
      *
      * @return array
      */
-    public static function getAllColumnsComments(\Doctrine\DBAL\Connection $connection): array
+    public static function getAllColumnsComments(Connection $connection): array
     {
         $dbName = $connection->getDatabase();
         $sql = "SELECT
@@ -454,7 +481,7 @@ WHERE
             }
             return $result;
         } catch (\Throwable $e) {
-            logger()->warning('Failed to get column comments from database: '.$e->getMessage());
+            self::getLogger()->warning('Failed to get column comments from database: '.$e->getMessage());
             return [];
         }
     }
@@ -486,7 +513,7 @@ WHERE
         return $fieldComment;
     }
 
-    public static function getCommentForTable(\Doctrine\DBAL\Connection $connection, string $tableName): string
+    public static function getCommentForTable(Connection $connection, string $tableName): string
     {
         try {
             /** @var array $pgTableDescriptionArray */
@@ -497,7 +524,7 @@ WHERE
         }
     }
 
-    public static function reopenEntityManager(EntityManagerInterface $em, bool $onlyIfClosed = false): EntityManagerInterface
+    public static function reopenEntityManager(EntityManagerInterface $em, AbstractPgSqlEntityManagerBuilder $builder, bool $onlyIfClosed = false): EntityManagerInterface
     {
         if ($em->isOpen()) {
             $em->clear();
@@ -508,10 +535,11 @@ WHERE
             $em->close();
         }
 
-        $entityManager = (new EntityManagerBuilder)
+        $entityManager = $builder
             ->setConnection($em->getConnection())
             ->setProxyDir($em->getConfiguration()->getProxyDir())
             ->build();
+
         return $entityManager;
     }
 
