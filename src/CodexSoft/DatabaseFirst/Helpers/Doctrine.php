@@ -22,8 +22,6 @@ class Doctrine
 
     private const FORMAT_YMD_HIS = 'Y-m-d H:i:s';
 
-    public const NULL = 'CASE WHEN 1=1 THEN :null ELSE :null END';
-
     public const SQL_FORMATTER_SIMPLE = 1;
     public const SQL_FORMATTER_COMPLEX = 2;
     public const SQL_FORMATTER_DEFAULT = self::SQL_FORMATTER_SIMPLE;
@@ -370,24 +368,6 @@ class Doctrine
     }
 
     /**
-     * This truncates all table in database using custom "clear_tables" routine.
-     * ! Set up database schema via migrations before running database-based tests
-     * ! Add clear_tables routine before running tests, using database
-     *
-     * @param Connection $connection
-     */
-    public static function truncateAllTables(Connection $connection): void
-    {
-
-        $userName = $connection->getUsername();
-
-        $connection->getWrappedConnection()
-            ->prepare('SELECT clear_tables(:userName);')
-            ->execute(['userName' => $userName]);
-
-    }
-
-    /**
      * to improve performance, add optional attribute to specify tables to truncate
      *
      * @param Connection $connection
@@ -408,30 +388,6 @@ class Doctrine
             $pdo->prepare('TRUNCATE TABLE '.$table.' CASCADE;')->execute();
             $pdo->prepare('ALTER SEQUENCE IF EXISTS '.$table.'_id_seq RESTART WITH 1;')->execute();
 
-        }
-
-    }
-
-    /**
-     * Deletes all tables in database using delete_tables routine
-     *
-     * @param Connection $connection
-     * @param array $customDomainsList
-     */
-    public static function deleteAllTablesAndDomains(Connection $connection, array $customDomainsList = []): void
-    {
-
-        $userName = $connection->getUsername();
-
-        $pdo = $connection->getWrappedConnection();
-        $pdo->prepare("SELECT delete_tables('{$userName}');")->execute();
-
-        if (!\count($customDomainsList)) {
-            return;
-        }
-
-        foreach ($customDomainsList as $domainName) {
-            $pdo->prepare("DROP DOMAIN IF EXISTS public.{$domainName};")->execute();
         }
 
     }

@@ -22,7 +22,7 @@ class RemoveNotExistingInMappingEntitiesOperation extends Operation
 
     use DoctrineOrmSchemaAwareTrait;
 
-    const ID = '81311eaw-a311-431b-bbb5-7931c6e7c6ab';
+    protected const ID = '81311eaw-a311-431b-bbb5-7931c6e7c6ab';
 
     /** @var EntityManager */
     protected $em;

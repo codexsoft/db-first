@@ -2,8 +2,8 @@
 
 namespace CodexSoft\DatabaseFirst;
 
-use CodexSoft\Code\Command\ExecuteClosureCommand;
-use CodexSoft\Code\Command\ExecuteShellCommand;
+use CodexSoft\Cli\Command\ExecuteClosureCommand;
+use CodexSoft\Cli\Command\ExecuteShellCommand;
 use CodexSoft\DatabaseFirst\Helpers\Database;
 use CodexSoft\OperationsSystem\Command\ExecuteOperationCommand;
 use Symfony\Component\Console\Application;
@@ -19,7 +19,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ConsoleRunner
 {
-
     /**
      * @param DoctrineOrmSchema $ormSchema
      * @param string $ormConfigFile
@@ -43,13 +42,6 @@ class ConsoleRunner
             'models' => new ExecuteOperationCommand($dbFirst->generateEntities()),
             'add-migration' => new ExecuteOperationCommand($dbFirst->generateMigration()),
             'mapping' => new ExecuteOperationCommand($dbFirst->generateMapping()),
-
-            //'mapping-old' => new ExecuteShellCommand([
-            //    'php '.$cliDir.'/doctrine.orm.php '.$ormConfigFile.' orm:convert-mapping '
-            //    .DoctrineOrmSchema::CUSTOM_CODEXSOFT_BUILDER.' '
-            //    .$ormSchema->getPathToMapping().' '
-            //    .'--force --from-database --namespace='.$ormSchema->getNamespaceModels().'\\'
-            //]),
 
             'migrate' => new ExecuteShellCommand([
                 'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate',

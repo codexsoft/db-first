@@ -1,16 +1,11 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 namespace CodexSoft\DatabaseFirst\Helpers;
 
-use App\Domain\Config\EntityManagerBuilder;
-use function App\app;
+use Doctrine\DBAL\Connection;
 
-/**
- * Created by PhpStorm.
- * User: dx
- * Date: 25.12.17
- * Time: 17:57
- */
+use Doctrine\DBAL\Driver\Statement;
+use Doctrine\ORM\EntityManagerInterface;
 
 class Database
 {
@@ -18,13 +13,14 @@ class Database
     /**
      * Возвращает очередное значение из заданной последовательности (SEQUENCE).
      *
+     * @param EntityManagerInterface $entityManager
      * @param string $sequenceName
+     *
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function getSequenceNextVal(string $sequenceName): int
+    public static function getSequenceNextVal(EntityManagerInterface $entityManager, string $sequenceName): int
     {
-        $entityManager = app()->getEntityManager();
         $dbConnection = $entityManager->getConnection();
         $nextvalQuery = $dbConnection->getDatabasePlatform()->getSequenceNextValSQL($sequenceName);
 
@@ -32,16 +28,16 @@ class Database
     }
 
     /**
+     * @param EntityManagerInterface $entityManager
      * @param string $sql
      * @param array $params
      *
-     * @return \Doctrine\DBAL\Driver\Statement
+     * @return Statement
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function prepareSql(string $sql, array $params = []): \Doctrine\DBAL\Driver\Statement
+    public static function prepareSql(EntityManagerInterface $entityManager, string $sql, array $params = []): Statement
     {
-        $em = app()->getEntityManager();
-        $connection = $em->getConnection();
+        $connection = $entityManager->getConnection();
         $query = $connection->prepare($sql);
         foreach ($params as $paramName => $paramValue) {
             $query->bindParam($paramName,$paramValue);
@@ -50,59 +46,35 @@ class Database
     }
 
     /**
+     * @param EntityManagerInterface $entityManager
      * @param string $sql
      * @param array $params
      *
      * @return bool
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function runSql(string $sql, array $params = []): bool
+    public static function runSql(EntityManagerInterface $entityManager, string $sql, array $params = []): bool
     {
-        return self::prepareSql($sql, $params)->execute();
-    }
-
-    /**
-     * This truncates all table in database using custom "clear_tables" routine.
-     * ! Set up database schema via migrations before running database-based tests
-     * ! Add clear_tables routine before running tests, using database
-     */
-    public static function truncateAllTables(): void
-    {
-        Doctrine::truncateAllTables(
-            app()->getEntityManager()->getConnection()
-        );
+        return self::prepareSql($entityManager, $sql, $params)->execute();
     }
 
     /**
      * to improve performance, add optional attribute to specify tables to truncate
+     *
+     * @param EntityManagerInterface $entityManager
      * @param string|string[] $tables
      */
-    public static function truncateSpecificTables( $tables ): void
+    public static function truncateSpecificTables(EntityManagerInterface $entityManager, array $tables): void
     {
-        Doctrine::truncateSpecificTables(
-            app()->getEntityManager()->getConnection(),
-            $tables
-        );
-    }
-
-    /**
-     * Deletes all tables in database using delete_tables routine
-     */
-    public static function deleteAllTablesAndDomains(): void
-    {
-        Doctrine::deleteAllTablesAndDomains(
-            app()->getEntityManager()->getConnection(),
-            array_keys(EntityManagerBuilder::CUSTOM_DOMAINS)
-        );
+        Doctrine::truncateSpecificTables($entityManager->getConnection(), $tables);
     }
 
     /**
      * Deletes all tables in database using delete_tables routine
      *
-     * @param \Doctrine\DBAL\Connection $connection
-     * @param array $customDomainsList
+     * @param Connection $connection
      */
-    public static function deleteAllUserTables(\Doctrine\DBAL\Connection $connection): void
+    public static function deleteAllUserTables(Connection $connection): void
     {
         //$connection->getDatabasePlatform()->getListTablesSQL();
         $tablesList = $connection->getDriver()->getSchemaManager($connection)->listTableNames();
@@ -111,7 +83,7 @@ class Database
         }
     }
 
-    public static function truncateAllUserTables(\Doctrine\DBAL\Connection $connection): void
+    public static function truncateAllUserTables(Connection $connection): void
     {
         //$connection->getDatabasePlatform()->getListTablesSQL();
         $tablesList = $connection->getDriver()->getSchemaManager($connection)->listTableNames();

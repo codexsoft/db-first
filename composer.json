@@ -16,7 +16,9 @@
         "ramsey/uuid-doctrine": "^1.4",
         "codexsoft/code-arrays": "^1.0",
         "codexsoft/code-classes": "^1.0",
-        "codexsoft/code-traits": "^1.0"
+        "codexsoft/code-traits": "^1.0",
+        "codexsoft/date-and-time": "^1.0",
+        "codexsoft/cli": "^1.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",

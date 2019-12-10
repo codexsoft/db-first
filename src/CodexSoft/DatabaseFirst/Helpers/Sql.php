@@ -8,6 +8,12 @@ use CodexSoft\DatabaseFirst\Migration\SqlParser;
 
 class Sql
 {
+
+    /**
+     * @param string $sqlCode
+     *
+     * @return array
+     */
     public static function parseToStatements(string $sqlCode): array
     {
         return SqlParser::parseString($sqlCode);

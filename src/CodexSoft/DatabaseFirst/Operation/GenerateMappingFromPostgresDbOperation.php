@@ -26,7 +26,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 {
     use DoctrineOrmSchemaAwareTrait;
 
-    public const ID = 'e163ac5f-ec34-470e-b8ee-450eb8886453';
+    protected const ID = 'e163ac5f-ec34-470e-b8ee-450eb8886453';
 
     protected const ERROR_PREFIX = 'GenerateMappingFromDatabaseOperation cannot be completed: ';
 

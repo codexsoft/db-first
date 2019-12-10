@@ -2,15 +2,35 @@
 
 namespace CodexSoft\DatabaseFirst;
 
-use CodexSoft\Code\Traits\Loggable;
 use CodexSoft\DatabaseFirst\Operation;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 class DatabaseFirst
 {
-
     use Operation\DoctrineOrmSchemaAwareTrait;
-    use Loggable;
+
+    /** @var LoggerInterface */
+    private $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     *
+     * @return static
+     */
+    public function setLogger($logger): self
+    {
+        $this->logger = $logger;
+        return $this;
+    }
+
+    /**
+     * @return LoggerInterface
+     */
+    public function getLogger()
+    {
+        return $this->logger ?: $this->logger = new NullLogger;
+    }
 
     public function __construct(DoctrineOrmSchema $doctrineOrmSchema)
     {

@@ -2,17 +2,15 @@
 
 namespace CodexSoft\DatabaseFirst;
 
-use CodexSoft\Code\AbstractModuleSchema;
-use CodexSoft\Code\Helpers\Strings;
-use Doctrine\DBAL\Types\Type;
+use CodexSoft\Code\Strings\Strings;
+use CodexSoft\DatabaseFirst\Orm\Dql;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 
-class DoctrineOrmSchema extends AbstractModuleSchema
+class DoctrineOrmSchema
 {
-
-    public const CUSTOM_CODEXSOFT_BUILDER = 'codexsoft_builder';
-
     private $namespaceRepositories;
     private $namespaceRepositoriesTraits;
     private $namespaceModels;
@@ -50,29 +48,33 @@ class DoctrineOrmSchema extends AbstractModuleSchema
 
     /** @var string[]  */
     public $dbToPhpType = [
-        'json'             => 'array',
-        'json[]'           => 'array',
-        'jsonb'            => 'array',
-        'jsonb[]'          => 'array',
-        'text[]'           => 'string[]',
-        'smallint[]'       => 'integer[]',
-        'integer[]'        => 'integer[]',
-        'bigint[]'         => 'integer[]',
-        'varchar[]'        => 'string[]',
-        Type::DATETIMETZ   => '\DateTime',
-        Type::DATETIME     => '\DateTime',
-        Type::DATE         => '\DateTime',
-        Type::TIME         => '\DateTime',
-        Type::OBJECT       => '\stdClass',
-        Type::BIGINT       => 'integer',
-        Type::SMALLINT     => 'integer',
-        Type::TEXT         => 'string',
-        Type::BLOB         => 'string',
-        Type::DECIMAL      => 'string',
-        Type::JSON_ARRAY   => 'array',
-        Type::SIMPLE_ARRAY => 'array',
-        Type::GUID         => 'string',
-        'ltree'            => 'array',
+        'json[]'                    => 'array',
+        'jsonb'                     => 'array',
+        'jsonb[]'                   => 'array',
+        'text[]'                    => 'string[]',
+        'smallint[]'                => 'integer[]',
+        'integer[]'                 => 'integer[]',
+        'bigint[]'                  => 'integer[]',
+        'varchar[]'                 => 'string[]',
+        Types::DATETIMETZ_MUTABLE   => '\DateTime',
+        Types::DATETIMETZ_IMMUTABLE => '\DateTime',
+        Types::DATETIME_IMMUTABLE   => '\DateTime',
+        Types::DATETIME_MUTABLE     => '\DateTime',
+        Types::DATE_IMMUTABLE       => '\DateTime',
+        Types::DATE_MUTABLE         => '\DateTime',
+        Types::TIME_IMMUTABLE       => '\DateTime',
+        Types::TIME_MUTABLE         => '\DateTime',
+        Types::OBJECT               => '\stdClass',
+        Types::BIGINT               => 'integer',
+        Types::SMALLINT             => 'integer',
+        Types::TEXT                 => 'string',
+        Types::BLOB                 => 'string',
+        Types::DECIMAL              => 'string',
+        Types::JSON                 => 'array',
+        Types::JSON_ARRAY           => 'array',
+        Types::SIMPLE_ARRAY         => 'array',
+        Types::GUID                 => 'string',
+        'ltree'                     => 'array',
     ];
 
     /**
@@ -139,7 +141,7 @@ class DoctrineOrmSchema extends AbstractModuleSchema
      * @var string
      * OR \CodexSoft\DatabaseFirst\Orm\ModelMetadataInheritanceBuilder::class
      */
-    public $metadataBuilderClass = \Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder::class;
+    public $metadataBuilderClass = ClassMetadataBuilder::class;
 
     /** @var string  */
     public $metaVar = '$metadata';
@@ -191,7 +193,69 @@ class DoctrineOrmSchema extends AbstractModuleSchema
     public $knownEntityManagerRouterClass;
 
     /** @var string */
-    public $dqlHelperClass = \CodexSoft\DatabaseFirst\Orm\Dql::class;
+    public $dqlHelperClass = Dql::class;
+
+    protected $namespaceBase = 'App\\Domain';
+
+    /** @var string */
+    protected $pathToPsrRoot = '/src';
+
+    /**
+     * @param string $domainConfigFile
+     *
+     * @return static
+     * @throws \Exception
+     */
+    public static function getFromConfigFile(string $domainConfigFile): self
+    {
+        ob_start();
+        $domainSchema = include $domainConfigFile;
+        ob_end_clean();
+
+        if (!$domainSchema instanceof static) {
+            throw new \Exception("File $domainConfigFile does not return valid ".static::class."!\n");
+        }
+
+        return $domainSchema;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPathToPsrRoot(): string
+    {
+        return $this->pathToPsrRoot;
+    }
+
+    /**
+     * @param string $pathToPsrRoot
+     *
+     * @return static
+     */
+    public function setPathToPsrRoot(string $pathToPsrRoot): self
+    {
+        $this->pathToPsrRoot = $pathToPsrRoot;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNamespaceBase(): string
+    {
+        return $this->namespaceBase;
+    }
+
+    /**
+     * @param string $namespaceBase
+     *
+     * @return static
+     */
+    public function setNamespaceBase(string $namespaceBase): self
+    {
+        $this->namespaceBase = $namespaceBase;
+        return $this;
+    }
 
 
     public function __construct(string $databaseNamespace = null)

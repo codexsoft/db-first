@@ -26,7 +26,7 @@ class GenerateReposOperation extends Operation
 
     use DoctrineOrmSchemaAwareTrait;
 
-    const ID = '490383fb-4a65-48c8-8ba9-0eb85dc040e1';
+    protected const ID = '490383fb-4a65-48c8-8ba9-0eb85dc040e1';
 
     private const LS = "\n";
 

@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: dx
- * Date: 22.08.17
- * Time: 19:25
- */
 
 namespace CodexSoft\DatabaseFirst\Orm;
 

@@ -29,7 +29,7 @@ class GenerateEntitiesOperation extends Operation
 
     use DoctrineOrmSchemaAwareTrait;
 
-    const ID = '91922eda-b329-423b-aaa9-7832f3d7c6dd';
+    protected const ID = '91922eda-b329-423b-aaa9-7832f3d7c6dd';
 
     /** @var array comments for all columns in db, in format [ <table>.<column> => <comment> ] */
     protected $columnComments = [];

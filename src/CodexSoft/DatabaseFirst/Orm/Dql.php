@@ -3,6 +3,7 @@
 namespace CodexSoft\DatabaseFirst\Orm;
 
 use Carbon\Carbon;
+use CodexSoft\DateAndTime\DateAndTime;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Andx;
 use Doctrine\ORM\Query\Expr\Func;
@@ -14,7 +15,10 @@ use Doctrine\ORM\Query\Expr\Comparison;
 abstract class Dql
 {
 
-    private const FORMAT_YMD_HIS = 'Y-m-d H:i:s';
+    /** @var string DQL has not NULL, so this is hacky replacement */
+    public const NULL = 'CASE WHEN 1=1 THEN :null ELSE :null END';
+
+    private const FORMAT_YMD_HIS = DateAndTime::FORMAT_YMD_HIS;
 
     /** @var int */
     static private $counter = 0;

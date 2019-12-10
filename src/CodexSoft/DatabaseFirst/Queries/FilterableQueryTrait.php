@@ -2,7 +2,7 @@
 
 namespace CodexSoft\DatabaseFirst\Queries;
 
-use CodexSoft\Code\Helpers\DateAndTime;
+use CodexSoft\DateAndTime\DateAndTime;
 
 trait FilterableQueryTrait
 {

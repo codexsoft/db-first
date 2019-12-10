@@ -1,6 +1,6 @@
 <?php
 
-use CodexSoft\Code\Helpers\Cli;
+use CodexSoft\Cli\Cli;
 use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 use Doctrine\DBAL\Migrations\Configuration\Configuration;
 use Doctrine\DBAL\Migrations\Tools\Console\ConsoleRunner;
