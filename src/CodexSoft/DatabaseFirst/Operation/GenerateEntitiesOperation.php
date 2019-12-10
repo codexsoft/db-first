@@ -5,6 +5,7 @@ namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\Helpers\Doctrine;
+use CodexSoft\OperationsSystem\Exception\OperationException;
 use CodexSoft\OperationsSystem\Operation;
 use Doctrine\Common\Inflector\Inflector;
 use Doctrine\DBAL\Types\Type;
@@ -39,7 +40,7 @@ class GenerateEntitiesOperation extends Operation
 
     /**
      * @return void
-     * @throws \CodexSoft\OperationsSystem\Exception\OperationException
+     * @throws OperationException
      */
     protected function handle()
     {

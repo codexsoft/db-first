@@ -1,6 +1,6 @@
 <?php
 
-namespace CodexSoft\DatabaseFirst\Migration;
+namespace CodexSoft\DatabaseFirst\Helpers;
 
 /**
  * Service class for parsing a large SQL string into an array of SQL statements

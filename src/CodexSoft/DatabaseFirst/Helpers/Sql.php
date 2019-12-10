@@ -4,7 +4,7 @@
 namespace CodexSoft\DatabaseFirst\Helpers;
 
 
-use CodexSoft\DatabaseFirst\Migration\SqlParser;
+use CodexSoft\DatabaseFirst\Helpers\SqlParser;
 
 class Sql
 {

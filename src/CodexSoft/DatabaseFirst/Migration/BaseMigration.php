@@ -4,6 +4,7 @@ namespace CodexSoft\DatabaseFirst\Migration;
 
 use CodexSoft\Code\Arrays\Arrays;
 use CodexSoft\Code\Classes\Classes;
+use CodexSoft\DatabaseFirst\Helpers\SqlParser;
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema;
 use function Stringy\create as str;
