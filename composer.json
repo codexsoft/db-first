@@ -2,7 +2,7 @@
     "name": "codexsoft/db-first",
     "license": "MIT",
     "description": "Database-first approach tool based on Doctrine2",
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
         "php": "^7.2.0",
