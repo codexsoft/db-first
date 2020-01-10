@@ -24,8 +24,7 @@ class RemoveNotExistingInMappingEntitiesOperation extends Operation
 
     protected const ID = '81311eaw-a311-431b-bbb5-7931c6e7c6ab';
 
-    /** @var EntityManager */
-    protected $em;
+    protected EntityManager $em;
 
     /**
      * @return void

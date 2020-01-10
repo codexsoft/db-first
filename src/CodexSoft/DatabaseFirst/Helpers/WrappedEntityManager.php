@@ -10,10 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 class WrappedEntityManager
 {
 
-    /**
-     * @var EntityManagerInterface
-     */
-    protected $entityManager;
+    protected EntityManagerInterface $entityManager;
 
     public function __construct(EntityManagerInterface $entityManager)
     {

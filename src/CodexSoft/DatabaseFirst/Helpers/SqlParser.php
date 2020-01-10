@@ -9,12 +9,12 @@ namespace CodexSoft\DatabaseFirst\Helpers;
  */
 class SqlParser
 {
-    protected $delimiter = ';';
-    protected $delimiterLength = 1;
+    protected string $delimiter = ';';
+    protected int $delimiterLength = 1;
 
-    protected $sql = '';
-    protected $len = 0;
-    protected $pos = 0;
+    protected string $sql = '';
+    protected int $len = 0;
+    protected int $pos = 0;
 
     /**
      * Sets the inner SQL string for this object.

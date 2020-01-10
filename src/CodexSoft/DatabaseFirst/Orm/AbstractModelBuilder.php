@@ -5,11 +5,10 @@ namespace CodexSoft\DatabaseFirst\Orm;
 abstract class AbstractModelBuilder
 {
 
-    /** @var string class of model to build */
-    protected $modelClass;
+    /** class of model to build */
+    protected string $modelClass;
 
-    /** @var \StdClass */
-    private $model;
+    private \StdClass $model;
 
     public function __construct()
     {

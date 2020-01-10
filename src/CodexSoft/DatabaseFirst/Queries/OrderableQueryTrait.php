@@ -7,12 +7,8 @@ use InvalidArgumentException;
 
 trait OrderableQueryTrait
 {
-
-    /** @var string|null */
-    private $orderBy;
-
-    /** @var string */
-    private $orderDirection = Criteria::ASC;
+    private ?string $orderBy;
+    private string $orderDirection = Criteria::ASC;
 
     /**
      * @param null|string $orderBy

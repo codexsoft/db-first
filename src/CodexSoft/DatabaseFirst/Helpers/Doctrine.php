@@ -26,8 +26,7 @@ class Doctrine
     public const SQL_FORMATTER_COMPLEX = 2;
     public const SQL_FORMATTER_DEFAULT = self::SQL_FORMATTER_SIMPLE;
 
-    /** @var LoggerInterface */
-    private static $logger;
+    private static LoggerInterface $logger;
 
     private static function getLogger(): LoggerInterface
     {

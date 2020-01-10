@@ -32,11 +32,10 @@ class GenerateEntitiesOperation extends Operation
 
     protected const ID = '91922eda-b329-423b-aaa9-7832f3d7c6dd';
 
-    /** @var array comments for all columns in db, in format [ <table>.<column> => <comment> ] */
-    protected $columnComments = [];
+    /** comments for all columns in db, in format [ <table>.<column> => <comment> ] */
+    protected array $columnComments = [];
 
-    /** @var EntityManager */
-    protected $em;
+    protected EntityManager $em;
 
     /**
      * @return void
@@ -88,6 +87,11 @@ class GenerateEntitiesOperation extends Operation
                 $fs->dumpFile($modelAwareTraitFile, $this->generateEntityAwareTraitClassCode($metadata));
             }
 
+            $modelAwareNullableTraitFile = $ds->getPathToModelAwareTraits().'/'.$this->getClassName($metadata).'AwareNullableTrait.php';
+            if ($this->doctrineOrmSchema->generateNullableModelAwareTraits && ($this->doctrineOrmSchema->overwriteNullableModelAwareTraits || !file_exists($modelAwareNullableTraitFile))) {
+                $fs->dumpFile($modelAwareNullableTraitFile, $this->generateEntityAwareNullableTraitClassCode($metadata));
+            }
+
         }
     }
 
@@ -130,6 +134,45 @@ class GenerateEntitiesOperation extends Operation
 
         return implode("\n", $lines);
 
+    }
+
+    private function generateEntityAwareNullableTraitClassCode(ClassMetadata $metadata): string
+    {
+        $ds = $this->doctrineOrmSchema;
+        $shortEntityClassName = $this->getClassName($metadata);
+        $fqnEntityClassName = '\\'.$metadata->name;
+        $fieldName = lcfirst($shortEntityClassName);
+        $fieldNameOrId = $fieldName.'OrIdOrNull';
+
+        $lines = [];
+
+        \array_push($lines, ...[
+            '<?php',
+            '',
+            'namespace '.$ds->getNamespaceModelsAwareTraits().';',
+            '',
+            "use {$fqnEntityClassName};",
+            '',
+            "trait {$shortEntityClassName}AwareTrait",
+            '{',
+            TAB,
+            TAB."private ?{$shortEntityClassName} \${$fieldName};",
+            TAB.'',
+            TAB.'/**',
+            TAB." * @param $shortEntityClassName|int|null \${$fieldNameOrId}",
+            TAB.' *',
+            TAB.' * @return static',
+            TAB.' */',
+            TAB."public function set{$shortEntityClassName}OrIdOrNull(\${$fieldNameOrId}): self",
+            TAB.'{',
+            TAB."    \$this->{$fieldName} = (\${$fieldNameOrId} === null) ? null : {$shortEntityClassName}::byId(\${$fieldNameOrId});",
+            TAB.'    return $this;',
+            TAB.'}',
+            TAB.'',
+            '}',
+        ]);
+
+        return implode("\n", $lines);
     }
 
     private function generateEntityAwareTraitClassCode(ClassMetadata $metadata): string

@@ -10,8 +10,7 @@ class DatabaseFirst
 {
     use Operation\DoctrineOrmSchemaAwareTrait;
 
-    /** @var LoggerInterface */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * @param LoggerInterface $logger

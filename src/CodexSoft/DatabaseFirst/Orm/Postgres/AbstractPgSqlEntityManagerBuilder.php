@@ -35,33 +35,26 @@ abstract class AbstractPgSqlEntityManagerBuilder
         //'_jsonb' => 'jsonb[]',
     ];
 
-    /** @var bool  */
-    protected $isDevMode = true;
-
-    /** @var CacheProvider */
-    protected $cache;
-
-    /** @var string */
-    protected $proxyDir;
+    protected bool $isDevMode = true;
+    protected CacheProvider $cache;
+    protected string $proxyDir;
 
     /** @var string[] */
-    protected $mappingDirectories;
+    protected array $mappingDirectories;
 
-    /** @var array */
-    protected $databaseConfig = [];
+    protected array $databaseConfig = [];
 
-    /** @var \Doctrine\ORM\Configuration if no configuration provided, new one will be created */
-    protected $configuration;
+    /** if no configuration provided, new one will be created */
+    protected \Doctrine\ORM\Configuration $configuration;
 
     /**
      * If you have an existing Connection instance, use it
      * otherwise use setDatabaseConfig(array), array can be builded via ConnectionBuilder
-     * @var \Doctrine\DBAL\Connection
      */
-    protected $connection;
+    protected \Doctrine\DBAL\Connection $connection;
 
-    /** @var \Doctrine\Common\EventManager if no event manager provided, new one will be created */
-    protected $eventManager;
+    /** if no event manager provided, new one will be created */
+    protected EventManager $eventManager;
 
     public function __construct() {
         $this->cache = new VoidCache;

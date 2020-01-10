@@ -17,12 +17,8 @@ use Doctrine\ORM\Query\SqlWalker;
 
 class EarthDistance extends FunctionNode
 {
-
-    /** @var Node */
-    private $latitude;
-
-    /** @var Node */
-    private $longitude;
+    private Node $latitude;
+    private Node $longitude;
 
     /**
      * @param SqlWalker $sqlWalker

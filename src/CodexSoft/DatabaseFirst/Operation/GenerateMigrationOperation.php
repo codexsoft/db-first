@@ -12,7 +12,6 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class GenerateMigrationOperation extends Operation
 {
-
     use DoctrineOrmSchemaAwareTrait;
 
     protected const ID = 'd1c7d39c-fbcb-49c1-a198-2e39009e30b2';

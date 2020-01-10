@@ -27,10 +27,9 @@ class GenerateMappingFromPostgresDbOperation extends Operation
     use DoctrineOrmSchemaAwareTrait;
 
     protected const ID = 'e163ac5f-ec34-470e-b8ee-450eb8886453';
-
     protected const ERROR_PREFIX = 'GenerateMappingFromDatabaseOperation cannot be completed: ';
 
-    private $joinDefaultArguments = [
+    private array $joinDefaultArguments = [
         'name' => '',
         'referencedColumnName' => '',
         'nullable' => true,
@@ -40,16 +39,14 @@ class GenerateMappingFromPostgresDbOperation extends Operation
     ];
 
     /**
-     * @var string
      * todo: it is just a proxy, maybe remove?
      */
-    private $metaVar = '$metadata';
+    private string $metaVar = '$metadata';
 
     /**
-     * @var string
      * todo: it is just a proxy, maybe remove?
      */
-    private $builderVar = '$mapper';
+    private string $builderVar = '$mapper';
 
     /**
      * @return void

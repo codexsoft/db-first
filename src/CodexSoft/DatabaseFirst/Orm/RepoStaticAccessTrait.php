@@ -12,7 +12,6 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 trait RepoStaticAccessTrait
 {
-
     use KnownEntityManagerTrait;
 
     /**

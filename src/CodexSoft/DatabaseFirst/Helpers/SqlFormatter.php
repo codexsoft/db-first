@@ -105,46 +105,46 @@ class SqlFormatter
     );
 
     // Punctuation that can be used as a boundary between other tokens
-    protected static $boundaries = array(',', ';',':', ')', '(', '.', '=', '<', '>', '+', '-', '*', '/', '!', '^', '%', '|', '&', '#');
+    protected static array $boundaries = [',', ';',':', ')', '(', '.', '=', '<', '>', '+', '-', '*', '/', '!', '^', '%', '|', '&', '#'];
 
     // For HTML syntax highlighting
     // Styles applied to different token types
-    public static $quote_attributes = 'style="color: blue;"';
-    public static $backtick_quote_attributes = 'style="color: purple;"';
-    public static $reserved_attributes = 'style="font-weight:bold;"';
-    public static $boundary_attributes = '';
-    public static $number_attributes = 'style="color: green;"';
-    public static $word_attributes = 'style="color: #333;"';
-    public static $error_attributes = 'style="background-color: red;"';
-    public static $comment_attributes = 'style="color: #aaa;"';
-    public static $variable_attributes = 'style="color: orange;"';
-    public static $pre_attributes = 'style="color: black; background-color: white;"';
+    public static string $quote_attributes = 'style="color: blue;"';
+    public static string $backtick_quote_attributes = 'style="color: purple;"';
+    public static string $reserved_attributes = 'style="font-weight:bold;"';
+    public static string $boundary_attributes = '';
+    public static string $number_attributes = 'style="color: green;"';
+    public static string $word_attributes = 'style="color: #333;"';
+    public static string $error_attributes = 'style="background-color: red;"';
+    public static string $comment_attributes = 'style="color: #aaa;"';
+    public static string $variable_attributes = 'style="color: orange;"';
+    public static string $pre_attributes = 'style="color: black; background-color: white;"';
 
     // Boolean - whether or not the current environment is the CLI
     // This affects the type of syntax highlighting
     // If not defined, it will be determined automatically
-    public static $cli;
+    public static bool $cli;
 
     // For CLI syntax highlighting
-    public static $cli_quote = "\x1b[34;1m";
-    public static $cli_backtick_quote = "\x1b[35;1m";
-    public static $cli_reserved = "\x1b[37m";
-    public static $cli_boundary = "";
-    public static $cli_number = "\x1b[32;1m";
-    public static $cli_word = "";
-    public static $cli_error = "\x1b[31;1;7m";
-    public static $cli_comment = "\x1b[30;1m";
-    public static $cli_functions = "\x1b[37m";
-    public static $cli_variable = "\x1b[36;1m";
+    public static string $cli_quote = "\x1b[34;1m";
+    public static string $cli_backtick_quote = "\x1b[35;1m";
+    public static string $cli_reserved = "\x1b[37m";
+    public static string $cli_boundary = "";
+    public static string $cli_number = "\x1b[32;1m";
+    public static string $cli_word = "";
+    public static string $cli_error = "\x1b[31;1;7m";
+    public static string $cli_comment = "\x1b[30;1m";
+    public static string $cli_functions = "\x1b[37m";
+    public static string $cli_variable = "\x1b[36;1m";
 
     // The tab character to use when formatting SQL
-    public static $tab = '  ';
+    public static string $tab = '  ';
 
     // This flag tells us if queries need to be enclosed in <pre> tags
-    public static $use_pre = true;
+    public static bool $use_pre = true;
 
     // This flag tells us if SqlFormatted has been initialized
-    protected static $init;
+    protected static bool $init;
 
     // Regular expressions for tokenizing
     protected static $regex_boundaries;

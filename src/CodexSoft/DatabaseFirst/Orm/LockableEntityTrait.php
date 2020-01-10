@@ -14,7 +14,6 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 trait LockableEntityTrait
 {
-
     use KnownEntityManagerTrait;
 
     /**

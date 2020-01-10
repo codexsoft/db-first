@@ -23,7 +23,6 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class GenerateReposOperation extends Operation
 {
-
     use DoctrineOrmSchemaAwareTrait;
 
     protected const ID = '490383fb-4a65-48c8-8ba9-0eb85dc040e1';
@@ -31,13 +30,13 @@ class GenerateReposOperation extends Operation
     private const LS = "\n";
 
     /**
-     * @var array comments for all columns in db, in format [ <table>.<column> => <comment> ]
+     * comments for all columns in db, in format [ <table>.<column> => <comment> ]
      * @internal
      */
-    private $columnComments = [];
+    private array $columnComments = [];
 
-    /** @var string Which interface repo implements */
-    private $repoInterface;
+    /** Which interface repo implements */
+    private string $repoInterface;
 
     /**
      * @throws OperationException

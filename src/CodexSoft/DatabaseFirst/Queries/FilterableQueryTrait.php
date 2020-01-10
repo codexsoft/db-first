@@ -6,12 +6,8 @@ use CodexSoft\DateAndTime\DateAndTime;
 
 trait FilterableQueryTrait
 {
-
-    /** @var array */
-    private $filters = [];
-
-    /** @var string */
-    private $filterDateTimeZone = 'UTC';
+    private array $filters = [];
+    private string $filterDateTimeZone = 'UTC';
 
     /**
      * @param array $filters

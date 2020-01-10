@@ -4,12 +4,8 @@ namespace CodexSoft\DatabaseFirst\Queries;
 
 trait PaginatableQueryTrait
 {
-
-    /** @var int */
-    private $perPage = 10;
-
-    /** @var int */
-    private $page = 1;
+    private int $perPage = 10;
+    private int $page = 1;
 
     /**
      * @param int $perPage

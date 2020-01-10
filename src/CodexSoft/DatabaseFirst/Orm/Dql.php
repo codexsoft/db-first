@@ -14,14 +14,12 @@ use Doctrine\ORM\Query\Expr\Comparison;
 
 abstract class Dql
 {
-
     /** @var string DQL has not NULL, so this is hacky replacement */
     public const NULL = 'CASE WHEN 1=1 THEN :null ELSE :null END';
 
     private const FORMAT_YMD_HIS = DateAndTime::FORMAT_YMD_HIS;
 
-    /** @var int */
-    static private $counter = 0;
+    private static int $counter = 0;
 
     /**
      * @param null $varName

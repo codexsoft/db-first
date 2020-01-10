@@ -7,7 +7,6 @@ use Doctrine\Common\EventSubscriber;
 
 class DoctrineEntityManagerLifecycleEventSubscriber implements EventSubscriber
 {
-
     /**
      * @return array|string[]
      * todo: maybe make it configurable?
