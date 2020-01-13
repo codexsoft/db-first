@@ -36,25 +36,25 @@ abstract class AbstractPgSqlEntityManagerBuilder
     ];
 
     protected bool $isDevMode = true;
-    protected CacheProvider $cache;
-    protected string $proxyDir;
+    protected ?CacheProvider $cache = null;
+    protected ?string $proxyDir = null;
 
     /** @var string[] */
-    protected array $mappingDirectories;
+    protected array $mappingDirectories = [];
 
     protected array $databaseConfig = [];
 
     /** if no configuration provided, new one will be created */
-    protected \Doctrine\ORM\Configuration $configuration;
+    protected ?\Doctrine\ORM\Configuration $configuration = null;
 
     /**
      * If you have an existing Connection instance, use it
      * otherwise use setDatabaseConfig(array), array can be builded via ConnectionBuilder
      */
-    protected \Doctrine\DBAL\Connection $connection;
+    protected ?\Doctrine\DBAL\Connection $connection = null;
 
     /** if no event manager provided, new one will be created */
-    protected EventManager $eventManager;
+    protected ?EventManager $eventManager = null;
 
     public function __construct() {
         $this->cache = new VoidCache;

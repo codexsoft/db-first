@@ -11,25 +11,25 @@ use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 
 class DoctrineOrmSchema
 {
-    private $namespaceRepositories;
-    private $namespaceRepositoriesTraits;
-    private $namespaceModels;
-    private $namespaceModelsTraits;
-    private $namespaceModelsBuilders;
-    private $namespaceMigrations;
-    private $namespaceMapping;
-    private $namespaceMappingGenerated;
-    private $namespaceMappingExtra;
-    private $namespaceModelsAwareTraits;
+    private string $namespaceRepositories = '';
+    private string $namespaceRepositoriesTraits = '';
+    private string $namespaceModels = '';
+    private string $namespaceModelsTraits = '';
+    private string $namespaceModelsBuilders = '';
+    private string $namespaceMigrations = '';
+    private string $namespaceMapping = '';
+    private string $namespaceMappingGenerated = '';
+    private string $namespaceMappingExtra = '';
+    private string $namespaceModelsAwareTraits = '';
 
     private ?string $migrationBaseClass;
-    private string $pathToMigrations;
-    private string $pathToModels;
-    private string $pathToRepositories;
-    private string $pathToModelsTraits;
-    private string $pathToMapping;
+    private string $pathToMigrations = '';
+    private string $pathToModels = '';
+    private string $pathToRepositories = '';
+    private string $pathToModelsTraits = '';
+    private string $pathToMapping = '';
+    private string $pathToModelAwareTraits = '';
     private EntityManager $entityManager;
-    private string $pathToModelAwareTraits;
 
     /** @var string[]  */
     public array $dbToPhpType = [
@@ -100,7 +100,7 @@ class DoctrineOrmSchema
     public bool $generateModelWithLockHelpers = false;
 
     /** A string pattern used to match entities that should be processed. */
-    public string $metadataFilter;
+    public string $metadataFilter = '';
 
     /** OR \CodexSoft\DatabaseFirst\Orm\ModelMetadataInheritanceBuilder::class */
     public string $metadataBuilderClass = ClassMetadataBuilder::class;
@@ -141,8 +141,8 @@ class DoctrineOrmSchema
 
     public bool $generateRepoTraits = true;
     public bool $overwriteRepoClasses = false;
-    public string $knownEntityManagerContainerClass;
-    public string $knownEntityManagerRouterClass;
+    public ?string $knownEntityManagerContainerClass = null;
+    public ?string $knownEntityManagerRouterClass = null;
     public string $dqlHelperClass = Dql::class;
     protected string $namespaceBase = 'App\\Domain';
     protected string $pathToPsrRoot = '/src';
