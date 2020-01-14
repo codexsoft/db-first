@@ -234,8 +234,8 @@ class GenerateEntitiesOperation extends Operation
             "trait {$shortEntityClassName}AwareTrait",
             '{',
             TAB,
-            TAB."/** @var $shortEntityClassName */",
-            TAB."private \${$fieldName};",
+            //TAB."/** @var $shortEntityClassName */",
+            TAB."private $shortEntityClassName \${$fieldName};",
         ]);
 
         if ($this->doctrineOrmSchema->generateSetMethodForModelAwareTraits) {
