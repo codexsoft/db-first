@@ -2,7 +2,7 @@
     "name": "codexsoft/db-first",
     "license": "MIT",
     "description": "Database-first approach tool based on Doctrine2",
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
         "php": "^7.4",
@@ -13,7 +13,7 @@
         "codexsoft/code-classes": "^1.0",
         "codexsoft/code-traits": "^1.0",
         "codexsoft/date-and-time": "^1.0",
-        "codexsoft/operations": "dev-feature/php74-static-typing",
+        "codexsoft/operations": "^1.1",
         "doctrine/migrations": "^1.5.0",
         "doctrine/orm": "^2.6",
         "martin-georgiev/postgresql-for-doctrine": "0.10.*",
