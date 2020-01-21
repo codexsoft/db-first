@@ -22,7 +22,7 @@ class DoctrineOrmSchema
     private string $namespaceMappingExtra = '';
     private string $namespaceModelsAwareTraits = '';
 
-    private ?string $migrationBaseClass;
+    private ?string $migrationBaseClass = null;
     private string $pathToMigrations = '';
     private string $pathToModels = '';
     private string $pathToRepositories = '';
