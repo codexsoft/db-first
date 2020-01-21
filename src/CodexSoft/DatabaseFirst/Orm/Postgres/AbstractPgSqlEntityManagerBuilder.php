@@ -151,7 +151,11 @@ abstract class AbstractPgSqlEntityManagerBuilder
      */
     public function addCustomType(EntityManagerInterface $entityManager, string $typeName, string $typeClass)
     {
-        Type::addType($typeName, $typeClass);
+        if (Type::hasType($typeName)) {
+            Type::overrideType($typeName, $typeClass);
+        } else {
+            Type::addType($typeName, $typeClass);
+        }
         $platform = $entityManager->getConnection()->getDatabasePlatform();
         $platform->registerDoctrineTypeMapping($typeName, $typeName);
     }
@@ -172,7 +176,9 @@ abstract class AbstractPgSqlEntityManagerBuilder
             MartinGeorgievTypes\BigIntArray::class,
             MartinGeorgievTypes\JsonbArray::class,
             MartinGeorgievTypes\TextArray::class,
-            'varchar[]'  => MartinGeorgievTypes\TextArray::class,
+            'varchar[]' => MartinGeorgievTypes\TextArray::class,
+            UuidType::NAME => UuidType::class,
+            Types::BIGINT => BigIntCastingToIntType::class,
         ];
 
         foreach ($types as $typeName => $typeClass) {
@@ -188,14 +194,6 @@ abstract class AbstractPgSqlEntityManagerBuilder
             }
 
         }
-
-        if (!Type::hasType(UuidType::NAME)) {
-            Type::addType(UuidType::NAME, UuidType::class);
-        } else {
-            Type::overrideType(UuidType::NAME, UuidType::class);
-        }
-
-        Type::overrideType( Types::BIGINT, BigIntCastingToIntType::class );
     }
 
     /**
