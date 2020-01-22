@@ -1,6 +1,7 @@
 <?php
 namespace CodexSoft\DatabaseFirst\Operation;
 
+use Doctrine\DBAL\Types\Types;
 use \MartinGeorgiev\Doctrine\DBAL\Types as MartinGeorgievTypes;
 use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
@@ -130,6 +131,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                 '<?php',
                 '',
                 'use '.\Doctrine\DBAL\Types\Type::class.';',
+                'use '.\Doctrine\DBAL\Types\Types::class.';',
                 'use '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.';',
                 "use \\{$this->doctrineOrmSchema->metadataBuilderClass};",
                 '',
@@ -248,25 +250,27 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 
                     switch( $field['type'] ) {
 
-                        case Type::SMALLINT:
-                        case Type::INTEGER:
-                        case Type::BIGINT:
+                        case Types::SMALLINT:
+                        case Types::INTEGER:
+                        case Types::BIGINT:
                             $code[] = TAB."->option('".$option."',".( (int) $value ).')';
                             break;
 
-                        case Type::DATE:
-                        case Type::DATETIME:
+                        case Types::DATE_IMMUTABLE:
+                        case Types::DATE_MUTABLE:
+                        case Types::DATETIME_IMMUTABLE:
+                        case Types::DATETIME_MUTABLE:
                             //$fieldLines[] = TAB."->option('".$option."',".( (int) $value ).')';
                             break;
 
-                        case Type::FLOAT:
+                        case Types::FLOAT:
                             $code[] = TAB."->option('".$option."',".var_export((float) $value,true).')';
                             break;
 
-                        case Type::JSON:
-                        case Type::JSON_ARRAY:
-                        case Type::SIMPLE_ARRAY:
-                        case Type::TARRAY:
+                        case Types::JSON:
+                        case Types::JSON_ARRAY:
+                        case Types::SIMPLE_ARRAY:
+                        case Types::ARRAY:
                         case MartinGeorgievTypes\BigIntArray::TYPE_NAME:
                         case MartinGeorgievTypes\SmallIntArray::TYPE_NAME:
                         case MartinGeorgievTypes\IntegerArray::TYPE_NAME:
@@ -493,9 +497,13 @@ class GenerateMappingFromPostgresDbOperation extends Operation
     protected function generateType(string $type)
     {
 
-        if (\array_key_exists($type, $this->doctrineOrmSchema->doctrineTypesMap)) {
-            return 'Type::'.$this->doctrineOrmSchema->doctrineTypesMap[$type];
+        if (\array_key_exists($type, $this->doctrineOrmSchema->doctrineTypesMapNew)) {
+            return 'Types::'.mb_strtoupper($this->doctrineOrmSchema->doctrineTypesMapNew[$type]);
         }
+
+        //if (\array_key_exists($type, $this->doctrineOrmSchema->doctrineTypesMap)) {
+        //    return 'Type::'.$this->doctrineOrmSchema->doctrineTypesMap[$type];
+        //}
 
         //if (\array_key_exists($type, self::DOCTRINE_TYPES_MAP)) {
         //    return 'Type::'.self::DOCTRINE_TYPES_MAP[$type];
