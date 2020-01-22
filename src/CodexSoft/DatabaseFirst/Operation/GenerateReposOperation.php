@@ -36,7 +36,7 @@ class GenerateReposOperation extends Operation
     private array $columnComments = [];
 
     /** Which interface repo implements */
-    private string $repoInterface;
+    private ?string $repoInterface = null;
 
     /**
      * @throws OperationException
@@ -461,11 +461,11 @@ class GenerateReposOperation extends Operation
     }
 
     /**
-     * @param string $repoInterface
+     * @param string|null $repoInterface
      *
      * @return GenerateReposOperation
      */
-    public function setRepoInterface(string $repoInterface): GenerateReposOperation
+    public function setRepoInterface(?string $repoInterface): GenerateReposOperation
     {
         $this->repoInterface = $repoInterface;
         return $this;
