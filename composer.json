@@ -14,7 +14,7 @@
         "codexsoft/code-traits": "^1.0",
         "codexsoft/date-and-time": "^1.0",
         "codexsoft/operations": "^1.1",
-        "doctrine/migrations": "^1.5.0",
+        "doctrine/migrations": "^1.5.0|^2.0",
         "doctrine/orm": "^2.6",
         "martin-georgiev/postgresql-for-doctrine": "0.10.*",
         "ramsey/uuid-doctrine": "^1.4",
