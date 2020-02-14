@@ -10,3 +10,4 @@ $migrationsRepo = \TestDomain20190914\Model\DoctrineMigrationVersion::repo($ormS
 //$migrations = $migrationsRepo->findAll();
 $migrations = $migrationsRepo->getByVersion('asd');
 $x=1;
+
