@@ -219,15 +219,13 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 
                 $fieldCode = $this->generateFieldCode($field);
 
-                // skipping children fields from single table inheritance
-                //if (\in_array($field['columnName'], $singleTableInheritanceChildrenColumns, true)) {
+                // single table inheritance: moving children fields from base entity map to child entity map
                 if (\array_key_exists($field['columnName'], $singleTableInheritanceChildrenColumns)) {
                     echo "\nskipped $tableName.$fieldColumnName as it is configured for child entity {$singleTableInheritanceChildrenColumns[$field['columnName']]}";
                     array_push($singleTableInheritanceChildrenCodes[$singleTableInheritanceChildrenColumns[$field['columnName']]], ...$fieldCode);
                     continue;
                 }
 
-                //$fieldCode = $this->generateFieldCode($field);
                 array_push($code, ...$fieldCode);
             }
 
@@ -244,6 +242,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                     try {
                         $associationColumnName = $metadata->getSingleAssociationJoinColumnName($associationMappingName);
                         if (\in_array($tableName.'.'.$associationColumnName, $this->doctrineOrmSchema->skipColumns, true)) {
+                            echo "\nskipped $tableName.$associationMappingName because $tableName.$associationColumnName is configured as skipped";
                             continue;
                         }
                     } catch (\Doctrine\ORM\Mapping\MappingException $e) {
@@ -251,7 +250,17 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                     }
                 }
 
-                array_push($code, ...$this->generateAssociationCode($associationMappingName, $associationMapping, $tableName));
+                $associationCode = $this->generateAssociationCode($associationMappingName, $associationMapping, $tableName);
+
+                // single table inheritance: moving children fields from base entity map to child entity map
+                $associationSourceColumnName = \array_keys($associationMapping['sourceToTargetKeyColumns'])[0];
+                if (\array_key_exists($associationSourceColumnName, $singleTableInheritanceChildrenColumns)) {
+                    echo "\nskipped $tableName.$associationMappingName as it is configured for child entity {$singleTableInheritanceChildrenColumns[$associationSourceColumnName]}";
+                    array_push($singleTableInheritanceChildrenCodes[$singleTableInheritanceChildrenColumns[$associationSourceColumnName]], ...$associationCode);
+                    continue;
+                }
+
+                array_push($code, ...$associationCode);
                 //$this->generateAssociationCode($associationMappingName, $associationMapping, $tableName);
             }
 
@@ -445,8 +454,6 @@ class GenerateMappingFromPostgresDbOperation extends Operation
             // FOR OUR PROJECTS ALMOST ALL ASSOCIATIONS ARE MANYTOONE
             $importingEntityClass = $this->singularize($associationMapping['targetEntity']);
 
-            //$importingEntityClass = $this->simplifyFullQualifiedModelName( $importingEntityClass );
-
             $fieldLines[] = $this->builderVar."->createManyToOne('".$associationMapping['fieldName']."', \\".$importingEntityClass.'::class)';
 
             if ( $associationMapping['inversedBy'] ) {
@@ -456,8 +463,6 @@ class GenerateMappingFromPostgresDbOperation extends Operation
             if ( $associationMapping['isOwningSide'] && \array_key_exists('joinColumns',$associationMapping) ) {
                 foreach( (array) $associationMapping['joinColumns'] as $joinColumn ) {
 
-                    //$params = $this->joinColumnParametersHelper( $joinColumn );
-                    //$params = $this->generateArgumentsRespectingDefaultValues($joinColumn,self::JOIN_DEFAULTS);
                     $params = $this->generateArgumentsRespectingDefaultValues($joinColumn, $this->joinDefaultArguments);
                     $fieldLines[] = TAB.'->addJoinColumn('.implode(', ',$params).')';
 
