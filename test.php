@@ -11,3 +11,4 @@ $migrationsRepo = \TestDomain20190914\Model\DoctrineMigrationVersion::repo($ormS
 $migrations = $migrationsRepo->getByVersion('asd');
 $x=1;
 
+// this is test release
