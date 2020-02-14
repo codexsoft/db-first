@@ -111,13 +111,19 @@ class GenerateEntitiesOperation extends Operation
         $tableComment = Doctrine::getCommentForTable($this->em->getConnection(), $metadata->table['name']);
         $customRepoClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.$entityClassName.'Repository';
 
+        $extendsStatement = '';
+        if ($metadata->isInheritanceTypeSingleTable() && ($metadata->name !== $metadata->rootEntityName)) {
+            $extendsStatement = ' extends '.Classes::short($metadata->rootEntityName);
+            //$parentClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.Classes::short($metadata->rootEntityName).'Repository';
+        }
+
         $lines = [
             '<?php',
             '',
             'namespace '.$ds->getNamespaceModels().';',
             '/**',
             " * {$tableComment}",
-            ' * '.$entityClassName,
+            ' * '.$entityClassName.$extendsStatement,
             //$this->generateWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.' $em = null)' : ' *',
             $this->doctrineOrmSchema->generateModelWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.' $em = null)' : ' *',
             ' * @Doctrine\ORM\Mapping\Entity(repositoryClass="'.$customRepoClass.'")',
@@ -254,10 +260,10 @@ class GenerateEntitiesOperation extends Operation
             //$this->doctrineOrmSchema->generateModelWithRepoAccess || $this->doctrineOrmSchema->generateModelWithLockHelpers
             //? TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\KnownEntityManagerTrait::class.';' : '',
 
-            $this->doctrineOrmSchema->generateModelWithRepoAccess
+            $this->doctrineOrmSchema->generateModelWithRepoAccess && (!$metadata->isInheritanceTypeSingleTable() || $metadata->rootEntityName === $metadata->name)
             ? TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\RepoStaticAccessTrait::class.';' : '',
 
-            $this->doctrineOrmSchema->generateModelWithLockHelpers
+            $this->doctrineOrmSchema->generateModelWithLockHelpers && (!$metadata->isInheritanceTypeSingleTable() || $metadata->rootEntityName === $metadata->name)
                 ? TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\LockableEntityTrait::class.';' : '',
             '',
             $this->generateEntityKnownEntityManager(),
@@ -451,8 +457,21 @@ class GenerateEntitiesOperation extends Operation
     protected function generateSqlFieldNameHelpers(ClassMetadataInfo $metadata): string
     {
         $lines = ['','// to avoid human mistakes when using SQL table and columns names...',''];
-        //$lines[] = "public const TABLE = '".$metadata->getTableName()."';"; // traits cannot have constants
-        $lines[] = 'public static function _db_table_($doubleQuoted = true): string { return $doubleQuoted ? \'"'.$metadata->getTableName().'"\' : \''.$metadata->getTableName().'\'; }';
+
+        //if ($metadata->isInheritanceTypeSingleTable() || $metadata->subClasses)
+        if (!$metadata->isInheritanceTypeSingleTable() || $metadata->rootEntityName === $metadata->name) {
+            $lines[] = 'public static function _db_table_($doubleQuoted = true): string { return $doubleQuoted ? \'"'.$metadata->getTableName().'"\' : \''.$metadata->getTableName().'\'; }';
+        }
+
+        //if ($this->doctrineOrmSchema->inheritanceMap->getEntityDataForTable($metadata->getTableName())) {
+        //    $lines[] = 'public static function _db_table_($doubleQuoted = true): string { return $doubleQuoted ? \'"'.$metadata->getTableName().'"\' : \''.$metadata->getTableName().'\'; }';
+        //}
+
+        //if (\array_key_exists($metadata->getTableName(), $this->doctrineOrmSchema->singleTableInheritance)) {
+            // traits cannot have constants
+            //$lines[] = 'public static function _db_table_($doubleQuoted = true): string { return $doubleQuoted ? \'"'.$metadata->getTableName().'"\' : \''.$metadata->getTableName().'\'; }';
+        //}
+
         $lines[] = '';
 
         $methodNames = [];

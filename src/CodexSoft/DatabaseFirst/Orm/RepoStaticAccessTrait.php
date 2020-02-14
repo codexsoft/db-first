@@ -139,11 +139,7 @@ trait RepoStaticAccessTrait
     {
         $table = static::_db_table_();
         /** @noinspection SqlResolve */
-        //$stmt = AbstractDomain::fromContext()->getEntityManager()->getConnection()->query("SELECT id FROM $table ORDER BY RANDOM()");
-        $stmt = self::knownEntityManager($em)->getConnection()->query('SELECT id FROM :tableName ORDER BY RANDOM() LIMIT 1');
-        $stmt->execute([
-            ':tableName' => $table,
-        ]);
+        $stmt = self::knownEntityManager($em)->getConnection()->query('SELECT id FROM '.$table.' ORDER BY RANDOM() LIMIT 1');
         $id = $stmt->fetchColumn();
         return (int) $id;
     }

@@ -73,7 +73,6 @@ class GenerateReposOperation extends Operation
         $reposPath = $this->doctrineOrmSchema->getPathToRepositories();
         $reposTraitPath = $reposPath.'/Generated'; // todo: get from config?
 
-        $parentClass = $this->doctrineOrmSchema->parentRepositoryClass;
         //$repoNamespace = $this->repoNamespace;
         $repoNamespace = $this->doctrineOrmSchema->getNamespaceRepositories();
         $repoInterface = $this->repoInterface;
@@ -97,6 +96,12 @@ class GenerateReposOperation extends Operation
         }
 
         foreach ($metadatas as $metadata) {
+
+            $parentClass = $this->doctrineOrmSchema->parentRepositoryClass;
+            if ($metadata->isInheritanceTypeSingleTable() && ($metadata->name !== $metadata->rootEntityName)) {
+                $parentClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.Classes::short($metadata->rootEntityName).'Repository';
+            }
+
             $tableComment = Doctrine::getCommentForTable($em->getConnection(), $metadata->table['name']);
             $this->getLogger()->info("Processing entity {$metadata->name}");
 

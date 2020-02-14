@@ -162,12 +162,12 @@ class GenerateMappingFromPostgresDbOperation extends Operation
             if ($singleTableInheritanceData) {
                 [$descriminatorColumnName, $descriminatorColumnType, $childrenColumnsMap] = $singleTableInheritanceData;
 
-                $code[] = "{$this->builderVar}->setDiscriminatorColumn('$descriminatorColumnName', '$descriminatorColumnType')";
+                $code[] = "{$this->builderVar}->setDiscriminatorColumn('$descriminatorColumnName', '$descriminatorColumnType');";
                 foreach ($childrenColumnsMap as [$childModelName, $childDiscriminatorValue, $childColumns]) {
 
                     $childRepoClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.$childModelName.'Repository';
 
-                    $singleTableInheritanceChildrenCodes[$childModelName] = [
+                    $subEntityCode = [
                         '<?php',
                         '',
                         'use '.\Doctrine\DBAL\Types\Type::class.';',
@@ -179,28 +179,48 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                         //'/** @noinspection PhpUnhandledExceptionInspection */',
                         //"{$this->metaVar}->setInheritanceType(ClassMetadataInfo::INHERITANCE_TYPE_NONE);",
                         //"{$this->metaVar}->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_SEQUENCE);",
+                        "{$this->metaVar}->setInheritanceType(ClassMetadataInfo::$inheritanceType);",
                         '',
                         "{$this->builderVar} = new $builderShortClass({$this->metaVar});",
                         "{$this->builderVar}->setCustomRepositoryClass('$childRepoClass');",
-                        //"{$this->builderVar}->setTable('$tableName');",
+                        "{$this->builderVar}->setTable('$tableName');",
 
                     ];
+
+                    $singularizedTableName = $this->singularize($metadata->name);
+
+                    $subEntityCode[] = "{$this->metaVar}->setParentClasses([";
+                    $subEntityCode[] = "    \\{$singularizedTableName}::class,";
+                    $subEntityCode[] = ']);';
+
+                    $singleTableInheritanceChildrenCodes[$childModelName] = $subEntityCode;
 
                     foreach ($childColumns as $childColumn) {
                         $singleTableInheritanceChildrenColumns[$childColumn] = $childModelName;
                     }
 
                     //Arrays::push($singleTableInheritanceChildrenColumns, ...$childColumns);
-                    $code[] = "    ->addDiscriminatorMapClass($childDiscriminatorValue, \\{$modelsNamespace}\\{$childModelName}::class)";
+                    //$code[] = "    ->addDiscriminatorMapClass($childDiscriminatorValue, \\{$modelsNamespace}\\{$childModelName}::class)";
+
+                    $childModelClass = "{$modelsNamespace}\\{$childModelName}";
+                    if (!\class_exists($childModelClass)) {
+                        $stubModelFile = $this->doctrineOrmSchema->getPathToMapping()."/../ModelStub/{$childModelName}.php";
+                        $fs->dumpFile($stubModelFile, implode("\n", [
+                            '<?php',
+                            'namespace '.$this->doctrineOrmSchema->getNamespaceModels().';',
+                            "class $childModelName {}",
+                        ]));
+                        $code[] = "include_once '{$stubModelFile}'";
+                    }
+                    $code[] = "{$this->builderVar}->addDiscriminatorMapClass($childDiscriminatorValue, \\{$childModelClass}::class)";
                 }
                 $code[] = ';';
 
-                $code[] = "{$this->metaVar}->setSubclasses([";
-                foreach ($childrenColumnsMap as [$childModelName, $childDiscriminatorValue, $childColumns]) {
-                    $code[] = "    \\{$modelsNamespace}\\{$childModelName}::class,";
-                }
-
-                $code[] = ']);';
+                //$code[] = "{$this->metaVar}->setSubclasses([";
+                //foreach ($childrenColumnsMap as [$childModelName, $childDiscriminatorValue, $childColumns]) {
+                //    $code[] = "    \\{$modelsNamespace}\\{$childModelName}::class,";
+                //}
+                //$code[] = ']);';
 
             }
 
@@ -268,7 +288,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 
             $overridenFileSearchCode = [
                 '',
-                "if (file_exists(\$_extraMappingInfoFile = __DIR__.'/Override/'.basename(__FILE__))) {",
+                "if (file_exists(\$_extraMappingInfoFile = __DIR__.'/../MappingOverride/'.basename(__FILE__))) {",
                 '    /** @noinspection PhpIncludeInspection */ include $_extraMappingInfoFile;',
                 '}',
             ];
