@@ -203,6 +203,9 @@ class DoctrineOrmSchema
     /** @var array */
     public $singleTableInheritance = [];
 
+    /** @var InheritanceMap */
+    public $inheritanceMap;
+
     /**
      * @param string $domainConfigFile
      *
@@ -882,6 +885,7 @@ class DoctrineOrmSchema
     public function setSingleTableInheritance(array $singleTableInheritance): DoctrineOrmSchema
     {
         $this->singleTableInheritance = $singleTableInheritance;
+        $this->inheritanceMap = new InheritanceMap($singleTableInheritance);
         return $this;
     }
 
