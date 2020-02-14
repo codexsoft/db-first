@@ -165,6 +165,8 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                 $code[] = "{$this->builderVar}->setDiscriminatorColumn('$descriminatorColumnName', '$descriminatorColumnType')";
                 foreach ($childrenColumnsMap as [$childModelName, $childDiscriminatorValue, $childColumns]) {
 
+                    $childRepoClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.$childModelName.'Repository';
+
                     $singleTableInheritanceChildrenCodes[$childModelName] = [
                         '<?php',
                         '',
@@ -179,7 +181,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                         //"{$this->metaVar}->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_SEQUENCE);",
                         '',
                         "{$this->builderVar} = new $builderShortClass({$this->metaVar});",
-                        "{$this->builderVar}->setCustomRepositoryClass('$customRepoClass');",
+                        "{$this->builderVar}->setCustomRepositoryClass('$childRepoClass');",
                         //"{$this->builderVar}->setTable('$tableName');",
 
                     ];
@@ -264,22 +266,20 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                 //$this->generateAssociationCode($associationMappingName, $associationMapping, $tableName);
             }
 
-            foreach (\array_keys($singleTableInheritanceChildrenCodes) as $childEntityName) {
-                array_push($singleTableInheritanceChildrenCodes[$childEntityName], ...[
-                    '',
-                    "if (file_exists(\$_extraMappingInfoFile = __DIR__.'/Override/'.basename(__FILE__))) {",
-                    '    /** @noinspection PhpIncludeInspection */ include $_extraMappingInfoFile;',
-                    '}',
-                ]);
-                $fs->dumpFile($this->generateOutputFilePath(new ClassMetadataInfo($this->doctrineOrmSchema->getNamespaceModels().'\\'.$childEntityName)), implode("\n", $singleTableInheritanceChildrenCodes[$childEntityName]));
-            }
-
-            array_push($code, ...[
+            $overridenFileSearchCode = [
                 '',
                 "if (file_exists(\$_extraMappingInfoFile = __DIR__.'/Override/'.basename(__FILE__))) {",
                 '    /** @noinspection PhpIncludeInspection */ include $_extraMappingInfoFile;',
                 '}',
-            ]);
+            ];
+
+            // generating STI child entities mapping
+            foreach (\array_keys($singleTableInheritanceChildrenCodes) as $childEntityName) {
+                array_push($singleTableInheritanceChildrenCodes[$childEntityName], ...$overridenFileSearchCode);
+                $fs->dumpFile($this->generateOutputFilePath(new ClassMetadataInfo($this->doctrineOrmSchema->getNamespaceModels().'\\'.$childEntityName)), implode("\n", $singleTableInheritanceChildrenCodes[$childEntityName]));
+            }
+
+            array_push($code, ...$overridenFileSearchCode);
 
             $fs->dumpFile($file, implode("\n", $code));
         }
