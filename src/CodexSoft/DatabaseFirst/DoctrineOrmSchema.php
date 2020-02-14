@@ -200,6 +200,9 @@ class DoctrineOrmSchema
     /** @var string */
     protected $pathToPsrRoot = '/src';
 
+    /** @var array */
+    public $singleTableInheritance = [];
+
     /**
      * @param string $domainConfigFile
      *
@@ -868,6 +871,17 @@ class DoctrineOrmSchema
     public function setDqlHelperClass(string $dqlHelperClass): DoctrineOrmSchema
     {
         $this->dqlHelperClass = $dqlHelperClass;
+        return $this;
+    }
+
+    /**
+     * @param array $singleTableInheritance
+     *
+     * @return DoctrineOrmSchema
+     */
+    public function setSingleTableInheritance(array $singleTableInheritance): DoctrineOrmSchema
+    {
+        $this->singleTableInheritance = $singleTableInheritance;
         return $this;
     }
 

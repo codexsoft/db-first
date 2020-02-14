@@ -1,6 +1,7 @@
 <?php
 namespace CodexSoft\DatabaseFirst\Operation;
 
+use CodexSoft\Code\Arrays\Arrays;
 use \MartinGeorgiev\Doctrine\DBAL\Types as MartinGeorgievTypes;
 use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
@@ -91,7 +92,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
             $singularizedModelClass = $this->singularize($metadata->name);
             $tableName = $metadata->table['name'];
 
-            echo sprintf("\n".'Processing table "%s"', $tableName);
+            echo sprintf("\n\n".'Processing table "%s"', $tableName);
 
             if (\in_array($tableName, $this->doctrineOrmSchema->skipTables, true)) {
                 $this->getLogger()->notice(sprintf("\n".'Skipping table "%s"', $tableName));
@@ -129,6 +130,17 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 
             $builderShortClass = Classes::short($this->doctrineOrmSchema->metadataBuilderClass);
 
+            $singleTableInheritanceData = null;
+            $singleTableInheritanceChildrenColumns = [];
+            $singleTableInheritanceChildrenCodes = [];
+
+            $inheritanceType = 'INHERITANCE_TYPE_NONE';
+            if (isset($this->doctrineOrmSchema->singleTableInheritance[$tableName])) {
+                $inheritanceType = 'INHERITANCE_TYPE_SINGLE_TABLE';
+                $singleTableInheritanceData = $this->doctrineOrmSchema->singleTableInheritance[$tableName];
+            }
+
+            $modelsNamespace = $this->doctrineOrmSchema->getNamespaceModels();
             $code = [
                 '<?php',
                 '',
@@ -136,17 +148,59 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                 'use '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.';',
                 "use \\{$this->doctrineOrmSchema->metadataBuilderClass};",
                 '',
-                //"/** @var \$metadata \\$builderShortClass */",
                 '/** @var '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.' '.$this->metaVar.' */',
                 '',
                 '/** @noinspection PhpUnhandledExceptionInspection */',
-                "{$this->metaVar}->setInheritanceType(ClassMetadataInfo::INHERITANCE_TYPE_NONE);", // inheritance now is not supported
+                "{$this->metaVar}->setInheritanceType(ClassMetadataInfo::$inheritanceType);",
                 "{$this->metaVar}->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_SEQUENCE);",
                 '',
                 "{$this->builderVar} = new $builderShortClass({$this->metaVar});",
                 "{$this->builderVar}->setCustomRepositoryClass('$customRepoClass');",
                 "{$this->builderVar}->setTable('$tableName');",
             ];
+
+            if ($singleTableInheritanceData) {
+                [$descriminatorColumnName, $descriminatorColumnType, $childrenColumnsMap] = $singleTableInheritanceData;
+
+                $code[] = "{$this->builderVar}->setDiscriminatorColumn('$descriminatorColumnName', '$descriminatorColumnType')";
+                foreach ($childrenColumnsMap as [$childModelName, $childDiscriminatorValue, $childColumns]) {
+
+                    $singleTableInheritanceChildrenCodes[$childModelName] = [
+                        '<?php',
+                        '',
+                        'use '.\Doctrine\DBAL\Types\Type::class.';',
+                        'use '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.';',
+                        "use \\{$this->doctrineOrmSchema->metadataBuilderClass};",
+                        '',
+                        '/** @var '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.' '.$this->metaVar.' */',
+                        '',
+                        //'/** @noinspection PhpUnhandledExceptionInspection */',
+                        //"{$this->metaVar}->setInheritanceType(ClassMetadataInfo::INHERITANCE_TYPE_NONE);",
+                        //"{$this->metaVar}->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_SEQUENCE);",
+                        '',
+                        "{$this->builderVar} = new $builderShortClass({$this->metaVar});",
+                        "{$this->builderVar}->setCustomRepositoryClass('$customRepoClass');",
+                        //"{$this->builderVar}->setTable('$tableName');",
+
+                    ];
+
+                    foreach ($childColumns as $childColumn) {
+                        $singleTableInheritanceChildrenColumns[$childColumn] = $childModelName;
+                    }
+
+                    //Arrays::push($singleTableInheritanceChildrenColumns, ...$childColumns);
+                    $code[] = "    ->addDiscriminatorMapClass($childDiscriminatorValue, \\{$modelsNamespace}\\{$childModelName}::class)";
+                }
+                $code[] = ';';
+
+                $code[] = "{$this->metaVar}->setSubclasses([";
+                foreach ($childrenColumnsMap as [$childModelName, $childDiscriminatorValue, $childColumns]) {
+                    $code[] = "    \\{$modelsNamespace}\\{$childModelName}::class,";
+                }
+
+                $code[] = ']);';
+
+            }
 
             if (!ksort($metadata->fieldMappings)) {
                 throw new \RuntimeException("Failed to sort fieldMappings for entity $metadata->name");
@@ -163,8 +217,18 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                     continue;
                 }
 
+                $fieldCode = $this->generateFieldCode($field);
+
+                // skipping children fields from single table inheritance
+                //if (\in_array($field['columnName'], $singleTableInheritanceChildrenColumns, true)) {
+                if (\array_key_exists($field['columnName'], $singleTableInheritanceChildrenColumns)) {
+                    echo "\nskipped $tableName.$fieldColumnName as it is configured for child entity {$singleTableInheritanceChildrenColumns[$field['columnName']]}";
+                    array_push($singleTableInheritanceChildrenCodes[$singleTableInheritanceChildrenColumns[$field['columnName']]], ...$fieldCode);
+                    continue;
+                }
+
                 //$fieldCode = $this->generateFieldCode($field);
-                array_push($code, ...$this->generateFieldCode($field));
+                array_push($code, ...$fieldCode);
             }
 
             foreach ($metadata->associationMappings as $associationMappingName => $associationMapping) {
@@ -191,9 +255,19 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                 //$this->generateAssociationCode($associationMappingName, $associationMapping, $tableName);
             }
 
+            foreach (\array_keys($singleTableInheritanceChildrenCodes) as $childEntityName) {
+                array_push($singleTableInheritanceChildrenCodes[$childEntityName], ...[
+                    '',
+                    "if (file_exists(\$_extraMappingInfoFile = __DIR__.'/Override/'.basename(__FILE__))) {",
+                    '    /** @noinspection PhpIncludeInspection */ include $_extraMappingInfoFile;',
+                    '}',
+                ]);
+                $fs->dumpFile($this->generateOutputFilePath(new ClassMetadataInfo($this->doctrineOrmSchema->getNamespaceModels().'\\'.$childEntityName)), implode("\n", $singleTableInheritanceChildrenCodes[$childEntityName]));
+            }
+
             array_push($code, ...[
                 '',
-                "if (file_exists(\$_extraMappingInfoFile = __DIR__.'/../Extra/'.basename(__FILE__))) {",
+                "if (file_exists(\$_extraMappingInfoFile = __DIR__.'/Override/'.basename(__FILE__))) {",
                 '    /** @noinspection PhpIncludeInspection */ include $_extraMappingInfoFile;',
                 '}',
             ]);
