@@ -203,16 +203,18 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                     //$code[] = "    ->addDiscriminatorMapClass($childDiscriminatorValue, \\{$modelsNamespace}\\{$childModelName}::class)";
 
                     $childModelClass = "{$modelsNamespace}\\{$childModelName}";
+                    $stubModelFile = "/../ModelStub/{$childModelName}.php";
                     if (!\class_exists($childModelClass)) {
-                        $stubModelFile = $this->doctrineOrmSchema->getPathToMapping()."/../ModelStub/{$childModelName}.php";
-                        $fs->dumpFile($stubModelFile, implode("\n", [
+                        $fs->dumpFile($this->doctrineOrmSchema->getPathToRepositories().$stubModelFile, implode("\n", [
                             '<?php',
                             'namespace '.$this->doctrineOrmSchema->getNamespaceModels().';',
                             "class $childModelName {}",
                         ]));
-                        $code[] = "include_once '{$stubModelFile}'";
+                        $code[] = "include_once __DIR__.'{$stubModelFile}';";
+                    } elseif ($fs->exists($this->doctrineOrmSchema->getPathToRepositories().$stubModelFile)) {
+                        $fs->remove($this->doctrineOrmSchema->getPathToRepositories().$stubModelFile);
                     }
-                    $code[] = "{$this->builderVar}->addDiscriminatorMapClass($childDiscriminatorValue, \\{$childModelClass}::class)";
+                    $code[] = "{$this->builderVar}->addDiscriminatorMapClass($childDiscriminatorValue, \\{$childModelClass}::class);";
                 }
                 $code[] = ';';
 
