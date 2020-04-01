@@ -18,17 +18,17 @@ abstract class Dql
     /** @var string DQL has not NULL, so this is hacky replacement */
     public const NULL = 'CASE WHEN 1=1 THEN :null ELSE :null END';
 
-    private const FORMAT_YMD_HIS = DateAndTime::FORMAT_YMD_HIS;
+    protected const FORMAT_YMD_HIS = DateAndTime::FORMAT_YMD_HIS;
 
     /** @var int */
-    static private $counter = 0;
+    static protected $counter = 0;
 
     /**
      * @param null $varName
      *
      * @return string
      */
-    private static function generateParamName($varName = null): string
+    protected static function generateParamName($varName = null): string
     {
         $slug = $varName ? '_'.preg_replace('/\W+/', '', str_replace('.','_',$varName)) : '';
 
@@ -58,7 +58,7 @@ abstract class Dql
      * todo: import strings as DQL expressions?..
      * @return array
      */
-    private static function normalizeExpressions($expressions): array
+    protected static function normalizeExpressions($expressions): array
     {
         $normailzed = [];
         foreach ($expressions as $expression) {
@@ -147,14 +147,14 @@ abstract class Dql
      */
     public static function eq(QueryBuilder $qb, string $var, $value, $type = null): Comparison
     {
-        $paramName = self::generateParamName($var);
+        $paramName = static::generateParamName($var);
         $qb->setParameter($paramName,$value,$type);
         return $qb->expr()->eq($var,':'.$paramName);
     }
 
     public static function set(QueryBuilder $qb, string $var, $value, $type = null): QueryBuilder
     {
-        $paramName = self::generateParamName($var);
+        $paramName = static::generateParamName($var);
         $qb->setParameter($paramName,$value,$type);
         return $qb->set($var,':'.$paramName);
     }
@@ -170,7 +170,7 @@ abstract class Dql
      */
     public static function neq(QueryBuilder $qb, string $var, $value, $type = null): Comparison
     {
-        $paramName = self::generateParamName($var);
+        $paramName = static::generateParamName($var);
         $qb->setParameter($paramName,$value,$type);
         return $qb->expr()->neq($var,':'.$paramName);
     }
@@ -186,7 +186,7 @@ abstract class Dql
      */
     public static function lt(QueryBuilder $qb, string $var, $value, $type = null): Comparison
     {
-        $paramName = self::generateParamName($var);
+        $paramName = static::generateParamName($var);
         $qb->setParameter($paramName,$value,$type);
         return $qb->expr()->lt($var,':'.$paramName);
     }
@@ -202,7 +202,7 @@ abstract class Dql
      */
     public static function lte(QueryBuilder $qb, string $var, $value, $type = null): Comparison
     {
-        $paramName = self::generateParamName($var);
+        $paramName = static::generateParamName($var);
         $qb->setParameter($paramName,$value,$type);
         return $qb->expr()->lte($var,':'.$paramName);
     }
@@ -218,7 +218,7 @@ abstract class Dql
      */
     public static function gt(QueryBuilder $qb, string $var, $value, $type = null): Comparison
     {
-        $paramName = self::generateParamName($var);
+        $paramName = static::generateParamName($var);
         $qb->setParameter($paramName,$value,$type);
         return $qb->expr()->gt($var,':'.$paramName);
     }
@@ -234,7 +234,7 @@ abstract class Dql
      */
     public static function gte(QueryBuilder $qb, string $var, $value, $type = null): Comparison
     {
-        $paramName = self::generateParamName($var);
+        $paramName = static::generateParamName($var);
         $qb->setParameter($paramName,$value,$type);
         return $qb->expr()->gte($var,':'.$paramName);
     }
@@ -256,8 +256,8 @@ abstract class Dql
 
         // should provide ability to set $var, $min, $max either in-sql value like a.state or fixed scalar/object like "desiredValue"
         // use special wrapper for it?
-        $minVar = self::generateParamName('min');
-        $maxVar = self::generateParamName('max');
+        $minVar = static::generateParamName('min');
+        $maxVar = static::generateParamName('max');
         $qb->setParameter($minVar,$min,$type);
         $qb->setParameter($maxVar,$max,$type);
 
@@ -341,7 +341,7 @@ abstract class Dql
      */
     public static function like(QueryBuilder $qb, string $var, $value, $type = null): Comparison
     {
-        $paramName = self::generateParamName($var);
+        $paramName = static::generateParamName($var);
         $qb->setParameter($paramName,$value,$type);
         return $qb->expr()->like($var,':'.$paramName);
     }
@@ -357,7 +357,7 @@ abstract class Dql
      */
     public static function notLike(QueryBuilder $qb, string $var, $value, $type = null): Comparison
     {
-        $paramName = self::generateParamName($var);
+        $paramName = static::generateParamName($var);
         $qb->setParameter($paramName,$value,$type);
         return $qb->expr()->notLike($var,':'.$paramName);
     }
@@ -440,7 +440,7 @@ abstract class Dql
      */
     public static function isInstanceOf(QueryBuilder $qb, string $var, $value): Comparison
     {
-        $paramName = self::generateParamName($var);
+        $paramName = static::generateParamName($var);
         $qb->setParameter($paramName,$value);
         return $qb->expr()->isInstanceOf($var,':'.$paramName);
     }
@@ -577,7 +577,7 @@ abstract class Dql
      *
      * @return string
      */
-    private static function timeStampDiff( QueryBuilder $qb, $value1, $value2, $part = 'SECOND'): string
+    protected static function timeStampDiff( QueryBuilder $qb, $value1, $value2, $part = 'SECOND'): string
     {
         if ($value1 instanceof \DateTime) {
             $value1 = "'".Carbon::instance($value1)->format(self::FORMAT_YMD_HIS)."'";
@@ -601,7 +601,7 @@ abstract class Dql
      *
      * @return string
      */
-    private static function timestampFromAToB( QueryBuilder $qb, $a, $b, $part = 'SECOND'): string
+    protected static function timestampFromAToB( QueryBuilder $qb, $a, $b, $part = 'SECOND'): string
     {
         return self::timeStampDiff($qb,$a,$b,$part);
     }
@@ -657,7 +657,7 @@ abstract class Dql
      *
      * @return string
      */
-    private static function timestampAMinusB( QueryBuilder $qb, $a, $b, $part = 'SECOND'): string
+    protected static function timestampAMinusB( QueryBuilder $qb, $a, $b, $part = 'SECOND'): string
     {
         return self::timeStampDiff($qb,$b,$a,$part);
     }
@@ -785,6 +785,38 @@ abstract class Dql
     public static function notContains(QueryBuilder $qb, $left, $right): string
     {
         return Dql::dql($qb, 'CONTAINS('.$left.', '.$right.') = FALSE');
+    }
+
+    /**
+     * @param QueryBuilder $qb
+     * @param string $var
+     * @param $value
+     *
+     * @param null $type
+     *
+     * @return Comparison
+     */
+    public static function ilike(QueryBuilder $qb, string $var, $value, $type = null): Comparison
+    {
+        $paramName = static::generateParamName($var);
+        $qb->setParameter($paramName,$value,$type);
+        return new Comparison($var, 'ILIKE', $paramName);
+    }
+
+    /**
+     * @param QueryBuilder $qb
+     * @param string $var
+     * @param $value
+     *
+     * @param null $type
+     *
+     * @return Comparison
+     */
+    public static function notIlike(QueryBuilder $qb, string $var, $value, $type = null): Comparison
+    {
+        $paramName = static::generateParamName($var);
+        $qb->setParameter($paramName,$value,$type);
+        return new Comparison($var, 'NOT ILIKE', $paramName);
     }
 
 }
