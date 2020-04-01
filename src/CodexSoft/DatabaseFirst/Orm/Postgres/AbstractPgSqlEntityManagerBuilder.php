@@ -185,7 +185,7 @@ abstract class AbstractPgSqlEntityManagerBuilder
         foreach ($types as $typeName => $typeClass) {
 
             if (\is_int($typeName)) {
-                $typeName = $typeClass::TYPE_NAME;
+                $typeName = $typeClass::getName();
             }
 
             if (!Type::hasType($typeName)) {
