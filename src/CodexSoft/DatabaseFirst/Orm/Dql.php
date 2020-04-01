@@ -797,9 +797,6 @@ abstract class Dql
      */
     public static function ilike(QueryBuilder $qb, $left, $right): string
     {
-        //$paramName = static::generateParamName($var);
-        //$qb->setParameter($paramName,$value,$type);
-        //return new Comparison($var, 'ILIKE', $paramName);
         return Dql::dql($qb, 'ILIKE('.$left.', '.$right.') = TRUE');
     }
 
@@ -812,9 +809,6 @@ abstract class Dql
      */
     public static function notIlike(QueryBuilder $qb, $left, $right): string
     {
-        //$paramName = static::generateParamName($var);
-        //$qb->setParameter($paramName,$value,$type);
-        //return new Comparison($var, 'NOT ILIKE', $paramName);
         return Dql::dql($qb, 'ILIKE('.$left.', '.$right.') = FALSE');
     }
 
