@@ -789,34 +789,33 @@ abstract class Dql
 
     /**
      * @param QueryBuilder $qb
-     * @param string $var
-     * @param $value
      *
-     * @param null $type
+     * @param $left
+     * @param $right
      *
      * @return Comparison
      */
-    public static function ilike(QueryBuilder $qb, string $var, $value, $type = null): Comparison
+    public static function ilike(QueryBuilder $qb, $left, $right): string
     {
-        $paramName = static::generateParamName($var);
-        $qb->setParameter($paramName,$value,$type);
-        return new Comparison($var, 'ILIKE', $paramName);
+        //$paramName = static::generateParamName($var);
+        //$qb->setParameter($paramName,$value,$type);
+        //return new Comparison($var, 'ILIKE', $paramName);
+        return Dql::dql($qb, 'ILIKE('.$left.', '.$right.') = TRUE');
     }
 
     /**
      * @param QueryBuilder $qb
-     * @param string $var
-     * @param $value
-     *
-     * @param null $type
+     * @param $left
+     * @param $right
      *
      * @return Comparison
      */
-    public static function notIlike(QueryBuilder $qb, string $var, $value, $type = null): Comparison
+    public static function notIlike(QueryBuilder $qb, $left, $right): string
     {
-        $paramName = static::generateParamName($var);
-        $qb->setParameter($paramName,$value,$type);
-        return new Comparison($var, 'NOT ILIKE', $paramName);
+        //$paramName = static::generateParamName($var);
+        //$qb->setParameter($paramName,$value,$type);
+        //return new Comparison($var, 'NOT ILIKE', $paramName);
+        return Dql::dql($qb, 'ILIKE('.$left.', '.$right.') = FALSE');
     }
 
 }
