@@ -174,17 +174,18 @@ abstract class AbstractPgSqlEntityManagerBuilder
     public static function addCustomTypes(): void
     {
         $types = [
-            MartinGeorgievTypes\SmallIntArray::class,
-            MartinGeorgievTypes\IntegerArray::class,
-            MartinGeorgievTypes\BigIntArray::class,
-            MartinGeorgievTypes\JsonbArray::class,
-            MartinGeorgievTypes\TextArray::class,
+            'smallint[]' => MartinGeorgievTypes\SmallIntArray::class,
+            'integer[]' => MartinGeorgievTypes\IntegerArray::class,
+            'bigint[]' => MartinGeorgievTypes\BigIntArray::class,
+            'jsonb[]' => MartinGeorgievTypes\JsonbArray::class,
+            'text[]' => MartinGeorgievTypes\TextArray::class,
             'varchar[]'  => MartinGeorgievTypes\TextArray::class,
         ];
 
         foreach ($types as $typeName => $typeClass) {
 
             if (\is_int($typeName)) {
+                // this will trigger PHP deprecated call non-static method statically
                 $typeName = $typeClass::getName();
             }
 
