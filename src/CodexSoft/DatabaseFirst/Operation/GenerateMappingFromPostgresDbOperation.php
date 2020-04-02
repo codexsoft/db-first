@@ -375,11 +375,11 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                         case Type::JSON_ARRAY:
                         case Type::SIMPLE_ARRAY:
                         case Type::TARRAY:
-                        case MartinGeorgievTypes\BigIntArray::TYPE_NAME:
-                        case MartinGeorgievTypes\SmallIntArray::TYPE_NAME:
-                        case MartinGeorgievTypes\IntegerArray::TYPE_NAME:
-                        case MartinGeorgievTypes\JsonbArray::TYPE_NAME:
-                        case MartinGeorgievTypes\TextArray::TYPE_NAME:
+                        case 'bigint[]': // MartinGeorgievTypes\BigIntArray::TYPE_NAME
+                        case 'smallint[]': // MartinGeorgievTypes\SmallIntArray::TYPE_NAME
+                        case 'integer[]': // MartinGeorgievTypes\IntegerArray::TYPE_NAME
+                        case 'jsonb[]': // MartinGeorgievTypes\JsonbArray::TYPE_NAME
+                        case 'text[]': // MartinGeorgievTypes\TextArray::TYPE_NAME
                         case 'varchar[]':
                         case '_int2':
                         case '_int4':
