@@ -36,46 +36,49 @@ class ConsoleRunner
         $cliDir = $cliDir ?: dirname($cliFile);
         $console = new Application('CodexSoft Database-first CLI');
         $commandList = [
+            'remove-not-mapped' => (new ExecuteOperationCommand($dbFirst->removeEntitiesAndReposNotExistingInMapping()))
+                                   ->setDescription('Remove entity and repository for not existed in mapping') ,
+            'repos' => (new ExecuteOperationCommand($dbFirst->generateRepositories()))
+                ->setDescription('Generate repositories by database schema'),
+            'models' => (new ExecuteOperationCommand($dbFirst->generateEntities()))
+                ->setDescription('Generate models by database schema') ,
+            'add-migration' => (new ExecuteOperationCommand($dbFirst->generateMigration()))
+                ->setDescription('Create new migration'),
+            'mapping' => (new ExecuteOperationCommand($dbFirst->generateMapping()))
+                         ->setDescription('Generate doctrine mapping'),
 
-            'remove-not-mapped' => new ExecuteOperationCommand($dbFirst->removeEntitiesAndReposNotExistingInMapping()),
-            'repos' => new ExecuteOperationCommand($dbFirst->generateRepositories()),
-            'models' => new ExecuteOperationCommand($dbFirst->generateEntities()),
-            'add-migration' => new ExecuteOperationCommand($dbFirst->generateMigration()),
-            'mapping' => new ExecuteOperationCommand($dbFirst->generateMapping()),
-
-            'migrate' => new ExecuteShellCommand([
+            'migrate' => (new ExecuteShellCommand([
                 'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate',
-            ]),
+            ]))->setDescription('apply migrations'),
 
-            'check' => new ExecuteShellCommand([
+            'check' => (new ExecuteShellCommand([
                 'php '.$cliDir.'/doctrine.orm.php '.$ormConfigFile.' orm:validate-schema --skip-sync',
-            ]),
+            ]))->setDescription('Validate doctrine schema'),
 
-            'review' => new ExecuteShellCommand([
+            'review' => (new ExecuteShellCommand([
                 'php '.$cliFile.' '.$ormConfigFile.' mapping',
                 'php '.$cliFile.' '.$ormConfigFile.' models',
                 'php '.$cliFile.' '.$ormConfigFile.' repos',
-            ]),
+            ]))->setDescription('Execute commands mapping, models, repos'),
 
-            'db-remake' => new ExecuteShellCommand([
+            'db-remake' => (new ExecuteShellCommand([
                 'php '.$cliFile.' '.$ormConfigFile.' db-clean',
                 'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate --no-interaction',
-            ]),
+            ]))->setDescription('Remove db and apply migrations(Execute commands db-clean + migrate --no-interaction)'),
 
-            'regenerate' => new ExecuteShellCommand([
-                'php '.$cliFile.' '.$ormConfigFile.' db-clean',
-                'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate --no-interaction',
+            'regenerate' => (new ExecuteShellCommand([
+                'php '.$cliFile.' '.$ormConfigFile.' db-remake',
                 'php '.$cliFile.' '.$ormConfigFile.' review',
                 'php '.$cliFile.' '.$ormConfigFile.' check',
-            ]),
+            ]))->setDescription('Recreate db and mapping, entity,repos (Execute commands db-remake, review, check)'),
 
-            'db-clean' => new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+            'db-clean' => (new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
                 Database::deleteAllUserTables($ormSchema->getEntityManager()->getConnection());
-            }),
+            }))->setDescription('Delete all not system tables'),
 
-            'db-truncate' => new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+            'db-truncate' => (new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
                 Database::truncateAllUserTables($ormSchema->getEntityManager()->getConnection());
-            }),
+            }))->setDescription('Truncate all not system tables'),
         ];
 
         foreach ($commandList as $command => $commandClass) {
