@@ -23,9 +23,9 @@ abstract class BaseMigration extends AbstractMigration
 
     abstract public static function getContainingDirectory(): string;
 
-    protected function getSqlStatements(): array
+    protected function getSqlStatements(string $migrationSqlFile): array
     {
-        $migrationSqlFile = static::getContainingDirectory().'/'.Classes::short(static::class).'.sql';
+        //$migrationSqlFile = static::getContainingDirectory().'/'.Classes::short(static::class).'.sql';
         if (!\file_exists($migrationSqlFile)) {
             throw new \RuntimeException('Migration file does not exists! '.$migrationSqlFile);
         }
@@ -102,41 +102,48 @@ abstract class BaseMigration extends AbstractMigration
     }
 
     /**
+     * Of course, instead we can override up() method and use Schema $schema.
      * @param Schema $schema
      *
      * @throws \Exception
      */
     public function up(Schema $schema): void
     {
-        // this up() migration is auto-generated, please modify it to your needs
-        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'postgresql', 'Migration can only be executed safely on \'postgresql\'.');
+        $platform = $this->connection->getDatabasePlatform();
+        $this->abortIf($platform || ($platform->getName() !== 'postgresql'), 'Migration can only be executed safely on \'postgresql\'.');
 
-        $statemets = $this->getSqlStatements();
+        $migrationSqlFile = static::getContainingDirectory().'/'.Classes::short(static::class).'.sql';
+        $statemets = $this->getSqlStatements($migrationSqlFile);
 
         $this->addSql('BEGIN');
-        foreach( $statemets as $statement ) {
-            $this->addSql( $statement );
+        foreach($statemets as $statement) {
+            $this->addSql($statement);
         }
         $this->addSql('COMMIT');
-
-        // of course, instead we can use Schema $schema.
     }
 
     /**
+     * Of course, instead we can override down() method and use Schema $schema.
      * @param Schema $schema
      *
-     //* @throws \Doctrine\DBAL\Migrations\AbortMigrationException
-     //* @throws \Doctrine\DBAL\Migrations\IrreversibleMigrationException
      * @throws \Doctrine\DBAL\DBALException
      */
     public function down(Schema $schema): void
     {
+        $platform = $this->connection->getDatabasePlatform();
+        $this->abortIf($platform || ($platform->getName() !== 'postgresql'), 'Migration can only be executed safely on \'postgresql\'.');
 
-        // this down() migration is auto-generated, please modify it to your needs
-        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'postgresql', 'Migration can only be executed safely on \'postgresql\'.');
+        $migrationSqlFile = static::getContainingDirectory().'/'.Classes::short(static::class).'down.sql';
+        if (!\file_exists($migrationSqlFile)) {
+            $this->throwIrreversibleMigrationException();
+        }
+        $statemets = $this->getSqlStatements($migrationSqlFile);
 
-        $this->throwIrreversibleMigrationException();
-
+        $this->addSql('BEGIN');
+        foreach($statemets as $statement) {
+            $this->addSql($statement);
+        }
+        $this->addSql('COMMIT');
     }
 
 }
