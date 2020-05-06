@@ -36,16 +36,26 @@ class ConsoleRunner
         $cliDir = $cliDir ?: dirname($cliFile);
         $console = new Application('CodexSoft Database-first CLI');
         $commandList = [
+
             'remove-not-mapped' => (new ExecuteOperationCommand($dbFirst->removeEntitiesAndReposNotExistingInMapping()))
-                                   ->setDescription('Remove entity and repository for not existed in mapping') ,
+                ->setDescription('Remove entity and repository for not existed in mapping') ,
+
             'repos' => (new ExecuteOperationCommand($dbFirst->generateRepositories()))
                 ->setDescription('Generate repositories by database schema'),
+
             'models' => (new ExecuteOperationCommand($dbFirst->generateEntities()))
                 ->setDescription('Generate models by database schema') ,
+
             'add-migration' => (new ExecuteOperationCommand($dbFirst->generateMigration()))
                 ->setDescription('Create new migration'),
+
             'mapping' => (new ExecuteOperationCommand($dbFirst->generateMapping()))
-                         ->setDescription('Generate doctrine mapping'),
+                ->setDescription('Generate doctrine mapping'),
+
+            // todo: how to pass rest of input to executing shell command?
+            //'migrations' => (new ExecuteShellCommand([
+            //    'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate',
+            //]))->setDescription('doctrine migrations CLI'),
 
             'migrate' => (new ExecuteShellCommand([
                 'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate',

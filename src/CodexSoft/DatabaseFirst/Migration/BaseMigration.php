@@ -110,7 +110,7 @@ abstract class BaseMigration extends AbstractMigration
     public function up(Schema $schema): void
     {
         $platform = $this->connection->getDatabasePlatform();
-        $this->abortIf($platform || ($platform->getName() !== 'postgresql'), 'Migration can only be executed safely on \'postgresql\'.');
+        $this->abortIf(!$platform || ($platform->getName() !== 'postgresql'), 'Migration can only be executed safely on \'postgresql\'.');
 
         $migrationSqlFile = static::getContainingDirectory().'/'.Classes::short(static::class).'.sql';
         $statemets = $this->getSqlStatements($migrationSqlFile);
@@ -131,7 +131,7 @@ abstract class BaseMigration extends AbstractMigration
     public function down(Schema $schema): void
     {
         $platform = $this->connection->getDatabasePlatform();
-        $this->abortIf($platform || ($platform->getName() !== 'postgresql'), 'Migration can only be executed safely on \'postgresql\'.');
+        $this->abortIf(!$platform || ($platform->getName() !== 'postgresql'), 'Migration can only be executed safely on \'postgresql\'.');
 
         $migrationSqlFile = static::getContainingDirectory().'/'.Classes::short(static::class).'down.sql';
         if (!\file_exists($migrationSqlFile)) {
