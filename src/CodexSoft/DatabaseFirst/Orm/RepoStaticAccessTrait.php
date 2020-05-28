@@ -3,6 +3,7 @@
 namespace CodexSoft\DatabaseFirst\Orm;
 
 use CodexSoft\Code\Classes\Classes;
+use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -35,7 +36,7 @@ trait RepoStaticAccessTrait
     public static function byId($id, EntityManagerInterface $em = null)
     {
         $foundEntity = static::byIdOrNull($id, $em);
-        if (!$foundEntity instanceof static) {
+        if (!static::isInstanceOrProxy($foundEntity)) {
             throw new \RuntimeException(Classes::short(__CLASS__).' with ID='.$id.' not found!');
         }
 
@@ -55,8 +56,23 @@ trait RepoStaticAccessTrait
         if (method_exists($repository,'getByIdsIndexedById')) {
             return $repository->getByIdsIndexedById($ids);
         }
-        //logger()->notice('called '.static::class.'::byIds and repo method getByIdsIndexedById is not defined');
         return $repository->findBy([static::_id() => $ids]);
+    }
+
+    /**
+     * Checks that $entity is instance of this class or
+     * @param $entity
+     *
+     * @return bool
+     */
+    private static function isInstanceOrProxy(object $entity): bool
+    {
+        if ($entity instanceof static) {
+            return true;
+        }
+        $entityRealClass = ClassUtils::getClass($entity);
+        $staticRealClass = ClassUtils::getRealClass(static::class);
+        return ($entityRealClass === $staticRealClass) || \is_subclass_of($entityRealClass, $staticRealClass);
     }
 
     /**
@@ -68,14 +84,12 @@ trait RepoStaticAccessTrait
      */
     public static function byIdOrNull($id, EntityManagerInterface $em = null)
     {
-
-        if ($id instanceof static) {
+        if (\is_object($id) && static::isInstanceOrProxy($id)) {
             return $id;
         }
 
         /** @noinspection PhpIncompatibleReturnTypeInspection */
         return self::repo($em)->find((int) $id);
-
     }
 
     /**
@@ -83,8 +97,6 @@ trait RepoStaticAccessTrait
      *
      * В некоторых случаях, чтобы не делать лишние запросы в БД, имея на руках ID
      * или сущность, можно пользоваться этим методом.
-     *
-     * todo: проверить что число >0 ?
      *
      * @param int|string|static $idOrEntity
      *
@@ -96,6 +108,10 @@ trait RepoStaticAccessTrait
         $id = static::extractIdOrNull($idOrEntity);
         if ($id === null) {
             throw new \RuntimeException("ID '$idOrEntity' is not entity nor numeric value");
+        }
+
+        if ($id < 1) {
+            throw new \RuntimeException("invalid ID '$idOrEntity' extracted");
         }
 
         return $id;
@@ -116,8 +132,8 @@ trait RepoStaticAccessTrait
             return $idOrEntity;
         }
 
-        if ($idOrEntity instanceof static) {
-            // todo: is entity always implements has getId()? Maybe check that it has getter?
+        if (\is_object($idOrEntity) && static::isInstanceOrProxy($idOrEntity)) {
+            // todo: is entity always has method getId()? Maybe check that it has getter?
             if ($idOrEntity->getId() === null) {
                 throw new \RuntimeException('Entity of class '.static::class.' has not ID yet!');
             }
