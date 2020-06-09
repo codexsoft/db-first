@@ -2,84 +2,259 @@
 
 namespace CodexSoft\DatabaseFirst;
 
-use CodexSoft\DatabaseFirst\Operation;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use CodexSoft\Cli\Command\ExecuteClosureCommand;
+use CodexSoft\Cli\Command\ExecuteShellCommand;
+use CodexSoft\DatabaseFirst\Helpers\Database;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * todo: should avoid executing shell, when cli applications doctrine orm&migrations can be executed
+ * via constructing them in code?
+ *
+ * https://symfony.com/doc/current/console/command_in_controller.html
+ */
 class DatabaseFirst
 {
-    use Operation\DoctrineOrmSchemaAwareTrait;
-
-    /** @var LoggerInterface */
-    private $logger;
-
     /**
-     * @param LoggerInterface $logger
+     * @param DoctrineOrmSchema $ormSchema
+     * @param string $ormConfigFile
      *
-     * @return static
+     * @param string $cliFile
+     *
+     * @param string $cliDir
+     *
+     * @return Application
      */
-    public function setLogger($logger): self
+    public static function createApplication(
+        DoctrineOrmSchema $ormSchema,
+        string $ormConfigFile,
+        string $cliFile,
+        string $cliDir = null
+    ): Application
     {
-        $this->logger = $logger;
-        return $this;
-    }
+        $cliDir = $cliDir ?: dirname($cliFile);
+        $console = new Application('CodexSoft Database-first CLI');
+        $commandList = [
 
-    /**
-     * @return LoggerInterface
-     */
-    public function getLogger()
-    {
-        return $this->logger ?: $this->logger = new NullLogger;
-    }
+            'remove-not-mapped' => (new ExecuteClosureCommand(
+                function (Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+                    (new Operation\RemoveNotExistingInMappingEntitiesOperation())
+                        ->setLogger($this->logger)
+                        ->setDoctrineOrmSchema($ormSchema)
+                        ->execute();
+                }
+            ))->setDescription('Remove entity and repository for not existed in mapping'),
 
-    public function __construct(DoctrineOrmSchema $doctrineOrmSchema)
-    {
-        $this->doctrineOrmSchema = $doctrineOrmSchema;
-        $this->logger = new NullLogger;
-    }
+            'repos' => (new ExecuteClosureCommand(
+                function (Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+                    (new Operation\GenerateReposOperation())
+                        ->setLogger($this->logger)
+                        ->setDoctrineOrmSchema($ormSchema)
+                        ->execute();
+                }
+            ))->setDescription('Generate repositories by database schema'),
 
-    /**
-     * @return Operation\GenerateEntitiesOperation
-     */
-    public function generateEntities(): Operation\GenerateEntitiesOperation
-    {
-        return (new Operation\GenerateEntitiesOperation)
-            ->setLogger($this->logger)
-            ->setDoctrineOrmSchema($this->doctrineOrmSchema);
-    }
+            'models' => (new ExecuteClosureCommand(
+                function (Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+                    (new Operation\GenerateEntitiesOperation())
+                        ->setLogger($this->logger)
+                        ->setDoctrineOrmSchema($ormSchema)
+                        ->execute();
+                }
+            ))->setDescription('Generate models by database schema'),
 
-    /**
-     * @return Operation\GenerateMigrationOperation
-     */
-    public function generateMigration(): Operation\GenerateMigrationOperation
-    {
-        return (new Operation\GenerateMigrationOperation)
-            ->setLogger($this->logger)
-            ->setDoctrineOrmSchema($this->doctrineOrmSchema);
-    }
+            'add-migration' => (new ExecuteClosureCommand(
+                function (Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+                    (new Operation\GenerateMigrationOperation())
+                        ->setLogger($this->logger)
+                        ->setDoctrineOrmSchema($ormSchema)
+                        ->execute();
+                }
+            ))->setDescription('Create new migration'),
 
-    /**
-     * @return Operation\GenerateReposOperation
-     */
-    public function generateRepositories(): Operation\GenerateReposOperation
-    {
-        return (new Operation\GenerateReposOperation)
-            ->setLogger($this->logger)
-            ->setDoctrineOrmSchema($this->doctrineOrmSchema);
-    }
+            'mapping' => (new ExecuteClosureCommand(
+                function (Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+                    (new Operation\GenerateMappingFromPostgresDbOperation())
+                        ->setLogger($this->logger)
+                        ->setDoctrineOrmSchema($ormSchema)
+                        ->execute();
+                }
+            ))->setDescription('Generate doctrine mapping for postgres db'),
 
-    public function generateMapping(): Operation\GenerateMappingFromPostgresDbOperation
-    {
-        return (new Operation\GenerateMappingFromPostgresDbOperation)
-            ->setLogger($this->logger)
-            ->setDoctrineOrmSchema($this->doctrineOrmSchema);
-    }
+            'migrate' => (new ExecuteShellCommand([
+                'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate',
+            ]))->setDescription('apply migrations'),
 
-    public function removeEntitiesAndReposNotExistingInMapping(): Operation\RemoveNotExistingInMappingEntitiesOperation
-    {
-        return (new Operation\RemoveNotExistingInMappingEntitiesOperation)
-            ->setLogger($this->logger)
-            ->setDoctrineOrmSchema($this->doctrineOrmSchema);
+            'check' => (new ExecuteShellCommand([
+                'php '.$cliDir.'/doctrine.orm.php '.$ormConfigFile.' orm:validate-schema --skip-sync',
+            ]))->setDescription('Validate doctrine schema'),
+
+            'review' => (new ExecuteShellCommand([
+                'php '.$cliFile.' '.$ormConfigFile.' mapping',
+                'php '.$cliFile.' '.$ormConfigFile.' models',
+                'php '.$cliFile.' '.$ormConfigFile.' repos',
+            ]))->setDescription('Execute commands mapping, models, repos'),
+
+            'db-remake' => (new ExecuteShellCommand([
+                'php '.$cliFile.' '.$ormConfigFile.' db-clean',
+                'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate --no-interaction',
+            ]))->setDescription('Remove db and apply migrations(Execute commands db-clean + migrate --no-interaction)'),
+
+            'regenerate' => (new ExecuteShellCommand([
+                'php '.$cliFile.' '.$ormConfigFile.' db-remake',
+                'php '.$cliFile.' '.$ormConfigFile.' review',
+                'php '.$cliFile.' '.$ormConfigFile.' check',
+            ]))->setDescription('Recreate db and mapping, entity,repos (Execute commands db-remake, review, check)'),
+
+            'db-clean' => (new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+                Database::deleteAllUserTables($ormSchema->getEntityManager()->getConnection());
+            }))->setDescription('Delete all not system tables'),
+
+            'db-truncate' => (new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+                Database::truncateAllUserTables($ormSchema->getEntityManager()->getConnection());
+            }))->setDescription('Truncate all not system tables'),
+        ];
+
+        $console->add(
+            new class extends Command
+            {
+                protected static $defaultName = 'remove-not-mapped';
+                protected DoctrineOrmSchema $ormSchema;
+
+                public function __construct(DoctrineOrmSchema $ormSchema, string $name = null)
+                {
+                    parent::__construct($name);
+                    $this->ormSchema = $ormSchema;
+                    $this->setDescription('Remove entity and repository for not existed in mapping');
+                }
+
+                protected function execute(InputInterface $input, OutputInterface $output)
+                {
+                    (new Operation\RemoveNotExistingInMappingEntitiesOperation)
+                        ->setDoctrineOrmSchema($this->ormSchema)
+                        ->execute();
+
+                    return 0;
+                }
+            }
+        );
+
+        $console->add(
+            new class extends Command
+            {
+                protected static $defaultName = 'repos';
+                protected DoctrineOrmSchema $ormSchema;
+
+                public function __construct(DoctrineOrmSchema $ormSchema, string $name = null)
+                {
+                    parent::__construct($name);
+                    $this->ormSchema = $ormSchema;
+                    $this->setDescription('Generate repositories by database schema');
+                }
+
+                protected function execute(InputInterface $input, OutputInterface $output)
+                {
+                    (new Operation\GenerateReposOperation())
+                        ->setDoctrineOrmSchema($this->ormSchema)
+                        ->execute();
+
+                    return 0;
+                }
+            }
+        );
+
+        $console->add(
+            new class extends Command
+            {
+                protected static $defaultName = 'models';
+                protected DoctrineOrmSchema $ormSchema;
+
+                public function __construct(DoctrineOrmSchema $ormSchema, string $name = null)
+                {
+                    parent::__construct($name);
+                    $this->ormSchema = $ormSchema;
+                    $this->setDescription('Generate models by database schema');
+                }
+
+                protected function execute(InputInterface $input, OutputInterface $output)
+                {
+                    (new Operation\GenerateEntitiesOperation())
+                        ->setDoctrineOrmSchema($this->ormSchema)
+                        ->execute();
+
+                    return 0;
+                }
+            }
+        );
+
+        $console->add(
+            new class extends Command
+            {
+                protected static $defaultName = 'add-migration';
+                protected DoctrineOrmSchema $ormSchema;
+
+                public function __construct(DoctrineOrmSchema $ormSchema, string $name = null)
+                {
+                    parent::__construct($name);
+                    $this->ormSchema = $ormSchema;
+                    $this->setDescription('Create new migration');
+                }
+
+                protected function execute(InputInterface $input, OutputInterface $output)
+                {
+                    (new Operation\GenerateMigrationOperation())
+                        ->setDoctrineOrmSchema($this->ormSchema)
+                        ->execute();
+
+                    return 0;
+                }
+            }
+        );
+
+        $console->add(
+            new class extends Command
+            {
+                protected static $defaultName = 'mapping';
+                protected DoctrineOrmSchema $ormSchema;
+
+                public function __construct(DoctrineOrmSchema $ormSchema, string $name = null)
+                {
+                    parent::__construct($name);
+                    $this->ormSchema = $ormSchema;
+                    $this->setDescription('Generate doctrine mapping for postgres db');
+                }
+
+                protected function execute(InputInterface $input, OutputInterface $output)
+                {
+                    (new Operation\GenerateMappingFromPostgresDbOperation())
+                        ->setDoctrineOrmSchema($this->ormSchema)
+                        ->execute();
+
+                    return 0;
+                }
+            }
+        );
+
+        foreach ($commandList as $command => $commandClass) {
+            try {
+
+                if ($commandClass instanceof Command) {
+                    $commandInstance = $commandClass;
+                } else {
+                    $commandInstance = new $commandClass($command);
+                }
+                $console->add($commandInstance->setName($command));
+
+            } catch ( \Throwable $e ) {
+                echo "\nSomething went wrong: ".$e->getMessage();
+            };
+
+        }
+
+        return $console;
     }
 
 }

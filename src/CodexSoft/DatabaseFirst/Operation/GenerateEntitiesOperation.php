@@ -25,7 +25,7 @@ use const CodexSoft\Shortcut\TAB;
 /**
  * @method void execute()
  */
-class GenerateEntitiesOperation extends Operation
+class   GenerateEntitiesOperation extends Operation
 {
 
     use DoctrineOrmSchemaAwareTrait;
