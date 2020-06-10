@@ -22,32 +22,19 @@ class DoctrineOrmSchema
     private $namespaceMappingExtra;
     private $namespaceModelsAwareTraits;
 
-    /** @var string|null */
-    private $migrationBaseClass;
+    private ?string $migrationBaseClass = null;
+    private ?string $pathToMigrations = null;
+    private ?string $pathToModels = null;
+    private ?string $pathToRepositories = null;
+    private ?string $pathToModelsTraits = null;
+    private ?string $pathToMapping = null;
 
-    /** @var string */
-    private $pathToMigrations;
+    private EntityManager $entityManager;
 
-    /** @var string */
-    private $pathToModels;
-
-    /** @var string */
-    private $pathToRepositories;
-
-    /** @var string */
-    private $pathToModelsTraits;
-
-    /** @var string */
-    private $pathToMapping;
-
-    /** @var EntityManager */
-    private $entityManager;
-
-    /** @var string */
-    private $pathToModelAwareTraits;
+    private ?string $pathToModelAwareTraits;
 
     /** @var string[]  */
-    public $dbToPhpType = [
+    public array $dbToPhpType = [
         'json[]'                    => 'array',
         'jsonb'                     => 'array',
         'jsonb[]'                   => 'array',
@@ -81,7 +68,7 @@ class DoctrineOrmSchema
      * @var string[] while generating entities, entities for these tables should be skipped
      * supports wildcard ending like doctrine_*
      */
-    public $skipTables = [
+    public array $skipTables = [
         'doctrine_migration_versions'
     ];
 
@@ -94,62 +81,35 @@ class DoctrineOrmSchema
      * ]
      * @var string[]
      */
-    public $skipColumns = [];
+    public array $skipColumns = [];
 
-    /** @var bool  */
-    public $cascadePersistAllRelationships = true;
-
-    /** @var bool  */
-    public $cascadeRefreshAllRelationships = true;
-
-    /** @var bool */
-    public $generateModelAwareTraits = true;
-
-    /** @var bool */
-    public $overwriteModelAwareTraits = false;
-
-    /** @var bool */
-    public $generateSetMethodForModelAwareTraits = false;
-
-    /** @var bool */
-    public $generateSetOrIdMethodForModelAwareTraits = true;
-
-    /** @var bool */
-    public $overwriteModelClasses = false;
+    public bool $cascadePersistAllRelationships = true;
+    public bool $cascadeRefreshAllRelationships = true;
+    public bool $generateModelAwareTraits = true;
+    public bool $overwriteModelAwareTraits = false;
+    public bool $generateSetMethodForModelAwareTraits = false;
+    public bool $generateSetOrIdMethodForModelAwareTraits = true;
+    public bool $overwriteModelClasses = false;
 
     /**
      * Visibility of the field in generated model traits
-     *
-     * @var string
      */
-    public $modelTraitFieldVisibility = 'private';
+    public string $modelTraitFieldVisibility = 'private';
 
-    /**
-     * @var bool
-     */
-    public $generateModelWithRepoAccess = true;
+    public bool $generateModelWithRepoAccess = true;
+    public bool $generateModelWithLockHelpers = false;
 
-    /**
-     * @var bool
-     */
-    public $generateModelWithLockHelpers = false;
-
-    /** @var string A string pattern used to match entities that should be processed. */
+    /** @var string|string[] A string pattern used to match entities that should be processed. */
     public $metadataFilter;
 
     /**
-     * @var string
      * OR \CodexSoft\DatabaseFirst\Orm\ModelMetadataInheritanceBuilder::class
      */
-    public $metadataBuilderClass = ClassMetadataBuilder::class;
+    public string $metadataBuilderClass = ClassMetadataBuilder::class;
+    public string $metaVar = '$metadata';
+    public string $builderVar = '$mapper';
 
-    /** @var string  */
-    public $metaVar = '$metadata';
-
-    /** @var string  */
-    public $builderVar = '$mapper';
-
-    public $doctrineTypesMap = [
+    public array $doctrineTypesMap = [
         'array' => 'TARRAY',
         'simple_array' => 'SIMPLE_ARRAY',
         'json_array' => 'JSON_ARRAY',
@@ -178,33 +138,17 @@ class DoctrineOrmSchema
     ];
 
     /** @var string A parent class for repository. */
-    public $parentRepositoryClass = EntityRepository::class;
+    public string $parentRepositoryClass = EntityRepository::class;
 
-    /** @var bool  */
-    public $generateRepoTraits = true;
-
-    /** @var bool  */
-    public $overwriteRepoClasses = false;
-
-    /** @var string */
-    public $knownEntityManagerContainerClass;
-
-    /** @var string */
-    public $knownEntityManagerRouterClass;
-
-    /** @var string */
-    public $dqlHelperClass = Dql::class;
-
-    protected $namespaceBase = 'App\\Domain';
-
-    /** @var string */
-    protected $pathToPsrRoot = '/src';
-
-    /** @var array */
-    public $singleTableInheritance = [];
-
-    /** @var InheritanceMap */
-    public $inheritanceMap;
+    public bool $generateRepoTraits = true;
+    public bool $overwriteRepoClasses = false;
+    public ?string $knownEntityManagerContainerClass = null;
+    public ?string $knownEntityManagerRouterClass = null;
+    public string $dqlHelperClass = Dql::class;
+    protected string $namespaceBase = 'App\\Domain';
+    protected string $pathToPsrRoot = '/src';
+    public array $singleTableInheritance = [];
+    public ?InheritanceMap $inheritanceMap = null;
 
     /**
      * @param string $domainConfigFile

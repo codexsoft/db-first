@@ -4,9 +4,9 @@ namespace CodexSoft\DatabaseFirst\InheritanceMap;
 
 class EntityData
 {
-    public $isSubclass;
-    public $table;
-    public $descriminatorColumnName;
-    public $descriminatorColumnType;
-    public $delegatedColumnNamesMap = [];
+    public bool $isSubclass;
+    public string $table;
+    public string $descriminatorColumnName;
+    public string $descriminatorColumnType;
+    public array $delegatedColumnNamesMap = [];
 }

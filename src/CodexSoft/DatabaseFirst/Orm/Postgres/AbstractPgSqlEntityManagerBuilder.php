@@ -35,33 +35,31 @@ abstract class AbstractPgSqlEntityManagerBuilder
         //'_jsonb' => 'jsonb[]',
     ];
 
-    /** @var bool  */
-    protected $isDevMode = true;
+    protected bool $isDevMode = true;
 
     /** @var CacheProvider */
     protected $cache;
 
-    /** @var string */
-    protected $proxyDir;
+    protected string $proxyDir;
 
     /** @var string[] */
-    protected $mappingDirectories;
+    protected array $mappingDirectories = [];
 
     /** @var array */
-    protected $databaseConfig = [];
+    protected array $databaseConfig = [];
 
     /** @var \Doctrine\ORM\Configuration if no configuration provided, new one will be created */
-    protected $configuration;
+    protected ?\Doctrine\ORM\Configuration $configuration = null;
 
     /**
      * If you have an existing Connection instance, use it
      * otherwise use setDatabaseConfig(array), array can be builded via ConnectionBuilder
      * @var \Doctrine\DBAL\Connection
      */
-    protected $connection;
+    protected ?\Doctrine\DBAL\Connection $connection = null;
 
     /** @var \Doctrine\Common\EventManager if no event manager provided, new one will be created */
-    protected $eventManager;
+    protected ?EventManager $eventManager = null;
 
     public function __construct() {
         $this->cache = new VoidCache;
@@ -81,6 +79,10 @@ abstract class AbstractPgSqlEntityManagerBuilder
     {
         $config->setCustomStringFunctions($this->getStringFunctions());
         $config->setCustomNumericFunctions($this->getNumericFunctions());
+        //$config->setMetadataDriverImpl(new \Doctrine\Persistence\Mapping\Driver\PHPDriver($this->getMappingDirectories()));
+        //$config->setMetadataDriverImpl(new \Doctrine\Persistence\Mapping\Driver\PHPDriver($this->getMappingDirectories()));
+        //$config->setMetadataDriverImpl(new \Doctrine\Persistence\Mapping\Driver\PHPDriver($this->getMappingDirectories()));
+        //$config->setMetadataDriverImpl(new \Doctrine\Persistence\Mapping\Driver\PHPDriver($this->getMappingDirectories()));
         $config->setMetadataDriverImpl(new PHPDriver($this->getMappingDirectories()));
 
         /**
@@ -186,7 +188,9 @@ abstract class AbstractPgSqlEntityManagerBuilder
 
             if (\is_int($typeName)) {
                 // this will trigger PHP deprecated call non-static method statically
-                $typeName = $typeClass::getName();
+                /** @var \MartinGeorgiev\Doctrine\DBAL\Types\BaseType $typeName */
+                $typeName = $typeClass::TYPE_NAME;
+                //$typeName = $typeClass::getName();
             }
 
             if (!Type::hasType($typeName)) {

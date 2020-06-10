@@ -6,8 +6,8 @@ use CodexSoft\DatabaseFirst\InheritanceMap\EntityData;
 
 class InheritanceMap
 {
-    private $entityDataByTable = [];
-    private $entityDataByName = [];
+    private array $entityDataByTable = [];
+    private array $entityDataByName = [];
 
     public function __construct(array $inheritanceMap)
     {

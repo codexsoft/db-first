@@ -60,6 +60,7 @@ trait LockableEntityTrait
      */
     public function lockForUpdateViaFind(EntityManagerInterface $em = null)
     {
+        /** @noinspection PhpUndefinedMethodInspection */
         $locked = static::knownEntityManager($em)
             ->find(static::class, $this->getId(), LockMode::PESSIMISTIC_WRITE);
 

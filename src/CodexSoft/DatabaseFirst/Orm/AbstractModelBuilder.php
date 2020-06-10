@@ -6,7 +6,7 @@ abstract class AbstractModelBuilder
 {
 
     /** @var string class of model to build */
-    protected $modelClass;
+    protected string $modelClass;
 
     /** @var \StdClass */
     private $model;

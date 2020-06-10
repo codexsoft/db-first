@@ -10,8 +10,7 @@ use Doctrine\ORM\EntityManager;
  */
 abstract class KnownEntityManagerContainer implements KnownEntityManagerContainerInterface
 {
-    /** @var EntityManager|null */
-    protected static $entityManager;
+    protected static ?EntityManager $entityManager = null;
 
     public static function getEntityManager(): ?EntityManager
     {

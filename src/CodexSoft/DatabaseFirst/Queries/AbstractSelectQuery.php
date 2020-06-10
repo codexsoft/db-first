@@ -9,11 +9,10 @@ use InvalidArgumentException;
 abstract class AbstractSelectQuery
 {
 
-    protected $_sql = '';
-    protected $_params = [];
+    protected string $_sql = '';
+    protected array $_params = [];
 
-    /** @var EntityManagerInterface */
-    protected $entityManager;
+    protected EntityManagerInterface $entityManager;
 
     /**
      * @param EntityManagerInterface $entityManager

@@ -10,7 +10,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\QueryBuilder;
 use CodexSoft\Code\Arrays\Arrays;
-use CodexSoft\Code\Strings\Strings;
 use Psr\Log\LoggerInterface;
 
 use Psr\Log\NullLogger;
@@ -26,8 +25,7 @@ class Doctrine
     public const SQL_FORMATTER_COMPLEX = 2;
     public const SQL_FORMATTER_DEFAULT = self::SQL_FORMATTER_SIMPLE;
 
-    /** @var LoggerInterface */
-    private static $logger;
+    private static ?LoggerInterface $logger = null;
 
     private static function getLogger(): LoggerInterface
     {
@@ -189,7 +187,7 @@ class Doctrine
 
     private static function simplyFormatSQL($sql): string
     {
-        return Strings::replacePlaceholders($sql, [
+        return \strtr($sql, [
             'FROM'       => "\nFROM",
             'WHERE'      => "\nWHERE\n",
             'UNION'      => "\nUNION\n",
