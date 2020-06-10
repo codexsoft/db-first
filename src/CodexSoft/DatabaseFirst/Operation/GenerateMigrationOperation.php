@@ -3,25 +3,20 @@
 namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Classes\Classes;
-use CodexSoft\OperationsSystem\Operation;
+use CodexSoft\DatabaseFirst\Migration\BaseMigration;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Generates new blank migration class
- * @method void execute()
  */
-class GenerateMigrationOperation extends Operation
+class GenerateMigrationOperation extends AbstractBaseOperation
 {
-
-    use DoctrineOrmSchemaAwareTrait;
-
-    protected const ID = 'd1c7d39c-fbcb-49c1-a198-2e39009e30b2';
-
-    /**
-     * @return void
-     */
-    protected function handle()
+    public function execute(): void
     {
+        if (!isset($this->doctrineOrmSchema)) {
+            throw new \InvalidArgumentException('Required doctrineOrmSchema is not provided');
+        }
+
         $dbConfig = $this->doctrineOrmSchema;
         $version = $this->generateVersionNumber();
         $fileName = $dbConfig->getPathToMigrations().'/Version'.$version;
@@ -37,7 +32,7 @@ class GenerateMigrationOperation extends Operation
                 '',
                 'namespace '.$dbConfig->getNamespaceMigrations().';',
                 '',
-                'class '.$baseMigrationClassShort.' extends \\'.\CodexSoft\DatabaseFirst\Migration\BaseMigration::class,
+                'class '.$baseMigrationClassShort.' extends \\'.BaseMigration::class,
                 '{',
                 '    public static function getContainingDirectory(): string',
                 '    {',
@@ -61,9 +56,10 @@ class GenerateMigrationOperation extends Operation
         ];
 
         $fs->dumpFile($fileName.'.php', implode("\n", $code));
-        $fs->dumpFile($fileName.'.sql', '-- write migration SQL code here');
+        $fs->dumpFile($fileName.'.sql', '-- write UP migration SQL code here');
+        $fs->dumpFile($fileName.'down.sql', '-- write DOWN migration SQL code here (it should completely revert UP migration)');
 
-        $this->getLogger()->info("Generated new migration class to $fileName");
+        $this->logger->info("Generated new migration class to $fileName");
     }
 
     private function generateVersionNumber(\DateTimeInterface $now = null): string

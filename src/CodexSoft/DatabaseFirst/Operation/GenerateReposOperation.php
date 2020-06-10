@@ -5,12 +5,11 @@ namespace CodexSoft\DatabaseFirst\Operation;
 use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\Helpers\Doctrine;
 use CodexSoft\DatabaseFirst\Orm\Dql;
-use CodexSoft\OperationsSystem\Operation;
-use CodexSoft\OperationsSystem\Exception\OperationException;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\QueryException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Console\MetadataFilter;
@@ -19,81 +18,57 @@ use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Generate repository classes and method stubs from your mapping information.
- * @method void execute()
  */
-class GenerateReposOperation extends Operation
+class GenerateReposOperation extends AbstractBaseOperation
 {
-
-    use DoctrineOrmSchemaAwareTrait;
-
-    protected const ID = '490383fb-4a65-48c8-8ba9-0eb85dc040e1';
-
     private const LS = "\n";
 
     /**
      * @var array comments for all columns in db, in format [ <table>.<column> => <comment> ]
      * @internal
      */
-    private $columnComments = [];
+    private array $columnComments = [];
 
     /** @var string Which interface repo implements */
-    private $repoInterface;
-
-    /**
-     * @throws OperationException
-     */
-    protected function validateInputData(): void
-    {
-        $this->assert(\class_exists($this->doctrineOrmSchema->dqlHelperClass),
-            $this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not exists');
-
-        $this->assert($this->doctrineOrmSchema->dqlHelperClass === Dql::class || \is_subclass_of($this->doctrineOrmSchema->dqlHelperClass, Dql::class),
-            $this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not extend '.Dql::class);
-    }
+    private ?string $repoInterface = null;
 
     /**
      * @return void
-     * @throws OperationException
      */
-    protected function handle()
+    public function execute(): void
     {
+        if (!isset($this->doctrineOrmSchema)) {
+            throw new \InvalidArgumentException('Required doctrineOrmSchema is not provided');
+        }
+
+        if (!\class_exists($this->doctrineOrmSchema->dqlHelperClass)) {
+            throw new \InvalidArgumentException($this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not exists');
+        }
+
+        if (!Classes::isSameOrExtends($this->doctrineOrmSchema->dqlHelperClass, Dql::class)) {
+            throw new \InvalidArgumentException($this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not extend '.Dql::class);
+        }
+
         $em = $this->doctrineOrmSchema->getEntityManager();
         $this->columnComments = Doctrine::getAllColumnsComments($em->getConnection());
+        $metadatas = $this->getMetadata($em);
+
+        $reposPath = $this->doctrineOrmSchema->getPathToRepositories();
+
         $fs = new Filesystem();
 
-        //$this->repoNamespace = $this->doctrineOrmSchema->getNamespaceRepositories();
-
-        $cmf = new DisconnectedClassMetadataFactory();
-        $cmf->setEntityManager( $em );
-        $metadatas = $cmf->getAllMetadata();
-        $metadatas = MetadataFilter::filter($metadatas, $this->doctrineOrmSchema->metadataFilter);
-        /** @var ClassMetadata[] $metadatas */
-
-        //$reposPath = realpath($this->reposPath);
-        $reposPath = $this->doctrineOrmSchema->getPathToRepositories();
-        $reposTraitPath = $reposPath.'/Generated'; // todo: get from config?
-
-        //$repoNamespace = $this->repoNamespace;
-        $repoNamespace = $this->doctrineOrmSchema->getNamespaceRepositories();
-        $repoInterface = $this->repoInterface;
-
-        // todo: try to create?
-
-        if (!file_exists($reposPath)) {
+        if (!$fs->exists($reposPath)) {
             $fs->mkdir($reposPath);
         }
 
-        if (!file_exists($reposPath)) {
-            throw $this->exception(self::ERROR_CODE_INVALID_INPUT_DATA, "Repos destination directory $reposPath does not exist.");
+        if (!\is_writable($reposPath)) {
+            throw new \RuntimeException("Repos destination directory $reposPath does not have write permissions.");
         }
 
-        if (!is_writable($reposPath)) {
-            throw $this->exception(self::ERROR_CODE_INVALID_INPUT_DATA, "Repos destination directory $reposPath does not have write permissions.");
-        }
+        $reposTraitPath = $reposPath.'/Generated'; // todo: get from config?
 
-        if (!count($metadatas)) {
-            throw $this->genericException('No Metadata Classes to process.');
-        }
+        $repoNamespace = $this->doctrineOrmSchema->getNamespaceRepositories();
+        $repoInterface = $this->repoInterface;
 
         foreach ($metadatas as $metadata) {
 
@@ -103,20 +78,20 @@ class GenerateReposOperation extends Operation
             }
 
             $tableComment = Doctrine::getCommentForTable($em->getConnection(), $metadata->table['name']);
-            $this->getLogger()->info("Processing entity {$metadata->name}");
+            $this->logger->info("Processing entity {$metadata->name}");
 
             $collectionShortClass = Classes::short($metadata->name).'Repository';
             $repoTraitFileName = $reposTraitPath.'/'.$collectionShortClass.'Trait.php';
 
             if ($this->doctrineOrmSchema->generateRepoTraits) {
-                $this->getLogger()->info('Generating repo trait...');
+                $this->logger->info('Generating repo trait...');
                 $content = $this->generateRepositoryBaseTrait($metadata, $collectionShortClass);
                 $fs->dumpFile($repoTraitFileName,$content);
             }
 
             $repoFilename = $reposPath.'/'.$collectionShortClass.'.php';
             if (file_exists($repoFilename)) {
-                $this->getLogger()->warning("Repo file $repoFilename already exists, skipped...");
+                $this->logger->warning("Repo file $repoFilename already exists, skipped...");
                 continue;
             }
 
@@ -167,7 +142,7 @@ class GenerateReposOperation extends Operation
 
     }
 
-    private function generateRepositoryBaseTrait(ClassMetadata $metadata, string $repoClass)
+    private function generateRepositoryBaseTrait(ClassMetadata $metadata, string $repoClass): string
     {
 
         \ksort($metadata->fieldMappings);
@@ -180,7 +155,7 @@ class GenerateReposOperation extends Operation
             'namespace '.$this->doctrineOrmSchema->getNamespaceRepositoriesTraits().';',
             '',
             'use '.$this->doctrineOrmSchema->getNamespaceModels().';',
-            'use '.\Doctrine\ORM\Query\Expr::class.';',
+            'use '.Expr::class.';',
             'use '.$this->doctrineOrmSchema->dqlHelperClass.';',
             '',
             '/**',
@@ -469,9 +444,9 @@ class GenerateReposOperation extends Operation
     /**
      * @param string $repoInterface
      *
-     * @return GenerateReposOperation
+     * @return static
      */
-    public function setRepoInterface(string $repoInterface): GenerateReposOperation
+    public function setRepoInterface(string $repoInterface): self
     {
         $this->repoInterface = $repoInterface;
         return $this;

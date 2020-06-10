@@ -5,8 +5,8 @@ namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\Helpers\Doctrine;
-use CodexSoft\OperationsSystem\Exception\OperationException;
-use CodexSoft\OperationsSystem\Operation;
+use CodexSoft\DatabaseFirst\Orm\LockableEntityTrait;
+use CodexSoft\DatabaseFirst\Orm\RepoStaticAccessTrait;
 use Doctrine\Common\Inflector\Inflector;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
@@ -14,50 +14,28 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Mapping\MappingException;
-use Doctrine\ORM\Tools\Console\MetadataFilter;
-use Doctrine\ORM\Tools\DisconnectedClassMetadataFactory;
 use Symfony\Component\Filesystem\Filesystem;
 
 use function Stringy\create as str;
 
 use const CodexSoft\Shortcut\TAB;
 
-/**
- * @method void execute()
- */
-class   GenerateEntitiesOperation extends Operation
+class   GenerateEntitiesOperation extends AbstractBaseOperation
 {
-
-    use DoctrineOrmSchemaAwareTrait;
-
-    protected const ID = '91922eda-b329-423b-aaa9-7832f3d7c6dd';
-
     /** @var array comments for all columns in db, in format [ <table>.<column> => <comment> ] */
-    protected $columnComments = [];
+    protected array $columnComments = [];
 
-    /** @var EntityManager */
-    protected $em;
+    protected EntityManager $em;
 
-    /**
-     * @return void
-     * @throws OperationException
-     */
-    protected function handle()
+    public function execute(): void
     {
-        $this->em = $this->doctrineOrmSchema->getEntityManager();
-
-        $cmf = new DisconnectedClassMetadataFactory();
-        $cmf->setEntityManager($this->em);
-        $metadatas = $cmf->getAllMetadata();
-        //$metadatas = MetadataFilter::filter($metadatas, $this->metadataFilter);
-        $metadatas = MetadataFilter::filter($metadatas, $this->doctrineOrmSchema->metadataFilter);
-
-        if (!count($metadatas)) {
-            throw $this->genericException('No Metadata Classes to process.');
+        if (!isset($this->doctrineOrmSchema)) {
+            throw new \InvalidArgumentException('Required doctrineOrmSchema is not provided');
         }
 
         $ds = $this->doctrineOrmSchema;
-        //$destPath = $ds->getPathToModels();
+        $this->em = $ds->getEntityManager();
+        $metadatas = $this->getMetadata($this->em);
 
         $fs = new Filesystem;
 
@@ -261,10 +239,10 @@ class   GenerateEntitiesOperation extends Operation
             //? TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\KnownEntityManagerTrait::class.';' : '',
 
             $this->doctrineOrmSchema->generateModelWithRepoAccess && (!$metadata->isInheritanceTypeSingleTable() || $metadata->rootEntityName === $metadata->name)
-            ? TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\RepoStaticAccessTrait::class.';' : '',
+            ? TAB.'use \\'.RepoStaticAccessTrait::class.';' : '',
 
             $this->doctrineOrmSchema->generateModelWithLockHelpers && (!$metadata->isInheritanceTypeSingleTable() || $metadata->rootEntityName === $metadata->name)
-                ? TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\LockableEntityTrait::class.';' : '',
+                ? TAB.'use \\'.LockableEntityTrait::class.';' : '',
             '',
             $this->generateEntityKnownEntityManager(),
             $this->generateEntityFieldMappingProperties($metadata),

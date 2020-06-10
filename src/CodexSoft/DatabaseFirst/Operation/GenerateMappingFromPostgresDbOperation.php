@@ -1,37 +1,20 @@
 <?php
 namespace CodexSoft\DatabaseFirst\Operation;
 
-use CodexSoft\Code\Arrays\Arrays;
-use \MartinGeorgiev\Doctrine\DBAL\Types as MartinGeorgievTypes;
 use CodexSoft\Code\Classes\Classes;
-use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
-use CodexSoft\OperationsSystem\Exception\OperationException;
-use CodexSoft\OperationsSystem\Operation;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Mapping\Driver\DatabaseDriver;
-use Doctrine\ORM\Tools\DisconnectedClassMetadataFactory;
 use Symfony\Component\Filesystem\Filesystem;
 
 use function Stringy\create as str;
 
 use const CodexSoft\Shortcut\TAB;
 
-/**
- * Class GenerateMappingOperation
- * todo: Write description — what this operation for
- * @method void execute() todo: change void to handle() method return type if other
- */
-class GenerateMappingFromPostgresDbOperation extends Operation
+class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
 {
-    use DoctrineOrmSchemaAwareTrait;
-
-    protected const ID = 'e163ac5f-ec34-470e-b8ee-450eb8886453';
-
-    protected const ERROR_PREFIX = 'GenerateMappingFromDatabaseOperation cannot be completed: ';
-
-    private $joinDefaultArguments = [
+    private array $joinDefaultArguments = [
         'name' => '',
         'referencedColumnName' => '',
         'nullable' => true,
@@ -40,33 +23,15 @@ class GenerateMappingFromPostgresDbOperation extends Operation
         'columnDefinition' => null,
     ];
 
-    /**
-     * @var string
-     * todo: it is just a proxy, maybe remove?
-     */
-    private $metaVar = '$metadata';
+    private string $metaVar = '$metadata';
+    private string $builderVar = '$mapper';
 
-    /**
-     * @var string
-     * todo: it is just a proxy, maybe remove?
-     */
-    private $builderVar = '$mapper';
-
-    /**
-     * @return void
-     * @throws OperationException
-     */
-    protected function validateInputData(): void
+    public function execute(): void
     {
-        $this->assert($this->doctrineOrmSchema instanceof DoctrineOrmSchema);
-    }
+        if (!isset($this->doctrineOrmSchema)) {
+            throw new \InvalidArgumentException('Required doctrineOrmSchema is not provided');
+        }
 
-    /**
-     * @return void
-     * @throws OperationException
-     */
-    protected function handle(): void
-    {
         $this->builderVar = $this->doctrineOrmSchema->builderVar;
         $this->metaVar = $this->doctrineOrmSchema->metaVar;
 
@@ -76,13 +41,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
         $em->getConfiguration()->setMetadataDriverImpl($databaseDriver);
         $databaseDriver->setNamespace($this->doctrineOrmSchema->getNamespaceModels().'\\');
 
-        $cmf = new DisconnectedClassMetadataFactory();
-        $cmf->setEntityManager($em);
-        $allMetadata = $cmf->getAllMetadata();
-
-        if (empty($allMetadata)) {
-            throw $this->genericException('No Metadata Classes to process.');
-        }
+        $allMetadata = $this->getMetadata($em);
 
         $fs = new Filesystem;
         $fs->mkdir($this->doctrineOrmSchema->getPathToMapping());
@@ -92,24 +51,23 @@ class GenerateMappingFromPostgresDbOperation extends Operation
             $singularizedModelClass = $this->singularize($metadata->name);
             $tableName = $metadata->table['name'];
 
-            echo sprintf("\n\n".'Processing table "%s"', $tableName);
+            $this->logger->info(\sprintf('Processing table "%s"', $tableName));
 
             if (\in_array($tableName, $this->doctrineOrmSchema->skipTables, true)) {
-                $this->getLogger()->notice(sprintf("\n".'Skipping table "%s"', $tableName));
-                //echo sprintf("\n".'Skipping table "%s"', $tableName);
+                $this->logger->debug(\sprintf('Skipping table "%s"', $tableName));
                 continue;
             }
 
             foreach ($this->doctrineOrmSchema->skipTables as $tableToSkip) {
                 if (str($tableToSkip)->endsWith('*') && str($tableName)->startsWith((string) str($tableToSkip)->removeRight('*'))) {
-                    echo sprintf("\n".'Skipping table "%s" because of %s', $tableName, $tableToSkip);
+                    $this->logger->debug(\sprintf('Skipping table "%s" because of %s', $tableName, $tableToSkip));
                     continue 2;
                 }
             }
 
-            echo sprintf("\n".'Entity class "%s"', $singularizedModelClass);
+            $this->logger->debug(\sprintf('Entity class "%s"', $singularizedModelClass));
             $file = $this->generateOutputFilePath($metadata);
-            echo sprintf("\n".'Mapping file "%s"', $file);
+            $this->logger->debug(\sprintf('Mapping file "%s"', $file));
 
             $customRepoClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.Classes::short($singularizedModelClass).'Repository';
             $metadata->customRepositoryClassName = $customRepoClass;
@@ -245,7 +203,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 
                 // single table inheritance: moving children fields from base entity map to child entity map
                 if (\array_key_exists($field['columnName'], $singleTableInheritanceChildrenColumns)) {
-                    echo "\nskipped $tableName.$fieldColumnName as it is configured for child entity {$singleTableInheritanceChildrenColumns[$field['columnName']]}";
+                    $this->logger->debug("skipped $tableName.$fieldColumnName as it is configured for child entity {$singleTableInheritanceChildrenColumns[$field['columnName']]}");
                     array_push($singleTableInheritanceChildrenCodes[$singleTableInheritanceChildrenColumns[$field['columnName']]], ...$fieldCode);
                     continue;
                 }
@@ -255,10 +213,10 @@ class GenerateMappingFromPostgresDbOperation extends Operation
 
             foreach ($metadata->associationMappings as $associationMappingName => $associationMapping) {
 
-                echo "\nfound $associationMappingName";
+                $this->logger->debug("found $associationMappingName");
 
                 if (\in_array($tableName.'.'.$associationMappingName, $this->doctrineOrmSchema->skipColumns, true)) {
-                    echo "\nskipped $tableName.$associationMappingName";
+                    $this->logger->debug("skipped $tableName.$associationMappingName");
                     continue;
                 }
 
@@ -266,7 +224,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                     try {
                         $associationColumnName = $metadata->getSingleAssociationJoinColumnName($associationMappingName);
                         if (\in_array($tableName.'.'.$associationColumnName, $this->doctrineOrmSchema->skipColumns, true)) {
-                            echo "\nskipped $tableName.$associationMappingName because $tableName.$associationColumnName is configured as skipped";
+                            $this->logger->debug("skipped $tableName.$associationMappingName because $tableName.$associationColumnName is configured as skipped");
                             continue;
                         }
                     } catch (\Doctrine\ORM\Mapping\MappingException $e) {
@@ -279,7 +237,7 @@ class GenerateMappingFromPostgresDbOperation extends Operation
                 // single table inheritance: moving children fields from base entity map to child entity map
                 $associationSourceColumnName = \array_keys($associationMapping['sourceToTargetKeyColumns'])[0];
                 if (\array_key_exists($associationSourceColumnName, $singleTableInheritanceChildrenColumns)) {
-                    echo "\nskipped $tableName.$associationMappingName as it is configured for child entity {$singleTableInheritanceChildrenColumns[$associationSourceColumnName]}";
+                    $this->logger->debug("skipped $tableName.$associationMappingName as it is configured for child entity {$singleTableInheritanceChildrenColumns[$associationSourceColumnName]}");
                     array_push($singleTableInheritanceChildrenCodes[$singleTableInheritanceChildrenColumns[$associationSourceColumnName]], ...$associationCode);
                     continue;
                 }

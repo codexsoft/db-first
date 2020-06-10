@@ -7,11 +7,12 @@ use CodexSoft\DatabaseFirst\Operation;
 use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class GenerateModelsCommand extends Command
 {
-    protected static $defaultName = 'models';
+    protected static $defaultName = 'dbf:models';
     protected DoctrineOrmSchema $ormSchema;
 
     public function __construct(DoctrineOrmSchema $ormSchema, string $name = null)
@@ -24,6 +25,7 @@ class GenerateModelsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         (new Operation\GenerateEntitiesOperation())
+            ->setLogger(new ConsoleLogger($output))
             ->setDoctrineOrmSchema($this->ormSchema)
             ->execute();
 

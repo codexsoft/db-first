@@ -6,9 +6,7 @@ use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 
 trait DoctrineOrmSchemaAwareTrait
 {
-
-    /** @var DoctrineOrmSchema */
-    private $doctrineOrmSchema;
+    protected DoctrineOrmSchema $doctrineOrmSchema;
 
     /**
      * @param DoctrineOrmSchema $doctrineOrmSchema
