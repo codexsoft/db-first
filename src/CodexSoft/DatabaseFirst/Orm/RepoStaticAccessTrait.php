@@ -36,7 +36,7 @@ trait RepoStaticAccessTrait
     public static function byId($id, EntityManagerInterface $em = null)
     {
         $foundEntity = static::byIdOrNull($id, $em);
-        if (!static::isInstanceOrProxy($foundEntity)) {
+        if (!\is_object($foundEntity) || !static::isInstanceOrProxy($foundEntity)) {
             throw new \RuntimeException(Classes::short(__CLASS__).' with ID='.$id.' not found!');
         }
 
