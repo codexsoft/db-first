@@ -910,7 +910,7 @@ class DoctrineOrmSchema
     public function configureRepositoriesTraits(string $namespace, string $path): self
     {
         $this->setNamespaceRepositoriesTraits($namespace);
-        //$this->setPathToRepositories($path);
+        $this->setPathToRepositoriesTraits($path);
         return $this;
     }
 
