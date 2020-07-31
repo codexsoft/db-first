@@ -9,6 +9,12 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 
+use Psr\Log\LoggerInterface;
+
+use Psr\Log\NullLogger;
+
+use function Stringy\create as str;
+
 class DoctrineOrmSchema
 {
     private $namespaceRepositories;
@@ -26,6 +32,7 @@ class DoctrineOrmSchema
     private ?string $pathToMigrations = null;
     private ?string $pathToModels = null;
     private ?string $pathToRepositories = null;
+    private ?string $pathToRepositoriesTraits = null;
     private ?string $pathToModelsTraits = null;
     private ?string $pathToMapping = null;
 
@@ -99,7 +106,7 @@ class DoctrineOrmSchema
     public bool $generateModelWithRepoAccess = true;
     public bool $generateModelWithLockHelpers = false;
 
-    /** @var string|string[] A string pattern used to match entities that should be processed. */
+    /** @var string|string[] A string pattern used to match entities that should be processed (IS WHITELIST). */
     public $metadataFilter;
 
     /**
@@ -146,6 +153,10 @@ class DoctrineOrmSchema
     public ?string $knownEntityManagerRouterClass = null;
     public string $dqlHelperClass = Dql::class;
     protected string $namespaceBase = 'App\\Domain';
+    /**
+     * @var string
+     * @deprecated
+     */
     protected string $pathToPsrRoot = '/src';
     public array $singleTableInheritance = [];
     public ?InheritanceMap $inheritanceMap = null;
@@ -635,11 +646,11 @@ class DoctrineOrmSchema
     }
 
     /**
-     * @param string $metadataFilter
+     * @param string|string[] $metadataFilter
      *
      * @return static
      */
-    public function setMetadataFilter(string $metadataFilter): self
+    public function setMetadataFilter($metadataFilter): self
     {
         $this->metadataFilter = $metadataFilter;
         return $this;
@@ -831,6 +842,95 @@ class DoctrineOrmSchema
         $this->singleTableInheritance = $singleTableInheritance;
         $this->inheritanceMap = new InheritanceMap($singleTableInheritance);
         return $this;
+    }
+
+    public static function tableShouldBeSkipped(string $tableName, array $skipTables, ?LoggerInterface $logger = null): bool
+    {
+        if ($logger === null) {
+            $logger = new NullLogger();
+        }
+
+        if (\in_array($tableName, $skipTables, true)) {
+            $logger->debug(\sprintf('Skipping table "%s"', $tableName));
+            return true;
+        }
+
+        foreach ($skipTables as $tableToSkip) {
+            if (str($tableToSkip)->endsWith('*') && str($tableName)->startsWith((string) str($tableToSkip)->removeRight('*'))) {
+                $logger->debug(\sprintf('Skipping table "%s" because of %s', $tableName, $tableToSkip));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function configureMigrations(string $namespace, string $path): self
+    {
+        $this->setNamespaceMigrations($namespace);
+        $this->setPathToMigrations($path);
+        return $this;
+    }
+
+    public function configureMapping(string $namespace, string $path): self
+    {
+        $this->setNamespaceMapping($namespace);
+        $this->setPathToMapping($path);
+        return $this;
+    }
+
+    public function configureModels(string $namespace, string $path): self
+    {
+        $this->setNamespaceModels($namespace);
+        $this->setPathToModels($path);
+        return $this;
+    }
+
+    public function configureModelsTraits(string $namespace, string $path): self
+    {
+        $this->setNamespaceModelsTraits($namespace);
+        $this->setPathToModelsTraits($path);
+        return $this;
+    }
+
+    public function configureModelsAwareTraits(string $namespace, string $path): self
+    {
+        $this->setNamespaceModelsAwareTraits($namespace);
+        $this->setPathToModelAwareTraits($path);
+        return $this;
+    }
+
+    public function configureRepositories(string $namespace, string $path): self
+    {
+        $this->setNamespaceRepositories($namespace);
+        $this->setPathToRepositories($path);
+        return $this;
+    }
+
+    public function configureRepositoriesTraits(string $namespace, string $path): self
+    {
+        $this->setNamespaceRepositoriesTraits($namespace);
+        //$this->setPathToRepositories($path);
+        return $this;
+    }
+
+    /**
+     * @param string|null $pathToRepositoriesTraits
+     *
+     * @return DoctrineOrmSchema
+     */
+    public function setPathToRepositoriesTraits(?string $pathToRepositoriesTraits): DoctrineOrmSchema
+    {
+        $this->pathToRepositoriesTraits = $pathToRepositoriesTraits;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPathToRepositoriesTraits(): string
+    {
+        return $this->pathToRepositoriesTraits ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceRepositoriesTraits());
     }
 
 }

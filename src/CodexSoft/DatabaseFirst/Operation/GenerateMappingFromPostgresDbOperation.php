@@ -2,13 +2,12 @@
 namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Classes\Classes;
+use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Mapping\Driver\DatabaseDriver;
 use Symfony\Component\Filesystem\Filesystem;
-
-use function Stringy\create as str;
 
 use const CodexSoft\Shortcut\TAB;
 
@@ -36,6 +35,14 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
         $this->metaVar = $this->doctrineOrmSchema->metaVar;
 
         $em = $this->doctrineOrmSchema->getEntityManager();
+        // trying to provide filtering while reverse engineering
+        $em->getConnection()->getConfiguration()->setSchemaAssetsFilter(
+            function($tableName) {
+                return false === DoctrineOrmSchema::tableShouldBeSkipped(
+                    $tableName, $this->doctrineOrmSchema->skipTables
+                );
+            }
+        );
         $databaseDriver = new DatabaseDriver($em->getConnection()->getSchemaManager());
 
         $em->getConfiguration()->setMetadataDriverImpl($databaseDriver);
@@ -53,16 +60,8 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
 
             $this->logger->info(\sprintf('Processing table "%s"', $tableName));
 
-            if (\in_array($tableName, $this->doctrineOrmSchema->skipTables, true)) {
-                $this->logger->debug(\sprintf('Skipping table "%s"', $tableName));
+            if (DoctrineOrmSchema::tableShouldBeSkipped($tableName, $this->doctrineOrmSchema->skipTables, $this->logger)) {
                 continue;
-            }
-
-            foreach ($this->doctrineOrmSchema->skipTables as $tableToSkip) {
-                if (str($tableToSkip)->endsWith('*') && str($tableName)->startsWith((string) str($tableToSkip)->removeRight('*'))) {
-                    $this->logger->debug(\sprintf('Skipping table "%s" because of %s', $tableName, $tableToSkip));
-                    continue 2;
-                }
             }
 
             $this->logger->debug(\sprintf('Entity class "%s"', $singularizedModelClass));

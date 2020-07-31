@@ -2,14 +2,16 @@
 
 namespace CodexSoft\DatabaseFirst\Orm\Postgres;
 
+use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
 use CodexSoft\DatabaseFirst\Orm\DoctrineEntityLifecycleEventSubscriber;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Configuration;
 use \MartinGeorgiev\Doctrine\DBAL\Types as MartinGeorgievTypes;
 use CodexSoft\DatabaseFirst\Orm\Postgres\Types\BigIntCastingToIntType;
 use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\Common\Cache\VoidCache;
 use Doctrine\Common\EventManager;
-use Doctrine\Common\Persistence\Mapping\Driver\PHPDriver;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -40,6 +42,7 @@ abstract class AbstractPgSqlEntityManagerBuilder
     /** @var CacheProvider */
     protected $cache;
 
+    /** @var string  */
     protected string $proxyDir;
 
     /** @var string[] */
@@ -48,51 +51,67 @@ abstract class AbstractPgSqlEntityManagerBuilder
     /** @var array */
     protected array $databaseConfig = [];
 
-    /** @var \Doctrine\ORM\Configuration if no configuration provided, new one will be created */
-    protected ?\Doctrine\ORM\Configuration $configuration = null;
+    /** @var Configuration if no configuration provided, new one will be created */
+    protected ?Configuration $configuration = null;
 
     /**
      * If you have an existing Connection instance, use it
      * otherwise use setDatabaseConfig(array), array can be builded via ConnectionBuilder
-     * @var \Doctrine\DBAL\Connection
+     * @var Connection
      */
-    protected ?\Doctrine\DBAL\Connection $connection = null;
+    protected ?Connection $connection = null;
 
     /** @var \Doctrine\Common\EventManager if no event manager provided, new one will be created */
     protected ?EventManager $eventManager = null;
 
     public function __construct() {
-        $this->cache = new VoidCache;
+        $this->cache = new VoidCache();
     }
 
+    /**
+     * Here custom string DQL functions can be resistered, this function can be overrided, like:
+     * <code>
+     * retun [
+     *     'ALL_OF' => \MartinGeorgiev\Doctrine\ORM\Query\AST\Functions\All::class,
+     * ]
+     * </code>
+     * @return array
+     */
     protected function getStringFunctions(): array
     {
         return [];
     }
 
+    /**
+     * Here custom numeric DQL functions can be resistered, this function can be overrided, like:
+     * <code>
+     * retun [
+     *     'LEAST' => \MartinGeorgiev\Doctrine\ORM\Query\AST\Functions\Least::class,
+     * ]
+     * </code>
+     * @return array
+     */
     protected function getNumericFunctions(): array
     {
         return [];
     }
 
-    public function tuneConfiguration(\Doctrine\ORM\Configuration $config): void
+    public function tuneConfiguration(Configuration $config): void
     {
         $config->setCustomStringFunctions($this->getStringFunctions());
         $config->setCustomNumericFunctions($this->getNumericFunctions());
-        //$config->setMetadataDriverImpl(new \Doctrine\Persistence\Mapping\Driver\PHPDriver($this->getMappingDirectories()));
-        //$config->setMetadataDriverImpl(new \Doctrine\Persistence\Mapping\Driver\PHPDriver($this->getMappingDirectories()));
-        //$config->setMetadataDriverImpl(new \Doctrine\Persistence\Mapping\Driver\PHPDriver($this->getMappingDirectories()));
-        //$config->setMetadataDriverImpl(new \Doctrine\Persistence\Mapping\Driver\PHPDriver($this->getMappingDirectories()));
-        $config->setMetadataDriverImpl(new PHPDriver($this->getMappingDirectories()));
+        $config->setMetadataDriverImpl(new \Doctrine\Persistence\Mapping\Driver\PHPDriver($this->getMappingDirectories()));
 
-        /**
-         * todo: this should be fixed someday
-         * Somewhy \Doctrine\DBAL\Schema\AbstractSchemaManager::filterAssetNames() ignores
-         * configured filterSchemaAssetsExpressionCallable
-         */
-        $config->setSchemaAssetsFilter(function($tableName) {
-            //return $tableName !== 'doctrine_migration_versions';
-        });
+        ///**
+        // * todo: this should be fixed someday
+        // * Somewhy \Doctrine\DBAL\Schema\AbstractSchemaManager::filterAssetNames() ignores
+        // * configured filterSchemaAssetsExpressionCallable
+        // */
+        //$config->setSchemaAssetsFilter(function($tableName) {
+        //    return false === DoctrineOrmSchema::tableShouldBeSkipped(
+        //        $tableName, $this->doctrineOrmSchema->skipTables
+        //    );
+        //});
     }
 
     /**
@@ -102,53 +121,60 @@ abstract class AbstractPgSqlEntityManagerBuilder
      */
     public function build(): EntityManagerInterface
     {
-
         static::addCustomTypes();
 
-        $config = ($this->configuration instanceof \Doctrine\ORM\Configuration)
-            ? $this->configuration
-            : Setup::createConfiguration($this->isDevMode,$this->proxyDir,$this->cache);
+        if ($this->configuration instanceof Configuration) {
+            $config = $this->configuration;
+        } else {
+            $config = Setup::createConfiguration($this->isDevMode, $this->proxyDir, $this->cache);;
+        }
 
-        $connection = ($this->connection instanceof \Doctrine\DBAL\Connection)
+        $connection = ($this->connection instanceof Connection)
             ? $this->connection
             : $this->databaseConfig;
 
-        // if event manager is not set manually, trying to get it from connection
-        if (!($this->eventManager instanceof EventManager)) {
-            if ($this->connection instanceof \Doctrine\DBAL\Connection) {
-                $this->eventManager = $this->connection->getEventManager();
-            }
+        /*
+         * if event manager is not set manually, trying to get it from connection
+         */
+        if (!($this->eventManager instanceof EventManager) && $this->connection instanceof Connection) {
+            $this->eventManager = $this->connection->getEventManager();
         }
 
-        // if event manager still not set, creating new
-        $eventManager = ($this->eventManager instanceof EventManager)
-            ? $this->eventManager
-            : new EventManager;
+        /*
+         * if event manager still not set, creating new
+         */
+        if ($this->eventManager instanceof EventManager) {
+            $eventManager = $this->eventManager;
+        } else {
+            $eventManager = new EventManager();
+        }
 
         $this->tuneConfiguration($config);
         $this->tuneEventManager($eventManager);
 
         $entityManager = EntityManager::create($connection, $config, $eventManager);
-
         $this->tuneEntityManager($entityManager);
 
         return $entityManager;
-
     }
 
     /**
      * @param EntityManagerInterface $entityManager
      *
      * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
      */
     public function tuneEntityManager(EntityManagerInterface $entityManager): void
     {
         $platform = $entityManager->getConnection()->getDatabasePlatform();
 
+        if ($platform === null) {
+            throw new \Exception('Database platform is not detected!');
+        }
+
         foreach( static::CUSTOM_DOMAINS as $domainName => $domainType ) {
             $platform->registerDoctrineTypeMapping($domainName, $domainType);
         }
-
     }
 
     /**
@@ -157,11 +183,17 @@ abstract class AbstractPgSqlEntityManagerBuilder
      * @param string $typeClass
      *
      * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
      */
     public function addCustomType(EntityManagerInterface $entityManager, string $typeName, string $typeClass)
     {
         Type::addType($typeName, $typeClass);
         $platform = $entityManager->getConnection()->getDatabasePlatform();
+
+        if ($platform === null) {
+            throw new \Exception('Database platform is not detected!');
+        }
+
         $platform->registerDoctrineTypeMapping($typeName, $typeName);
     }
 
@@ -293,20 +325,20 @@ abstract class AbstractPgSqlEntityManagerBuilder
     }
 
     /**
-     * @param \Doctrine\DBAL\Connection $connection
+     * @param Connection $connection
      *
      * @return static
      */
-    public function setConnection( \Doctrine\DBAL\Connection $connection ): self
+    public function setConnection( Connection $connection ): self
     {
         $this->connection = $connection;
         return $this;
     }
 
     /**
-     * @return \Doctrine\DBAL\Connection
+     * @return Connection
      */
-    public function getConnection(): \Doctrine\DBAL\Connection
+    public function getConnection(): Connection
     {
         return $this->connection;
     }
@@ -331,20 +363,20 @@ abstract class AbstractPgSqlEntityManagerBuilder
     }
 
     /**
-     * @param \Doctrine\ORM\Configuration $configuration
+     * @param Configuration $configuration
      *
      * @return static
      */
-    public function setConfiguration( \Doctrine\ORM\Configuration $configuration ): self
+    public function setConfiguration( Configuration $configuration ): self
     {
         $this->configuration = $configuration;
         return $this;
     }
 
     /**
-     * @return \Doctrine\ORM\Configuration
+     * @return Configuration
      */
-    public function getConfiguration(): \Doctrine\ORM\Configuration
+    public function getConfiguration(): Configuration
     {
         return $this->configuration;
     }

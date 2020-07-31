@@ -54,6 +54,7 @@ class GenerateReposOperation extends AbstractBaseOperation
         $metadatas = $this->getMetadata($em);
 
         $reposPath = $this->doctrineOrmSchema->getPathToRepositories();
+        $reposTraitPath = $this->doctrineOrmSchema->getPathToRepositoriesTraits();
 
         $fs = new Filesystem();
 
@@ -65,7 +66,7 @@ class GenerateReposOperation extends AbstractBaseOperation
             throw new \RuntimeException("Repos destination directory $reposPath does not have write permissions.");
         }
 
-        $reposTraitPath = $reposPath.'/Generated'; // todo: get from config?
+        //$reposTraitPath = $reposPath.'/Generated'; // todo: get from config?
 
         $repoNamespace = $this->doctrineOrmSchema->getNamespaceRepositories();
         $repoInterface = $this->repoInterface;
