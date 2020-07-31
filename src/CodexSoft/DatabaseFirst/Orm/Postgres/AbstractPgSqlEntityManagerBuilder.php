@@ -200,17 +200,11 @@ abstract class AbstractPgSqlEntityManagerBuilder
      *
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Exception
+     * @deprecated use installType instead
      */
     public function addCustomType(EntityManagerInterface $entityManager, string $typeName, string $typeClass)
     {
-        Type::addType($typeName, $typeClass);
-        $platform = $entityManager->getConnection()->getDatabasePlatform();
-
-        if ($platform === null) {
-            throw new \Exception('Database platform is not detected!');
-        }
-
-        $platform->registerDoctrineTypeMapping($typeName, $typeName);
+        static::installType($entityManager->getConnection()->getDatabasePlatform(), $typeName, $typeClass);
     }
 
     /**
