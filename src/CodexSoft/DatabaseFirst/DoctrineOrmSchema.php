@@ -147,6 +147,7 @@ class DoctrineOrmSchema
     /** @var string A parent class for repository. */
     public string $parentRepositoryClass = EntityRepository::class;
 
+    public bool $generateAssociationIdGetters = false;
     public bool $generateRepoTraits = true;
     public bool $overwriteRepoClasses = false;
     public ?string $knownEntityManagerContainerClass = null;
@@ -931,6 +932,17 @@ class DoctrineOrmSchema
     public function getPathToRepositoriesTraits(): string
     {
         return $this->pathToRepositoriesTraits ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceRepositoriesTraits());
+    }
+
+    /**
+     * @param bool $generateAssociationIdGetters
+     *
+     * @return static
+     */
+    public function setGenerateAssociationIdGetters(bool $generateAssociationIdGetters): self
+    {
+        $this->generateAssociationIdGetters = $generateAssociationIdGetters;
+        return $this;
     }
 
 }

@@ -580,6 +580,23 @@ class   GenerateEntitiesOperation extends AbstractBaseOperation
                 '}',
                 '',
             ];
+
+            if ($this->doctrineOrmSchema->generateAssociationIdGetters) {
+                $idGetter = [
+                    '/**',
+                    ' * Get '.$variableName.' ID or null',
+                    ' *',
+                    ' * @return int|null',
+                    ' */',
+                    "public function {$methodName}Id(): ?int",
+                    '{',
+                    TAB."return \$this->{$fieldName} ? \$this->{$fieldName}->getId() : null;",
+                    '}',
+                    '',
+                ];
+                \array_push($getMethodTemplate, ...$idGetter);
+            }
+
             return TAB.implode("\n".TAB, $getMethodTemplate);
         }
 
