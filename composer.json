@@ -30,7 +30,8 @@
     },
     "autoload": {
         "psr-4": {
-            "": ["src/", "vendor/"]
+            "CodexSoft\\DatabaseFirst\\": "src/",
+            "": ["vendor/"]
         }
     },
     "autoload-dev": {
