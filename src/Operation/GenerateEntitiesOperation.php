@@ -7,7 +7,6 @@ use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\Helpers\Doctrine;
 use CodexSoft\DatabaseFirst\Orm\LockableEntityTrait;
 use CodexSoft\DatabaseFirst\Orm\RepoStaticAccessTrait;
-use Doctrine\Common\Inflector\Inflector;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -510,8 +509,8 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
     {
 
         $fieldComment = $this->getCommentForField($metadata,$fieldName);
-        $methodName = 'get'.Inflector::classify($fieldName);
-        $variableName = Inflector::camelize($fieldName);
+        $methodName = 'get'.$this->inflector->classify($fieldName);
+        $variableName = $this->inflector->camelize($fieldName);
 
         $methodTypeHint = null;
         $types          = Type::getTypesMap();
@@ -634,8 +633,8 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
     {
         $fieldComment = $this->getCommentForField($metadata,$fieldName);
         $variableDefault = ($defaultValue !== null ) ? ' = '.$defaultValue : '';
-        $methodName = 'set'.Inflector::classify($fieldName);
-        $variableName = Inflector::camelize($fieldName);
+        $methodName = 'set'.$this->inflector->classify($fieldName);
+        $variableName = $this->inflector->camelize($fieldName);
 
         $methodTypeHint = null;
         //$methodTypeHint = $typeHint;
@@ -695,7 +694,7 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
                     .($mappedBy ? ' mappedBy: '.$mappedBy : '');
 
                 $collectionField = ucfirst($inversedBy);
-                $collectionItem = ucfirst(Inflector::singularize($inversedBy));
+                $collectionItem = ucfirst($this->inflector->singularize($inversedBy));
 
                 $lines = [];
 

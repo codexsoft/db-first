@@ -4,6 +4,9 @@
 namespace CodexSoft\DatabaseFirst\Operation;
 
 
+use Doctrine\Inflector\Inflector;
+use Doctrine\Inflector\InflectorFactory;
+use Doctrine\Inflector\Language;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Tools\Console\MetadataFilter;
@@ -16,9 +19,11 @@ abstract class AbstractBaseOperation implements LoggerAwareInterface
 {
     use DoctrineOrmSchemaAwareTrait;
     protected LoggerInterface $logger;
+    protected Inflector $inflector;
 
     public function __construct(?LoggerInterface $logger = null)
     {
+        $this->inflector = InflectorFactory::createForLanguage(Language::ENGLISH)->build();
         $this->logger = $logger ?: new NullLogger();
     }
 

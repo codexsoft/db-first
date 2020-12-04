@@ -571,7 +571,7 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
     }
 
     protected function singularize($plural) {
-        return \Doctrine\Common\Inflector\Inflector::singularize($plural);
+        return $this->inflector->singularize($plural);
     }
 
     protected function _getIdGeneratorTypeString($type)
