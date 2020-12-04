@@ -4,22 +4,20 @@ namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\Helpers\Doctrine;
-use CodexSoft\DatabaseFirst\Orm\Dql;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\Query\Expr;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Query\QueryException;
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\ORM\Tools\Console\MetadataFilter;
-use Doctrine\ORM\Tools\DisconnectedClassMetadataFactory;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Generate repository classes and method stubs from your mapping information.
  */
-class GenerateReposOperation extends AbstractBaseOperation
+class GenerateRepositoriesOperation extends AbstractBaseOperation
 {
     private const LS = "\n";
 
@@ -29,7 +27,7 @@ class GenerateReposOperation extends AbstractBaseOperation
      */
     private array $columnComments = [];
 
-    /** @var string Which interface repo implements */
+    /** @var string|null Which interface repo implements */
     private ?string $repoInterface = null;
 
     /**
@@ -41,13 +39,13 @@ class GenerateReposOperation extends AbstractBaseOperation
             throw new \InvalidArgumentException('Required doctrineOrmSchema is not provided');
         }
 
-        if (!\class_exists($this->doctrineOrmSchema->dqlHelperClass)) {
-            throw new \InvalidArgumentException($this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not exists');
-        }
+        //if (!\class_exists($this->doctrineOrmSchema->dqlHelperClass)) {
+        //    throw new \InvalidArgumentException($this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not exists');
+        //}
 
-        if (!Classes::isSameOrExtends($this->doctrineOrmSchema->dqlHelperClass, Dql::class)) {
-            throw new \InvalidArgumentException($this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not extend '.Dql::class);
-        }
+        //if (!Classes::isSameOrExtends($this->doctrineOrmSchema->dqlHelperClass, Dql::class)) {
+        //    throw new \InvalidArgumentException($this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not extend '.Dql::class);
+        //}
 
         $em = $this->doctrineOrmSchema->getEntityManager();
         $this->columnComments = Doctrine::getAllColumnsComments($em->getConnection());
@@ -117,7 +115,6 @@ class GenerateReposOperation extends AbstractBaseOperation
                 'class '.$collectionShortClass.' extends '.Classes::short($parentClass).$implementsInt,
                 '{',
                 '    use \\'.$this->doctrineOrmSchema->getNamespaceRepositoriesTraits().'\\'.$collectionShortClass.'Trait;',
-                //'    use \\'.Constants::NAMESPACE_REPOSITORIES_TRAITS.'\\'.$collectionShortClass.'Trait;',
                 '}',
             ];
 
@@ -157,7 +154,8 @@ class GenerateReposOperation extends AbstractBaseOperation
             '',
             'use '.$this->doctrineOrmSchema->getNamespaceModels().';',
             'use '.Expr::class.';',
-            'use '.$this->doctrineOrmSchema->dqlHelperClass.';',
+            'use '.Join::class.';',
+            //'use '.$this->doctrineOrmSchema->dqlHelperClass.';',
             '',
             '/**',
             ' */',
@@ -165,7 +163,7 @@ class GenerateReposOperation extends AbstractBaseOperation
             '{',
         ];
 
-        $importedDqlHelperClass = Classes::short($this->doctrineOrmSchema->dqlHelperClass);
+        //$importedDqlHelperClass = Classes::short($this->doctrineOrmSchema->dqlHelperClass);
 
         $result .= implode(self::LS, $code);
 
@@ -293,10 +291,20 @@ class GenerateReposOperation extends AbstractBaseOperation
                     '    $'.$associationMappingName.'Id = '.$targetEntityShortNamespaced.'::extractId($'.$nameOrId.');',
                     '    /** @var \\'.EntityRepository::class.' $this */',
                     '    $qb = $this->createQueryBuilder(\'base\');',
-                    '    $qb->innerJoin('.$targetEntityShortNamespaced.'::class, \'joined\', Expr\Join::WITH, '.$importedDqlHelperClass.'::andX($qb,[',
-                    '        '.$importedDqlHelperClass.'::dql($qb,'.$namespacedShortName.'::_'.$associationMappingName.'(\'base\').\' = joined\'),',
-                    '        '.$importedDqlHelperClass.'::eq($qb,'.$targetEntityShortNamespaced.'::_id(\'joined\'),$'.$associationMappingName.'Id),',
-                    '    ]));',
+                    //'    $qb->innerJoin('.$targetEntityShortNamespaced.'::class, \'joined\', Expr\Join::WITH, '.$importedDqlHelperClass.'::andX($qb,[',
+                    //'        '.$importedDqlHelperClass.'::dql($qb,'.$namespacedShortName.'::_'.$associationMappingName.'(\'base\').\' = joined\'),',
+                    //'        '.$importedDqlHelperClass.'::eq($qb,'.$targetEntityShortNamespaced.'::_id(\'joined\'),$'.$associationMappingName.'Id),',
+                    //'    ]));',
+                    "    \$qb->innerJoin($targetEntityShortNamespaced::class, 'joined', Join::WITH, \$qb->expr()->andX(",
+                    "        $namespacedShortName::_$associationMappingName('base').' = joined',",
+                    "        \$qb->expr()->eq($targetEntityShortNamespaced::_id('joined'), ':{$associationMappingName}Id')",
+                    "    ));",
+                    "",
+                    "    \$qb->setParameter('{$associationMappingName}Id', \${$associationMappingName}Id);",
+                    //'    $qb->innerJoin('.$targetEntityShortNamespaced.'::class, \'joined\', Expr\Join::WITH, '.$importedDqlHelperClass.'::andX($qb,[',
+                    //'        '.$importedDqlHelperClass.'::dql($qb,'.$namespacedShortName.'::_'.$associationMappingName.'(\'base\').\' = joined\'),',
+                    //'        '.$importedDqlHelperClass.'::eq($qb,'.$targetEntityShortNamespaced.'::_id(\'joined\'),$'.$associationMappingName.'Id),',
+                    //'    ]));',
                     '    /** @noinspection PhpUnhandledExceptionInspection */',
                     '    return $qb->setMaxResults(1)->getQuery()->getOneOrNullResult();',
                     '}',
@@ -358,15 +366,25 @@ class GenerateReposOperation extends AbstractBaseOperation
                     '    $'.$associationMappingName.'Id = '.$targetEntityShortNamespaced.'::extractId($'.$nameOrId.');',
                     '    /** @var \\'.EntityRepository::class.' $this */',
                     '    $qb = $this->createQueryBuilder(\'base\');',
-                    '    $qb->innerJoin('.$targetEntityShortNamespaced.'::class, \'joined\', Expr\Join::WITH, '.$importedDqlHelperClass.'::andX($qb,[',
-                    '        '.$importedDqlHelperClass.'::dql($qb,'.$namespacedShortName.'::_'.$associationMappingName.'(\'base\').\' = joined\'),',
-                    '        '.$importedDqlHelperClass.'::eq($qb,'.$targetEntityShortNamespaced.'::_id(\'joined\'),$'.$associationMappingName.'Id),',
-                    '    ]));',
+                    //'    $qb->innerJoin('.$targetEntityShortNamespaced.'::class, \'joined\', Expr\Join::WITH, '.$importedDqlHelperClass.'::andX($qb,[',
+                    //'        '.$importedDqlHelperClass.'::dql($qb,'.$namespacedShortName.'::_'.$associationMappingName.'(\'base\').\' = joined\'),',
+                    //'        '.$importedDqlHelperClass.'::eq($qb,'.$targetEntityShortNamespaced.'::_id(\'joined\'),$'.$associationMappingName.'Id),',
+                    //'    ]));',
+
+                    "    \$qb->innerJoin($targetEntityShortNamespaced::class, 'joined', Join::WITH, \$qb->expr()->andX(",
+                    "        $namespacedShortName::_$associationMappingName('base').' = joined',",
+                    "        \$qb->expr()->eq($targetEntityShortNamespaced::_id('joined'), ':{$associationMappingName}Id')",
+                    "    ));",
+                    "",
+                    "    \$qb->setParameter('{$associationMappingName}Id', \${$associationMappingName}Id);",
+
                     '    return $qb->getQuery()->getOneOrNullResult();',
                     '}',
                     '',
                 ];
                 $result .= implode(self::LS.'    ',$code);
+
+                // getOneByOrFail
 
                 $code = [
                     '',
@@ -424,11 +442,12 @@ class GenerateReposOperation extends AbstractBaseOperation
             '    }',
             '',
             '    /** @var \\'.QueryBuilder::class.' $qb */',
-            '    $qb = $this->createQueryBuilder(\'base\');',
-            '    $qb->indexBy(\'base\', \'base.id\');',
-            '    '.$importedDqlHelperClass.'::requireAll($qb, [',
-            '        '.$importedDqlHelperClass.'::in($qb, \'base.id\', $ids),',
-            '    ]);',
+            "    \$qb = \$this->createQueryBuilder('base');",
+            "    \$qb->indexBy('base', 'base.id');",
+            "    \$qb->where(\$qb->expr()->in('base.id', \$ids));",
+            //'    '.$importedDqlHelperClass.'::requireAll($qb, [',
+            //'        '.$importedDqlHelperClass.'::in($qb, \'base.id\', $ids),',
+            //'    ]);',
             '    return $qb->getQuery()->getResult();',
             '}',
             '',

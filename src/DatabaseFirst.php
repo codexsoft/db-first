@@ -4,7 +4,6 @@ namespace CodexSoft\DatabaseFirst;
 
 use CodexSoft\Cli\Command\ExecuteClosureCommand;
 use CodexSoft\Cli\Command\ExecuteShellCommand;
-use CodexSoft\DatabaseFirst\Console\AddMigrationCommand;
 use CodexSoft\DatabaseFirst\Console\GenerateMappingCommand;
 use CodexSoft\DatabaseFirst\Console\GenerateModelsCommand;
 use CodexSoft\DatabaseFirst\Console\GenerateReposCommand;
@@ -23,13 +22,14 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class DatabaseFirst
 {
+
     /**
      * @param DoctrineOrmSchema $ormSchema
      * @param string $ormConfigFile
      *
      * @param string $cliFile
      *
-     * @param string $cliDir
+     * @param string|null $cliDir
      *
      * @return Application
      */
@@ -44,16 +44,11 @@ class DatabaseFirst
         $console = new Application('CodexSoft Database-first CLI');
 
         $console->add(new GenerateMappingCommand($ormSchema, 'mapping'));
-        $console->add(new AddMigrationCommand($ormSchema, 'add-migration'));
         $console->add(new GenerateModelsCommand($ormSchema, 'models'));
         $console->add(new GenerateReposCommand($ormSchema, 'repos'));
         $console->add(new RemoveNotMappedCommand($ormSchema, 'remove-not-mapped'));
 
         $commandList = [
-            'migrate' => (new ExecuteShellCommand([
-                'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate',
-            ]))->setDescription('apply migrations'),
-
             'check' => (new ExecuteShellCommand([
                 'php '.$cliDir.'/doctrine.orm.php '.$ormConfigFile.' orm:validate-schema --skip-sync',
             ]))->setDescription('Validate doctrine schema'),
@@ -63,17 +58,6 @@ class DatabaseFirst
                 'php '.$cliFile.' '.$ormConfigFile.' models',
                 'php '.$cliFile.' '.$ormConfigFile.' repos',
             ]))->setDescription('Execute commands mapping, models, repos'),
-
-            'db-remake' => (new ExecuteShellCommand([
-                'php '.$cliFile.' '.$ormConfigFile.' db-clean',
-                'php '.$cliDir.'/doctrine.migrate.php '.$ormConfigFile.' migrations:migrate --no-interaction',
-            ]))->setDescription('Remove db and apply migrations(Execute commands db-clean + migrate --no-interaction)'),
-
-            'regenerate' => (new ExecuteShellCommand([
-                'php '.$cliFile.' '.$ormConfigFile.' db-remake',
-                'php '.$cliFile.' '.$ormConfigFile.' review',
-                'php '.$cliFile.' '.$ormConfigFile.' check',
-            ]))->setDescription('Recreate db and mapping, entity,repos (Execute commands db-remake, review, check)'),
 
             'db-clean' => (new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
                 Database::deleteAllUserTables($ormSchema->getEntityManager()->getConnection());

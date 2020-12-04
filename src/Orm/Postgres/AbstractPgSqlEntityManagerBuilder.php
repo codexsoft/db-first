@@ -18,31 +18,12 @@ use Doctrine\ORM\Tools\Setup;
 
 abstract class AbstractPgSqlEntityManagerBuilder
 {
-    /**
-     * @deprecated override via getDoctrineTypeMapping istead
-     */
-    public const CUSTOM_DOMAINS = [
-
-        // while reverse-engineering, this types were detected. in normal mode it still exists?
-        'smallint[]' => 'smallint[]',
-        'integer[]' => 'integer[]',
-        'bigint[]' => 'bigint[]',
-        'text[]' => 'text[]',
-        '_int2' => 'smallint[]',
-        '_int4' => 'integer[]',
-        '_int8' => 'bigint[]',
-        '_text' => 'text[]',
-        //'jsonb' => 'jsonb',
-        //'jsonb[]' => 'jsonb[]',
-        //'_jsonb' => 'jsonb[]',
-    ];
-
     protected bool $isDevMode = true;
 
     /** @var CacheProvider */
     protected $cache;
 
-    /** @var string  */
+    /** @var string */
     protected string $proxyDir;
 
     /** @var string[] */
@@ -51,17 +32,18 @@ abstract class AbstractPgSqlEntityManagerBuilder
     /** @var array */
     protected array $databaseConfig = [];
 
-    /** @var Configuration if no configuration provided, new one will be created */
+    /** @var Configuration|null if no configuration provided, new one will be created */
     protected ?Configuration $configuration = null;
 
     /**
      * If you have an existing Connection instance, use it
      * otherwise use setDatabaseConfig(array), array can be builded via ConnectionBuilder
-     * @var Connection
+     *
+     * @var Connection|null
      */
     protected ?Connection $connection = null;
 
-    /** @var EventManager if no event manager provided, new one will be created */
+    /** @var EventManager|null if no event manager provided, new one will be created */
     protected ?EventManager $eventManager = null;
 
     public function __construct() {
@@ -166,7 +148,19 @@ abstract class AbstractPgSqlEntityManagerBuilder
 
     protected static function getDoctrineTypeMapping(): array
     {
-        return static::CUSTOM_DOMAINS;
+        /*
+         * while reverse-engineering, this types were detected. in normal mode it still exists?
+         */
+        return [
+            'smallint[]' => 'smallint[]',
+            'integer[]' => 'integer[]',
+            'bigint[]' => 'bigint[]',
+            'text[]' => 'text[]',
+            '_int2' => 'smallint[]',
+            '_int4' => 'integer[]',
+            '_int8' => 'bigint[]',
+            '_text' => 'text[]',
+        ];
     }
 
     /**
@@ -194,20 +188,6 @@ abstract class AbstractPgSqlEntityManagerBuilder
     }
 
     /**
-     * @param EntityManagerInterface $entityManager
-     * @param string $typeName
-     * @param string $typeClass
-     *
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Exception
-     * @deprecated use installType instead
-     */
-    public function addCustomType(EntityManagerInterface $entityManager, string $typeName, string $typeClass)
-    {
-        static::installType($entityManager->getConnection()->getDatabasePlatform(), $typeName, $typeClass);
-    }
-
-    /**
      * @param AbstractPlatform $platform
      * @param string $typeName
      * @param string $typeClass
@@ -217,7 +197,13 @@ abstract class AbstractPgSqlEntityManagerBuilder
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function installType(AbstractPlatform $platform, string $typeName, string $typeClass, bool $overrideIfExists = true, bool $throwExceptionIfClassNotFound = false): void
+    public static function installType(
+        AbstractPlatform $platform,
+        string $typeName,
+        string $typeClass,
+        bool $overrideIfExists = true,
+        bool $throwExceptionIfClassNotFound = false
+    ): void
     {
         if (!\class_exists($typeClass)) {
             if ($throwExceptionIfClassNotFound) {
@@ -413,5 +399,4 @@ abstract class AbstractPgSqlEntityManagerBuilder
     {
         return $this->configuration;
     }
-
 }

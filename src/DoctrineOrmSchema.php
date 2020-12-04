@@ -3,7 +3,6 @@
 namespace CodexSoft\DatabaseFirst;
 
 use CodexSoft\Code\Strings\Strings;
-use CodexSoft\DatabaseFirst\Orm\Dql;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
@@ -22,13 +21,27 @@ class DoctrineOrmSchema
     private $namespaceModels;
     private $namespaceModelsTraits;
     private $namespaceModelsBuilders;
+
+    /**
+     * @var string|null
+     * @deprecated
+     */
     private $namespaceMigrations;
     private $namespaceMapping;
     private $namespaceMappingGenerated;
     private $namespaceMappingExtra;
     private $namespaceModelsAwareTraits;
 
+    /**
+     * @var string|null
+     * @deprecated
+     */
     private ?string $migrationBaseClass = null;
+
+    /**
+     * @var string|null
+     * @deprecated
+     */
     private ?string $pathToMigrations = null;
     private ?string $pathToModels = null;
     private ?string $pathToRepositories = null;
@@ -40,7 +53,10 @@ class DoctrineOrmSchema
 
     private ?string $pathToModelAwareTraits;
 
-    /** @var string[]  */
+    /**
+     * @var string[]
+     * @deprecated todo: rework this
+     */
     public array $dbToPhpType = [
         'json[]'                    => 'array',
         'jsonb'                     => 'array',
@@ -116,32 +132,37 @@ class DoctrineOrmSchema
     public string $metaVar = '$metadata';
     public string $builderVar = '$mapper';
 
+    /**
+     * @var array|string[]
+     * @deprecated
+     * todo: review this
+     */
     public array $doctrineTypesMap = [
         'array' => 'TARRAY',
-        'simple_array' => 'SIMPLE_ARRAY',
-        'json_array' => 'JSON_ARRAY',
-        'json' => 'JSON',
         'bigint' => 'BIGINT',
+        'binary' => 'BINARY',
+        'blob' => 'BLOB',
         'boolean' => 'BOOLEAN',
+        'date' => 'DATE',
+        'date_immutable' => 'DATE_IMMUTABLE',
+        'dateinterval' => 'DATEINTERVAL',
         'datetime' => 'DATETIME',
         'datetime_immutable' => 'DATETIME_IMMUTABLE',
         'datetimetz' => 'DATETIMETZ',
         'datetimetz_immutable' => 'DATETIMETZ_IMMUTABLE',
-        'date' => 'DATE',
-        'date_immutable' => 'DATE_IMMUTABLE',
-        'time' => 'TIME',
-        'time_immutable' => 'TIME_IMMUTABLE',
         'decimal' => 'DECIMAL',
+        'float' => 'FLOAT',
+        'guid' => 'GUID',
         'integer' => 'INTEGER',
+        'json' => 'JSON',
+        'json_array' => 'JSON_ARRAY',
         'object' => 'OBJECT',
+        'simple_array' => 'SIMPLE_ARRAY',
         'smallint' => 'SMALLINT',
         'string' => 'STRING',
         'text' => 'TEXT',
-        'binary' => 'BINARY',
-        'blob' => 'BLOB',
-        'float' => 'FLOAT',
-        'guid' => 'GUID',
-        'dateinterval' => 'DATEINTERVAL',
+        'time' => 'TIME',
+        'time_immutable' => 'TIME_IMMUTABLE',
     ];
 
     /** @var string A parent class for repository. */
@@ -152,13 +173,20 @@ class DoctrineOrmSchema
     public bool $overwriteRepoClasses = false;
     public ?string $knownEntityManagerContainerClass = null;
     public ?string $knownEntityManagerRouterClass = null;
-    public string $dqlHelperClass = Dql::class;
+    //public string $dqlHelperClass = Dql::class;
+
+    /**
+     * @var string
+     * @deprecated
+     */
     protected string $namespaceBase = 'App\\Domain';
+
     /**
      * @var string
      * @deprecated
      */
     protected string $pathToPsrRoot = '/src';
+
     public array $singleTableInheritance = [];
     public ?InheritanceMap $inheritanceMap = null;
 
@@ -440,25 +468,6 @@ class DoctrineOrmSchema
     }
 
     /**
-     * @param string|null $migrationBaseClass
-     *
-     * @return DoctrineOrmSchema
-     */
-    public function setMigrationBaseClass(?string $migrationBaseClass): DoctrineOrmSchema
-    {
-        $this->migrationBaseClass = $migrationBaseClass;
-        return $this;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getMigrationBaseClass(): ?string
-    {
-        return $this->migrationBaseClass ?: $this->getNamespaceMigrations().'\\AbstractBaseMigration';
-    }
-
-    /**
      * @param string $pathToMigrations
      *
      * @return DoctrineOrmSchema
@@ -474,7 +483,7 @@ class DoctrineOrmSchema
      */
     public function getPathToMigrations(): string
     {
-        return $this->pathToMigrations ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceMigrations());
+        return $this->pathToMigrations;
     }
 
     /**
@@ -822,16 +831,16 @@ class DoctrineOrmSchema
         return $this;
     }
 
-    /**
-     * @param string $dqlHelperClass
-     *
-     * @return DoctrineOrmSchema
-     */
-    public function setDqlHelperClass(string $dqlHelperClass): DoctrineOrmSchema
-    {
-        $this->dqlHelperClass = $dqlHelperClass;
-        return $this;
-    }
+    ///**
+    // * @param string $dqlHelperClass
+    // *
+    // * @return DoctrineOrmSchema
+    // */
+    //public function setDqlHelperClass(string $dqlHelperClass): DoctrineOrmSchema
+    //{
+    //    $this->dqlHelperClass = $dqlHelperClass;
+    //    return $this;
+    //}
 
     /**
      * @param array $singleTableInheritance

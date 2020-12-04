@@ -2,8 +2,6 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
-use Carbon\Carbon;
-use CodexSoft\DateAndTime\DateAndTime;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Andx;
 use Doctrine\ORM\Query\Expr\Func;
@@ -18,7 +16,7 @@ abstract class Dql
     /** @var string DQL has not NULL, so this is hacky replacement */
     public const NULL = 'CASE WHEN 1=1 THEN :null ELSE :null END';
 
-    protected const FORMAT_YMD_HIS = DateAndTime::FORMAT_YMD_HIS;
+    protected const FORMAT_YMD_HIS = 'Y-m-d H:i:s';
 
     /** @var int */
     static protected $counter = 0;
@@ -570,8 +568,8 @@ abstract class Dql
      * тут сколько секунд ОТ первого момента ДО второго
      *
      * @param QueryBuilder $qb
-     * @param $value1
-     * @param $value2
+     * @param \DateTime|string $value1
+     * @param \DateTime|string $value2
      *
      * @param string $part
      *
@@ -580,11 +578,11 @@ abstract class Dql
     protected static function timeStampDiff( QueryBuilder $qb, $value1, $value2, $part = 'SECOND'): string
     {
         if ($value1 instanceof \DateTime) {
-            $value1 = "'".Carbon::instance($value1)->format(self::FORMAT_YMD_HIS)."'";
+            $value1 = "'".$value1->format(self::FORMAT_YMD_HIS)."'";
         }
 
         if ($value2 instanceof \DateTime) {
-            $value2 = "'".Carbon::instance($value2)->format(self::FORMAT_YMD_HIS)."'";
+            $value2 = "'".$value2->format(self::FORMAT_YMD_HIS)."'";
         }
 
         return Dql::dql($qb,"TIMESTAMPDIFF($part, $value1, $value2)");

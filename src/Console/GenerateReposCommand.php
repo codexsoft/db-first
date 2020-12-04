@@ -24,7 +24,7 @@ class GenerateReposCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        (new Operation\GenerateReposOperation())
+        (new Operation\GenerateRepositoriesOperation())
             ->setLogger(new ConsoleLogger($output))
             ->setDoctrineOrmSchema($this->ormSchema)
             ->execute();
