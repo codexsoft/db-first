@@ -24,22 +24,23 @@ class DatabaseFirst
 {
 
     /**
-     * @param DoctrineOrmSchema $ormSchema
-     * @param string $ormConfigFile
+     * @param string $dfConfigFile
      *
      * @param string $cliFile
      *
      * @param string|null $cliDir
      *
      * @return Application
+     * @throws \Exception
      */
     public static function createApplication(
-        DoctrineOrmSchema $ormSchema,
-        string $ormConfigFile,
+        string $dfConfigFile,
         string $cliFile,
         string $cliDir = null
     ): Application
     {
+        $ormSchema = DatabaseFirstConfig::getFromConfigFile($dfConfigFile);
+
         $cliDir = $cliDir ?: dirname($cliFile);
         $console = new Application('CodexSoft Database-first CLI');
 
@@ -50,13 +51,13 @@ class DatabaseFirst
 
         $commandList = [
             'check' => (new ExecuteShellCommand([
-                'php '.$cliDir.'/doctrine.orm.php '.$ormConfigFile.' orm:validate-schema --skip-sync',
+                'php '.$cliDir.'/doctrine.orm.php '.$dfConfigFile.' orm:validate-schema --skip-sync',
             ]))->setDescription('Validate doctrine schema'),
 
             'review' => (new ExecuteShellCommand([
-                'php '.$cliFile.' '.$ormConfigFile.' mapping',
-                'php '.$cliFile.' '.$ormConfigFile.' models',
-                'php '.$cliFile.' '.$ormConfigFile.' repos',
+                'php '.$cliFile.' '.$dfConfigFile.' mapping',
+                'php '.$cliFile.' '.$dfConfigFile.' models',
+                'php '.$cliFile.' '.$dfConfigFile.' repos',
             ]))->setDescription('Execute commands mapping, models, repos'),
 
             'db-clean' => (new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {

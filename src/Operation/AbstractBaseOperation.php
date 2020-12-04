@@ -17,9 +17,9 @@ abstract class AbstractBaseOperation implements LoggerAwareInterface
     use DoctrineOrmSchemaAwareTrait;
     protected LoggerInterface $logger;
 
-    public function __construct()
+    public function __construct(?LoggerInterface $logger = null)
     {
-        $this->logger = new NullLogger();
+        $this->logger = $logger ?: new NullLogger();
     }
 
     /**

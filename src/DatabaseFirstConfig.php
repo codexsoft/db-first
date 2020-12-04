@@ -14,7 +14,7 @@ use Psr\Log\NullLogger;
 
 use function Stringy\create as str;
 
-class DoctrineOrmSchema
+class DatabaseFirstConfig
 {
     private $namespaceRepositories;
     private $namespaceRepositoriesTraits;
@@ -190,6 +190,13 @@ class DoctrineOrmSchema
     public array $singleTableInheritance = [];
     public ?InheritanceMap $inheritanceMap = null;
 
+    public function __construct(string $databaseNamespace = null)
+    {
+        if ($databaseNamespace) {
+            $this->namespaceBase = $databaseNamespace;
+        }
+    }
+
     /**
      * @param string $domainConfigFile
      *
@@ -211,6 +218,7 @@ class DoctrineOrmSchema
 
     /**
      * @return string
+     * @deprecated
      */
     public function getPathToPsrRoot(): string
     {
@@ -221,6 +229,7 @@ class DoctrineOrmSchema
      * @param string $pathToPsrRoot
      *
      * @return static
+     * @deprecated
      */
     public function setPathToPsrRoot(string $pathToPsrRoot): self
     {
@@ -245,14 +254,6 @@ class DoctrineOrmSchema
     {
         $this->namespaceBase = $namespaceBase;
         return $this;
-    }
-
-
-    public function __construct(string $databaseNamespace = null)
-    {
-        if ($databaseNamespace) {
-            $this->namespaceBase = $databaseNamespace;
-        }
     }
 
     /**
@@ -288,9 +289,9 @@ class DoctrineOrmSchema
     /**
      * @param string $namespaceRepositories
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setNamespaceRepositories(string $namespaceRepositories): DoctrineOrmSchema
+    public function setNamespaceRepositories(string $namespaceRepositories): DatabaseFirstConfig
     {
         $this->namespaceRepositories = $namespaceRepositories;
         return $this;
@@ -307,9 +308,9 @@ class DoctrineOrmSchema
     /**
      * @param string $namespaceRepositoriesTraits
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setNamespaceRepositoriesTraits(string $namespaceRepositoriesTraits): DoctrineOrmSchema
+    public function setNamespaceRepositoriesTraits(string $namespaceRepositoriesTraits): DatabaseFirstConfig
     {
         $this->namespaceRepositoriesTraits = $namespaceRepositoriesTraits;
         return $this;
@@ -326,9 +327,9 @@ class DoctrineOrmSchema
     /**
      * @param string $namespaceModels
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setNamespaceModels(string $namespaceModels): DoctrineOrmSchema
+    public function setNamespaceModels(string $namespaceModels): DatabaseFirstConfig
     {
         $this->namespaceModels = $namespaceModels;
         return $this;
@@ -345,9 +346,9 @@ class DoctrineOrmSchema
     /**
      * @param string $namespaceModelsTraits
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setNamespaceModelsTraits(string $namespaceModelsTraits): DoctrineOrmSchema
+    public function setNamespaceModelsTraits(string $namespaceModelsTraits): DatabaseFirstConfig
     {
         $this->namespaceModelsTraits = $namespaceModelsTraits;
         return $this;
@@ -364,9 +365,9 @@ class DoctrineOrmSchema
     /**
      * @param string $namespaceModelsBuilders
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setNamespaceModelsBuilders(string $namespaceModelsBuilders): DoctrineOrmSchema
+    public function setNamespaceModelsBuilders(string $namespaceModelsBuilders): DatabaseFirstConfig
     {
         $this->namespaceModelsBuilders = $namespaceModelsBuilders;
         return $this;
@@ -383,9 +384,10 @@ class DoctrineOrmSchema
     /**
      * @param string $namespaceMigrations
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
+     * @deprecated
      */
-    public function setNamespaceMigrations(string $namespaceMigrations): DoctrineOrmSchema
+    public function setNamespaceMigrations(string $namespaceMigrations): DatabaseFirstConfig
     {
         $this->namespaceMigrations = $namespaceMigrations;
         return $this;
@@ -402,9 +404,9 @@ class DoctrineOrmSchema
     /**
      * @param string $namespaceMapping
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setNamespaceMapping(string $namespaceMapping): DoctrineOrmSchema
+    public function setNamespaceMapping(string $namespaceMapping): DatabaseFirstConfig
     {
         $this->namespaceMapping = $namespaceMapping;
         return $this;
@@ -421,9 +423,9 @@ class DoctrineOrmSchema
     /**
      * @param string $namespaceMappingGenerated
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setNamespaceMappingGenerated(string $namespaceMappingGenerated): DoctrineOrmSchema
+    public function setNamespaceMappingGenerated(string $namespaceMappingGenerated): DatabaseFirstConfig
     {
         $this->namespaceMappingGenerated = $namespaceMappingGenerated;
         return $this;
@@ -440,9 +442,9 @@ class DoctrineOrmSchema
     /**
      * @param string $namespaceMappingExtra
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setNamespaceMappingExtra(string $namespaceMappingExtra): DoctrineOrmSchema
+    public function setNamespaceMappingExtra(string $namespaceMappingExtra): DatabaseFirstConfig
     {
         $this->namespaceMappingExtra = $namespaceMappingExtra;
         return $this;
@@ -451,9 +453,9 @@ class DoctrineOrmSchema
     /**
      * @param EntityManager $entityManager
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setEntityManager(EntityManager $entityManager): DoctrineOrmSchema
+    public function setEntityManager(EntityManager $entityManager): DatabaseFirstConfig
     {
         $this->entityManager = $entityManager;
         return $this;
@@ -470,9 +472,10 @@ class DoctrineOrmSchema
     /**
      * @param string $pathToMigrations
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
+     * @deprecated
      */
-    public function setPathToMigrations(string $pathToMigrations): DoctrineOrmSchema
+    public function setPathToMigrations(string $pathToMigrations): DatabaseFirstConfig
     {
         $this->pathToMigrations = $pathToMigrations;
         return $this;
@@ -489,7 +492,7 @@ class DoctrineOrmSchema
     /**
      * @param mixed $pathToModels
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
     public function setPathToModels($pathToModels)
     {
@@ -508,9 +511,9 @@ class DoctrineOrmSchema
     /**
      * @param string $pathToModelsTraits
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setPathToModelsTraits(string $pathToModelsTraits): DoctrineOrmSchema
+    public function setPathToModelsTraits(string $pathToModelsTraits): DatabaseFirstConfig
     {
         $this->pathToModelsTraits = $pathToModelsTraits;
         return $this;
@@ -527,7 +530,7 @@ class DoctrineOrmSchema
     /**
      * @param mixed $pathToRepositories
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
     public function setPathToRepositories($pathToRepositories)
     {
@@ -546,9 +549,9 @@ class DoctrineOrmSchema
     /**
      * @param string $pathToMapping
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setPathToMapping(string $pathToMapping): DoctrineOrmSchema
+    public function setPathToMapping(string $pathToMapping): DatabaseFirstConfig
     {
         $this->pathToMapping = $pathToMapping;
         return $this;
@@ -565,9 +568,9 @@ class DoctrineOrmSchema
     /**
      * @param string[] $skipTables
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setSkipTables(array $skipTables): DoctrineOrmSchema
+    public function setSkipTables(array $skipTables): DatabaseFirstConfig
     {
         $this->skipTables = $skipTables;
         return $this;
@@ -576,7 +579,7 @@ class DoctrineOrmSchema
     /**
      * @param mixed $namespaceModelsAwareTraits
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
     public function setNamespaceModelsAwareTraits($namespaceModelsAwareTraits)
     {
@@ -595,9 +598,9 @@ class DoctrineOrmSchema
     /**
      * @param string $pathToModelAwareTraits
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setPathToModelAwareTraits(string $pathToModelAwareTraits): DoctrineOrmSchema
+    public function setPathToModelAwareTraits(string $pathToModelAwareTraits): DatabaseFirstConfig
     {
         $this->pathToModelAwareTraits = $pathToModelAwareTraits;
         return $this;
@@ -636,9 +639,9 @@ class DoctrineOrmSchema
     /**
      * @param string $modelTraitFieldVisibility
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setModelTraitFieldVisibility(string $modelTraitFieldVisibility): DoctrineOrmSchema
+    public function setModelTraitFieldVisibility(string $modelTraitFieldVisibility): DatabaseFirstConfig
     {
         $this->modelTraitFieldVisibility = $modelTraitFieldVisibility;
         return $this;
@@ -647,9 +650,9 @@ class DoctrineOrmSchema
     /**
      * @param bool $generateModelWithRepoAccess
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setGenerateModelWithRepoAccess(bool $generateModelWithRepoAccess): DoctrineOrmSchema
+    public function setGenerateModelWithRepoAccess(bool $generateModelWithRepoAccess): DatabaseFirstConfig
     {
         $this->generateModelWithRepoAccess = $generateModelWithRepoAccess;
         return $this;
@@ -669,9 +672,9 @@ class DoctrineOrmSchema
     /**
      * @param string $metadataBuilderClass
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setMetadataBuilderClass(string $metadataBuilderClass): DoctrineOrmSchema
+    public function setMetadataBuilderClass(string $metadataBuilderClass): DatabaseFirstConfig
     {
         $this->metadataBuilderClass = $metadataBuilderClass;
         return $this;
@@ -680,9 +683,9 @@ class DoctrineOrmSchema
     /**
      * @param string $metaVar
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setMetaVar(string $metaVar): DoctrineOrmSchema
+    public function setMetaVar(string $metaVar): DatabaseFirstConfig
     {
         $this->metaVar = $metaVar;
         return $this;
@@ -691,9 +694,9 @@ class DoctrineOrmSchema
     /**
      * @param string $builderVar
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setBuilderVar(string $builderVar): DoctrineOrmSchema
+    public function setBuilderVar(string $builderVar): DatabaseFirstConfig
     {
         $this->builderVar = $builderVar;
         return $this;
@@ -702,9 +705,9 @@ class DoctrineOrmSchema
     /**
      * @param array $doctrineTypesMap
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setDoctrineTypesMap(array $doctrineTypesMap): DoctrineOrmSchema
+    public function setDoctrineTypesMap(array $doctrineTypesMap): DatabaseFirstConfig
     {
         $this->doctrineTypesMap = $doctrineTypesMap;
         return $this;
@@ -713,9 +716,9 @@ class DoctrineOrmSchema
     /**
      * @param string[] $skipColumns
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setSkipColumns(array $skipColumns): DoctrineOrmSchema
+    public function setSkipColumns(array $skipColumns): DatabaseFirstConfig
     {
         $this->skipColumns = $skipColumns;
         return $this;
@@ -724,9 +727,9 @@ class DoctrineOrmSchema
     /**
      * @param bool $cascadePersistAllRelationships
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setCascadePersistAllRelationships(bool $cascadePersistAllRelationships): DoctrineOrmSchema
+    public function setCascadePersistAllRelationships(bool $cascadePersistAllRelationships): DatabaseFirstConfig
     {
         $this->cascadePersistAllRelationships = $cascadePersistAllRelationships;
         return $this;
@@ -735,9 +738,9 @@ class DoctrineOrmSchema
     /**
      * @param bool $cascadeRefreshAllRelationships
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setCascadeRefreshAllRelationships(bool $cascadeRefreshAllRelationships): DoctrineOrmSchema
+    public function setCascadeRefreshAllRelationships(bool $cascadeRefreshAllRelationships): DatabaseFirstConfig
     {
         $this->cascadeRefreshAllRelationships = $cascadeRefreshAllRelationships;
         return $this;
@@ -746,9 +749,9 @@ class DoctrineOrmSchema
     /**
      * @param string $parentRepositoryClass
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setParentRepositoryClass(string $parentRepositoryClass): DoctrineOrmSchema
+    public function setParentRepositoryClass(string $parentRepositoryClass): DatabaseFirstConfig
     {
         $this->parentRepositoryClass = $parentRepositoryClass;
         return $this;
@@ -757,9 +760,9 @@ class DoctrineOrmSchema
     /**
      * @param bool $overwriteRepoClasses
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setOverwriteRepoClasses(bool $overwriteRepoClasses): DoctrineOrmSchema
+    public function setOverwriteRepoClasses(bool $overwriteRepoClasses): DatabaseFirstConfig
     {
         $this->overwriteRepoClasses = $overwriteRepoClasses;
         return $this;
@@ -768,9 +771,9 @@ class DoctrineOrmSchema
     /**
      * @param bool $generateRepoTraits
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setGenerateRepoTraits(bool $generateRepoTraits): DoctrineOrmSchema
+    public function setGenerateRepoTraits(bool $generateRepoTraits): DatabaseFirstConfig
     {
         $this->generateRepoTraits = $generateRepoTraits;
         return $this;
@@ -779,9 +782,9 @@ class DoctrineOrmSchema
     /**
      * @param bool $generateModelWithLockHelpers
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setGenerateModelWithLockHelpers(bool $generateModelWithLockHelpers): DoctrineOrmSchema
+    public function setGenerateModelWithLockHelpers(bool $generateModelWithLockHelpers): DatabaseFirstConfig
     {
         $this->generateModelWithLockHelpers = $generateModelWithLockHelpers;
         return $this;
@@ -790,9 +793,9 @@ class DoctrineOrmSchema
     /**
      * @param string $knownEntityManagerContainerClass
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setKnownEntityManagerContainerClass(string $knownEntityManagerContainerClass): DoctrineOrmSchema
+    public function setKnownEntityManagerContainerClass(string $knownEntityManagerContainerClass): DatabaseFirstConfig
     {
         $this->knownEntityManagerContainerClass = $knownEntityManagerContainerClass;
         return $this;
@@ -801,9 +804,9 @@ class DoctrineOrmSchema
     /**
      * @param string $knownEntityManagerRouterClass
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setKnownEntityManagerRouterClass(string $knownEntityManagerRouterClass): DoctrineOrmSchema
+    public function setKnownEntityManagerRouterClass(string $knownEntityManagerRouterClass): DatabaseFirstConfig
     {
         $this->knownEntityManagerRouterClass = $knownEntityManagerRouterClass;
         return $this;
@@ -812,9 +815,9 @@ class DoctrineOrmSchema
     /**
      * @param bool $generateSetOrIdMethodForModelAwareTraits
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setGenerateSetOrIdMethodForModelAwareTraits(bool $generateSetOrIdMethodForModelAwareTraits): DoctrineOrmSchema
+    public function setGenerateSetOrIdMethodForModelAwareTraits(bool $generateSetOrIdMethodForModelAwareTraits): DatabaseFirstConfig
     {
         $this->generateSetOrIdMethodForModelAwareTraits = $generateSetOrIdMethodForModelAwareTraits;
         return $this;
@@ -823,9 +826,9 @@ class DoctrineOrmSchema
     /**
      * @param bool $generateSetMethodForModelAwareTraits
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setGenerateSetMethodForModelAwareTraits(bool $generateSetMethodForModelAwareTraits): DoctrineOrmSchema
+    public function setGenerateSetMethodForModelAwareTraits(bool $generateSetMethodForModelAwareTraits): DatabaseFirstConfig
     {
         $this->generateSetMethodForModelAwareTraits = $generateSetMethodForModelAwareTraits;
         return $this;
@@ -845,9 +848,9 @@ class DoctrineOrmSchema
     /**
      * @param array $singleTableInheritance
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setSingleTableInheritance(array $singleTableInheritance): DoctrineOrmSchema
+    public function setSingleTableInheritance(array $singleTableInheritance): DatabaseFirstConfig
     {
         $this->singleTableInheritance = $singleTableInheritance;
         $this->inheritanceMap = new InheritanceMap($singleTableInheritance);
@@ -875,6 +878,13 @@ class DoctrineOrmSchema
         return false;
     }
 
+    /**
+     * @param string $namespace
+     * @param string $path
+     *
+     * @return $this
+     * @deprecated
+     */
     public function configureMigrations(string $namespace, string $path): self
     {
         $this->setNamespaceMigrations($namespace);
@@ -927,9 +937,9 @@ class DoctrineOrmSchema
     /**
      * @param string|null $pathToRepositoriesTraits
      *
-     * @return DoctrineOrmSchema
+     * @return DatabaseFirstConfig
      */
-    public function setPathToRepositoriesTraits(?string $pathToRepositoriesTraits): DoctrineOrmSchema
+    public function setPathToRepositoriesTraits(?string $pathToRepositoriesTraits): DatabaseFirstConfig
     {
         $this->pathToRepositoriesTraits = $pathToRepositoriesTraits;
         return $this;

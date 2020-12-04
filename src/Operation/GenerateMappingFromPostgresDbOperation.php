@@ -2,7 +2,7 @@
 namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Classes\Classes;
-use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
+use CodexSoft\DatabaseFirst\DatabaseFirstConfig;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
@@ -38,7 +38,7 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
         // trying to provide filtering while reverse engineering
         $em->getConnection()->getConfiguration()->setSchemaAssetsFilter(
             function($tableName) {
-                return false === DoctrineOrmSchema::tableShouldBeSkipped(
+                return false === DatabaseFirstConfig::tableShouldBeSkipped(
                     $tableName, $this->doctrineOrmSchema->skipTables
                 );
             }
@@ -60,7 +60,7 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
 
             $this->logger->info(\sprintf('Processing table "%s"', $tableName));
 
-            if (DoctrineOrmSchema::tableShouldBeSkipped($tableName, $this->doctrineOrmSchema->skipTables, $this->logger)) {
+            if (DatabaseFirstConfig::tableShouldBeSkipped($tableName, $this->doctrineOrmSchema->skipTables, $this->logger)) {
                 continue;
             }
 

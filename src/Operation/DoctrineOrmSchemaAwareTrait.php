@@ -2,18 +2,18 @@
 
 namespace CodexSoft\DatabaseFirst\Operation;
 
-use CodexSoft\DatabaseFirst\DoctrineOrmSchema;
+use CodexSoft\DatabaseFirst\DatabaseFirstConfig;
 
 trait DoctrineOrmSchemaAwareTrait
 {
-    protected DoctrineOrmSchema $doctrineOrmSchema;
+    protected DatabaseFirstConfig $doctrineOrmSchema;
 
     /**
-     * @param DoctrineOrmSchema $doctrineOrmSchema
+     * @param DatabaseFirstConfig $doctrineOrmSchema
      *
      * @return static
      */
-    public function setDoctrineOrmSchema(DoctrineOrmSchema $doctrineOrmSchema): self
+    public function setDoctrineOrmSchema(DatabaseFirstConfig $doctrineOrmSchema): self
     {
         $this->doctrineOrmSchema = $doctrineOrmSchema;
         return $this;

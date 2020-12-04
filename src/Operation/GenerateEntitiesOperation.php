@@ -20,7 +20,7 @@ use function Stringy\create as str;
 
 use const CodexSoft\Shortcut\TAB;
 
-class   GenerateEntitiesOperation extends AbstractBaseOperation
+class GenerateEntitiesOperation extends AbstractBaseOperation
 {
     /** @var array comments for all columns in db, in format [ <table>.<column> => <comment> ] */
     protected array $columnComments = [];

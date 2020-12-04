@@ -4,6 +4,9 @@ namespace CodexSoft\DatabaseFirst;
 
 use CodexSoft\DatabaseFirst\InheritanceMap\EntityData;
 
+/**
+ * @internal
+ */
 class InheritanceMap
 {
     private array $entityDataByTable = [];

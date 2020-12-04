@@ -5,13 +5,11 @@ namespace CodexSoft\DatabaseFirst\Helpers;
 use CodexSoft\DatabaseFirst\Orm\Postgres\AbstractPgSqlEntityManagerBuilder;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\QueryBuilder;
 use CodexSoft\Code\Arrays\Arrays;
 use Psr\Log\LoggerInterface;
-
 use Psr\Log\NullLogger;
 
 use function Stringy\create as str;
@@ -471,9 +469,9 @@ WHERE
     {
         try {
             /** @var array $pgTableDescriptionArray */
-            $pgTableDescriptionArray = $connection->fetchAssoc("SELECT obj_description('".$tableName."'::regclass)");
+            $pgTableDescriptionArray = $connection->fetchAssociative("SELECT obj_description('".$tableName."'::regclass)");
             return $pgTableDescriptionArray['obj_description'] ?? '';
-        } catch (DBALException $e) {
+        } catch (\Doctrine\DBAL\Exception $e) {
             return '';
         }
     }
