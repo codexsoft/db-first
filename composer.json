@@ -20,7 +20,6 @@
         "voku/stringy": "^6.2",
         "codexsoft/shortcut-tab-constant": "^1.0",
         "codexsoft/code-files": "^1.0",
-        "codexsoft/code-strings": "^1.0",
         "symfony/string": "^5.2",
         "doctrine/inflector": "^2.0"
     },

@@ -13,19 +13,19 @@ use Symfony\Component\Console\Output\OutputInterface;
 class RemoveNotMappedCommand extends Command
 {
     protected static $defaultName = 'dbf:remove-not-mapped';
-    protected DatabaseFirstConfig $ormSchema;
+    protected DatabaseFirstConfig $databaseFirstConfig;
 
-    public function __construct(DatabaseFirstConfig $ormSchema, string $name = null)
+    public function __construct(DatabaseFirstConfig $databaseFirstConfig, string $name = null)
     {
         parent::__construct($name);
-        $this->ormSchema = $ormSchema;
+        $this->databaseFirstConfig = $databaseFirstConfig;
         $this->setDescription('Remove entity and repository for not existed in mapping');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         (new RemoveNotExistingInMappingEntitiesOperation(new ConsoleLogger($output)))
-            ->setDoctrineOrmSchema($this->ormSchema)
+            ->setDatabaseFirstConfig($this->databaseFirstConfig)
             ->execute();
 
         return 0;

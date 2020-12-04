@@ -35,7 +35,7 @@ class GenerateRepositoriesOperation extends AbstractBaseOperation
      */
     public function execute(): void
     {
-        if (!isset($this->doctrineOrmSchema)) {
+        if (!isset($this->databaseFirstConfig)) {
             throw new \InvalidArgumentException('Required doctrineOrmSchema is not provided');
         }
 
@@ -47,12 +47,12 @@ class GenerateRepositoriesOperation extends AbstractBaseOperation
         //    throw new \InvalidArgumentException($this->doctrineOrmSchema->dqlHelperClass.' provided as Dql-helper class does not extend '.Dql::class);
         //}
 
-        $em = $this->doctrineOrmSchema->getEntityManager();
+        $em = $this->databaseFirstConfig->getEntityManager();
         $this->columnComments = Doctrine::getAllColumnsComments($em->getConnection());
         $metadatas = $this->getMetadata($em);
 
-        $reposPath = $this->doctrineOrmSchema->getPathToRepositories();
-        $reposTraitPath = $this->doctrineOrmSchema->getPathToRepositoriesTraits();
+        $reposPath = $this->databaseFirstConfig->getPathToRepositories();
+        $reposTraitPath = $this->databaseFirstConfig->getPathToRepositoriesTraits();
 
         $fs = new Filesystem();
 
@@ -66,14 +66,14 @@ class GenerateRepositoriesOperation extends AbstractBaseOperation
 
         //$reposTraitPath = $reposPath.'/Generated'; // todo: get from config?
 
-        $repoNamespace = $this->doctrineOrmSchema->getNamespaceRepositories();
+        $repoNamespace = $this->databaseFirstConfig->getNamespaceRepositories();
         $repoInterface = $this->repoInterface;
 
         foreach ($metadatas as $metadata) {
 
-            $parentClass = $this->doctrineOrmSchema->parentRepositoryClass;
+            $parentClass = $this->databaseFirstConfig->parentRepositoryClass;
             if ($metadata->isInheritanceTypeSingleTable() && ($metadata->name !== $metadata->rootEntityName)) {
-                $parentClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.Classes::short($metadata->rootEntityName).'Repository';
+                $parentClass = $this->databaseFirstConfig->getNamespaceRepositories().'\\'.Classes::short($metadata->rootEntityName).'Repository';
             }
 
             $tableComment = Doctrine::getCommentForTable($em->getConnection(), $metadata->table['name']);
@@ -82,7 +82,7 @@ class GenerateRepositoriesOperation extends AbstractBaseOperation
             $collectionShortClass = Classes::short($metadata->name).'Repository';
             $repoTraitFileName = $reposTraitPath.'/'.$collectionShortClass.'Trait.php';
 
-            if ($this->doctrineOrmSchema->generateRepoTraits) {
+            if ($this->databaseFirstConfig->optionRepoTraitsGenerate) {
                 $this->logger->info('Generating repo trait...');
                 $content = $this->generateRepositoryBaseTrait($metadata, $collectionShortClass);
                 $fs->dumpFile($repoTraitFileName,$content);
@@ -114,11 +114,11 @@ class GenerateRepositoriesOperation extends AbstractBaseOperation
                 ' */',
                 'class '.$collectionShortClass.' extends '.Classes::short($parentClass).$implementsInt,
                 '{',
-                '    use \\'.$this->doctrineOrmSchema->getNamespaceRepositoriesTraits().'\\'.$collectionShortClass.'Trait;',
+                '    use \\'.$this->databaseFirstConfig->getNamespaceRepositoriesTraits().'\\'.$collectionShortClass.'Trait;',
                 '}',
             ];
 
-            if ($this->doctrineOrmSchema->overwriteRepoClasses || !file_exists($repoFilename)) {
+            if ($this->databaseFirstConfig->optionRepoOverwriteClasses || !file_exists($repoFilename)) {
                 file_put_contents($repoFilename, implode(self::LS, $repoCode));
             }
 
@@ -150,9 +150,9 @@ class GenerateRepositoriesOperation extends AbstractBaseOperation
         $code = [
             '<?php',
             '',
-            'namespace '.$this->doctrineOrmSchema->getNamespaceRepositoriesTraits().';',
+            'namespace '.$this->databaseFirstConfig->getNamespaceRepositoriesTraits().';',
             '',
-            'use '.$this->doctrineOrmSchema->getNamespaceModels().';',
+            'use '.$this->databaseFirstConfig->getNamespaceEntities().';',
             'use '.Expr::class.';',
             'use '.Join::class.';',
             //'use '.$this->doctrineOrmSchema->dqlHelperClass.';',
@@ -169,7 +169,7 @@ class GenerateRepositoriesOperation extends AbstractBaseOperation
 
         $shortName = Classes::short($metadata->name);
         $lowerName = lcfirst($shortName);
-        $importedEntityNamespace = Classes::short($this->doctrineOrmSchema->getNamespaceModels());
+        $importedEntityNamespace = Classes::short($this->databaseFirstConfig->getNamespaceEntities());
         $namespacedShortName = $importedEntityNamespace.'\\'.$shortName;
 
         foreach ($metadata->fieldMappings as $key => $mapping) {

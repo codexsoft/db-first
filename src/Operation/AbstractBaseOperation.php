@@ -4,6 +4,7 @@
 namespace CodexSoft\DatabaseFirst\Operation;
 
 
+use CodexSoft\DatabaseFirst\DatabaseFirstConfigAwareTrait;
 use Doctrine\Inflector\Inflector;
 use Doctrine\Inflector\InflectorFactory;
 use Doctrine\Inflector\Language;
@@ -17,7 +18,7 @@ use Psr\Log\NullLogger;
 
 abstract class AbstractBaseOperation implements LoggerAwareInterface
 {
-    use DoctrineOrmSchemaAwareTrait;
+    use DatabaseFirstConfigAwareTrait;
     protected LoggerInterface $logger;
     protected Inflector $inflector;
 
@@ -49,8 +50,8 @@ abstract class AbstractBaseOperation implements LoggerAwareInterface
         $cmf->setEntityManager( $em );
 
         $metadatas = $cmf->getAllMetadata();
-        if ($this->doctrineOrmSchema->metadataFilter) {
-            $metadatas = MetadataFilter::filter($metadatas, $this->doctrineOrmSchema->metadataFilter);
+        if ($this->databaseFirstConfig->metadataFilter) {
+            $metadatas = MetadataFilter::filter($metadatas, $this->databaseFirstConfig->metadataFilter);
         }
 
         if (!\count($metadatas)) {

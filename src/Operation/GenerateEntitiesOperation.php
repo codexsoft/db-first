@@ -28,40 +28,40 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
 
     public function execute(): void
     {
-        if (!isset($this->doctrineOrmSchema)) {
+        if (!isset($this->databaseFirstConfig)) {
             throw new \InvalidArgumentException('Required doctrineOrmSchema is not provided');
         }
 
-        $ds = $this->doctrineOrmSchema;
+        $ds = $this->databaseFirstConfig;
         $this->em = $ds->getEntityManager();
         $metadatas = $this->getMetadata($this->em);
 
         $fs = new Filesystem;
 
         // todo: if dir not exsists and no write permissions?
-        if (!file_exists($ds->getPathToModels())) {
-            $fs->mkdir($ds->getPathToModels());
+        if (!file_exists($ds->getPathToEntities())) {
+            $fs->mkdir($ds->getPathToEntities());
         }
 
-        if (!file_exists($ds->getPathToModelsTraits())) {
-            $fs->mkdir($ds->getPathToModelsTraits());
+        if (!file_exists($ds->getPathToEntityTraits())) {
+            $fs->mkdir($ds->getPathToEntityTraits());
         }
 
         $this->columnComments = Doctrine::getAllColumnsComments($this->em->getConnection());
-        //die(var_export($this->columnComments));
+
         foreach ($metadatas as $metadata) {
             $fs->dumpFile(
-                $ds->getPathToModelsTraits().'/'.$this->getClassName($metadata).'Trait.php',
+                $ds->getPathToEntityTraits().'/'.$this->getClassName($metadata).'Trait.php',
                 $this->generateEntityTraitClassCode($metadata)
             );
 
-            $modelClassFile = $ds->getPathToModels().'/'.$this->getClassName($metadata).'.php';
-            if ($this->doctrineOrmSchema->overwriteModelClasses || !file_exists($modelClassFile)) {
+            $modelClassFile = $ds->getPathToEntities().'/'.$this->getClassName($metadata).'.php';
+            if ($this->databaseFirstConfig->optionEntityOverwriteExistingClasses || !file_exists($modelClassFile)) {
                 $fs->dumpFile($modelClassFile, $this->generateEntityClassCode($metadata));
             }
 
-            $modelAwareTraitFile = $ds->getPathToModelAwareTraits().'/'.$this->getClassName($metadata).'AwareTrait.php';
-            if ($this->doctrineOrmSchema->generateModelAwareTraits && ($this->doctrineOrmSchema->overwriteModelAwareTraits || !file_exists($modelAwareTraitFile))) {
+            $modelAwareTraitFile = $ds->getPathToEntityAwareTraits().'/'.$this->getClassName($metadata).'AwareTrait.php';
+            if ($this->databaseFirstConfig->optionEntityAwareTraitsGenerate && ($this->databaseFirstConfig->optionEntityAwareTraitsOverwriteExisting || !file_exists($modelAwareTraitFile))) {
                 $fs->dumpFile($modelAwareTraitFile, $this->generateEntityAwareTraitClassCode($metadata));
             }
 
@@ -81,33 +81,30 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
 
     private function generateEntityClassCode(ClassMetadata $metadata): string
     {
-        $ds = $this->doctrineOrmSchema;
-        //$lines = [];
+        $ds = $this->databaseFirstConfig;
 
         $entityClassName = $this->getClassName($metadata);
         $tableComment = Doctrine::getCommentForTable($this->em->getConnection(), $metadata->table['name']);
-        $customRepoClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.$entityClassName.'Repository';
+        $customRepoClass = $this->databaseFirstConfig->getNamespaceRepositories().'\\'.$entityClassName.'Repository';
 
         $extendsStatement = '';
         if ($metadata->isInheritanceTypeSingleTable() && ($metadata->name !== $metadata->rootEntityName)) {
             $extendsStatement = ' extends '.Classes::short($metadata->rootEntityName);
-            //$parentClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.Classes::short($metadata->rootEntityName).'Repository';
         }
 
         $lines = [
             '<?php',
             '',
-            'namespace '.$ds->getNamespaceModels().';',
+            'namespace '.$ds->getNamespaceEntities().';',
             '/**',
             " * {$tableComment}",
             ' * '.$entityClassName,
-            //$this->generateWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.' $em = null)' : ' *',
-            $this->doctrineOrmSchema->generateModelWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.' $em = null)' : ' *',
+            $this->databaseFirstConfig->optionEntityTraitGenerateWithRepoAccess ? ' * @method static \\'.$customRepoClass.' repo(\\'.EntityManagerInterface::class.' $em = null)' : ' *',
             ' * @Doctrine\ORM\Mapping\Entity(repositoryClass="'.$customRepoClass.'")',
             ' */',
             "class {$entityClassName}{$extendsStatement}",
             '{',
-            TAB.'use \\'.$ds->getNamespaceModelsTraits().'\\'.$entityClassName.'Trait;',
+            TAB.'use \\'.$ds->getNamespaceEntityTraits().'\\'.$entityClassName.'Trait;',
             '}',
         ];
 
@@ -117,68 +114,27 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
 
     private function generateEntityAwareTraitClassCode(ClassMetadata $metadata): string
     {
-        $ds = $this->doctrineOrmSchema;
+        $ds = $this->databaseFirstConfig;
         $shortEntityClassName = $this->getClassName($metadata);
         $fqnEntityClassName = '\\'.$metadata->name;
         $fieldName = lcfirst($shortEntityClassName);
-
-        //$lines = [
-        //    '<?php',
-        //    '',
-        //    'namespace '.$ds->getNamespaceModelsAwareTraits().';',
-        //    '',
-        //    "use {$fqnEntityClassName};",
-        //    '',
-        //    "trait {$shortEntityClassName}AwareTrait",
-        //    '{',
-        //    TAB,
-        //    TAB."/** @var $shortEntityClassName */",
-        //    TAB."private \${$fieldName};",
-        //    TAB.'',
-        //    TAB.'/**',
-        //    TAB." * @param $shortEntityClassName \$$fieldName",
-        //    TAB.' *',
-        //    TAB.' * @return static',
-        //    TAB.' */',
-        //    TAB."public function set{$shortEntityClassName}({$shortEntityClassName} \${$fieldName}): self",
-        //    TAB.'{',
-        //    TAB."    \$this->{$fieldName} = \${$fieldName};",
-        //    TAB.'    return $this;',
-        //    TAB.'}',
-        //    TAB.'',
-        //    TAB.'/**',
-        //    TAB." * @param $shortEntityClassName|int \${$fieldNameOrId}",
-        //    TAB.' *',
-        //    TAB.' * @return static',
-        //    TAB.' */',
-        //    TAB."public function set{$shortEntityClassName}OrId(\${$fieldNameOrId}): self",
-        //    TAB.'{',
-        //    TAB."    \${$fieldName} = $shortEntityClassName::byId(\${$fieldNameOrId});",
-        //    TAB."    \$this->{$fieldName} = \${$fieldName};",
-        //    TAB.'    return $this;',
-        //    TAB.'}',
-        //    TAB.'',
-        //    '}',
-        //
-        //];
 
         $lines = [];
 
         \array_push($lines, ...[
             '<?php',
             '',
-            'namespace '.$ds->getNamespaceModelsAwareTraits().';',
+            'namespace '.$ds->getNamespaceEntityAwareTraits().';',
             '',
             "use {$fqnEntityClassName};",
             '',
             "trait {$shortEntityClassName}AwareTrait",
             '{',
             TAB,
-            TAB."/** @var $shortEntityClassName */",
-            TAB."private \${$fieldName};",
+            TAB."private $shortEntityClassName \${$fieldName};",
         ]);
 
-        if ($this->doctrineOrmSchema->generateSetMethodForModelAwareTraits) {
+        if ($this->databaseFirstConfig->optionEntityAwareTraitsGenerateSetMethod) {
             \array_push($lines, ...[
                 TAB.'',
                 TAB.'/**',
@@ -194,7 +150,7 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
             ]);
         }
 
-        if ($this->doctrineOrmSchema->generateSetOrIdMethodForModelAwareTraits) {
+        if ($this->databaseFirstConfig->optionEntityAwareTraitsGenerateSetOrIdMethod) {
             $fieldNameOrId = $fieldName.'OrId';
             \array_push($lines, ...[
                 TAB.'',
@@ -222,33 +178,30 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
 
     private function generateEntityTraitClassCode(ClassMetadata $metadata): string
     {
-        $ds = $this->doctrineOrmSchema;
+        $ds = $this->databaseFirstConfig;
         $entityClassName = $this->getClassName($metadata);
 
         $lines = [
             '<?php',
             '',
-            'namespace '.$ds->getNamespaceModelsTraits().';',
+            'namespace '.$ds->getNamespaceEntityTraits().';',
             '',
             "trait {$entityClassName}Trait",
             '{',
             TAB,
 
-            //$this->doctrineOrmSchema->generateModelWithRepoAccess || $this->doctrineOrmSchema->generateModelWithLockHelpers
-            //? TAB.'use \\'.\CodexSoft\DatabaseFirst\Orm\KnownEntityManagerTrait::class.';' : '',
-
-            $this->doctrineOrmSchema->generateModelWithRepoAccess && (!$metadata->isInheritanceTypeSingleTable() || $metadata->rootEntityName === $metadata->name)
+            $this->databaseFirstConfig->optionEntityTraitGenerateWithRepoAccess && (!$metadata->isInheritanceTypeSingleTable() || $metadata->rootEntityName === $metadata->name)
             ? TAB.'use \\'.RepoStaticAccessTrait::class.';' : '',
 
-            $this->doctrineOrmSchema->generateModelWithLockHelpers && (!$metadata->isInheritanceTypeSingleTable() || $metadata->rootEntityName === $metadata->name)
+            $this->databaseFirstConfig->optionEntityTraitGenerateWithLockHelpers && (!$metadata->isInheritanceTypeSingleTable() || $metadata->rootEntityName === $metadata->name)
                 ? TAB.'use \\'.LockableEntityTrait::class.';' : '',
             '',
             $this->generateEntityKnownEntityManager(),
             $this->generateEntityFieldMappingProperties($metadata),
             $this->generateEntityAssociationMappingProperties($metadata),
             $this->generateEntityStubMethods($metadata),
-            $this->generateDqlFieldNameHelpers($metadata),
-            $this->generateSqlFieldNameHelpers($metadata),
+            $this->databaseFirstConfig->optionEntityTraitStaticDqlFieldNamesGenerate ? $this->generateDqlFieldNameHelpers($metadata) : '',
+            $this->databaseFirstConfig->optionEntityTraitStaticSqlColumnNamesGenerate ? $this->generateSqlFieldNameHelpers($metadata) : '',
             '}',
 
         ];
@@ -259,7 +212,6 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
     protected function generateFieldMappingPropertyDocBlock(array $fieldMapping, ClassMetadataInfo $metadata): string
     {
         $fieldComment = $this->getCommentForField($metadata,$fieldMapping['fieldName']);
-        //$fieldComment = Doctrine::getCommentForField($metadata, $fieldMapping['fieldName'], $this->columnComments);
         $lines = [];
         $lines[] = TAB.'/**';
         if ($fieldComment) {
@@ -280,8 +232,8 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
      */
     protected function getType($type): string
     {
-        if (isset($this->doctrineOrmSchema->dbToPhpType[$type])) {
-            return $this->doctrineOrmSchema->dbToPhpType[$type];
+        if (isset($this->databaseFirstConfig->dbToPhpType[$type])) {
+            return $this->databaseFirstConfig->dbToPhpType[$type];
         }
 
         return $type;
@@ -304,11 +256,11 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
     protected function generateEntityKnownEntityManager(): string
     {
         $lines = [];
-        if ($this->doctrineOrmSchema->knownEntityManagerContainerClass) {
-            $lines[] = TAB.'protected static $knownEntityManagerContainerClass = \\'.$this->doctrineOrmSchema->knownEntityManagerContainerClass.'::class;';
+        if ($this->databaseFirstConfig->knownEntityManagerContainerClass) {
+            $lines[] = TAB.'protected static $knownEntityManagerContainerClass = \\'.$this->databaseFirstConfig->knownEntityManagerContainerClass.'::class;';
         }
-        if ($this->doctrineOrmSchema->knownEntityManagerRouterClass) {
-            $lines[] = TAB.'protected static $knownEntityManagerRouterClass = \\'.$this->doctrineOrmSchema->knownEntityManagerRouterClass.'::class;';
+        if ($this->databaseFirstConfig->knownEntityManagerRouterClass) {
+            $lines[] = TAB.'protected static $knownEntityManagerRouterClass = \\'.$this->databaseFirstConfig->knownEntityManagerRouterClass.'::class;';
         }
         if ($lines) {
             $lines[] = '';
@@ -326,15 +278,8 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
         $lines = [];
 
         foreach ($metadata->fieldMappings as $fieldMapping) {
-            //if (isset($fieldMapping['declaredField'], $metadata->embeddedClasses[$fieldMapping['declaredField']]) ||
-            //    $this->hasProperty($fieldMapping['fieldName'], $metadata) ||
-            //    $metadata->isInheritedField($fieldMapping['fieldName'])
-            //) {
-            //    continue;
-            //}
-
             $lines[] = $this->generateFieldMappingPropertyDocBlock($fieldMapping, $metadata);
-            $lines[] = TAB.$this->doctrineOrmSchema->modelTraitFieldVisibility.' $'.$fieldMapping['fieldName']
+            $lines[] = TAB.$this->databaseFirstConfig->modelTraitFieldVisibility.' $'.$fieldMapping['fieldName']
                 .(isset($fieldMapping['options']['default']) ? ' = '.var_export($fieldMapping['options']['default'], true) : null) . ";\n";
         }
 
@@ -351,12 +296,8 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
         $lines = [];
 
         foreach ($metadata->associationMappings as $associationMapping) {
-            //if ($this->hasProperty($associationMapping['fieldName'], $metadata)) {
-            //    continue;
-            //}
-
             $lines[] = $this->generateAssociationMappingPropertyDocBlock($associationMapping, $metadata);
-            $lines[] = TAB.$this->doctrineOrmSchema->modelTraitFieldVisibility.' $'.$associationMapping['fieldName']
+            $lines[] = TAB.$this->databaseFirstConfig->modelTraitFieldVisibility.' $'.$associationMapping['fieldName']
                 .($associationMapping['type'] === 'manyToMany' ? ' = array()' : null).";\n";
         }
 
@@ -372,7 +313,6 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
     protected function generateAssociationMappingPropertyDocBlock(array $associationMapping, ClassMetadataInfo $metadata)
     {
         $fieldComment = $this->getCommentForField($metadata, $associationMapping['fieldName']);
-        //$fieldComment = Doctrine::getCommentForField($metadata, $associationMapping['fieldName'], $this->columnComments);
 
         $lines = [];
         $lines[] = TAB . '/**';
@@ -435,19 +375,9 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
     {
         $lines = ['','// to avoid human mistakes when using SQL table and columns names...',''];
 
-        //if ($metadata->isInheritanceTypeSingleTable() || $metadata->subClasses)
         if (!$metadata->isInheritanceTypeSingleTable() || $metadata->rootEntityName === $metadata->name) {
             $lines[] = 'public static function _db_table_($doubleQuoted = true): string { return $doubleQuoted ? \'"'.$metadata->getTableName().'"\' : \''.$metadata->getTableName().'\'; }';
         }
-
-        //if ($this->doctrineOrmSchema->inheritanceMap->getEntityDataForTable($metadata->getTableName())) {
-        //    $lines[] = 'public static function _db_table_($doubleQuoted = true): string { return $doubleQuoted ? \'"'.$metadata->getTableName().'"\' : \''.$metadata->getTableName().'\'; }';
-        //}
-
-        //if (\array_key_exists($metadata->getTableName(), $this->doctrineOrmSchema->singleTableInheritance)) {
-            // traits cannot have constants
-            //$lines[] = 'public static function _db_table_($doubleQuoted = true): string { return $doubleQuoted ? \'"'.$metadata->getTableName().'"\' : \''.$metadata->getTableName().'\'; }';
-        //}
 
         $lines[] = '';
 
@@ -521,19 +451,6 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
             $methodTypeHint =  '\\' . $typeHint . ' ';
         }
 
-        //if ( ClassMetadata::ONE_TO_MANY === $metadata->associationMappings[$fieldName]['type'] ) {
-        //
-        //    $mappedBy = null;
-        //    $inversedBy = null;
-        //    $targetEntity = null;
-        //    $sourceEntity = null;
-        //
-        //    if ( array_key_exists($fieldName,$metadata->associationMappings) ) {
-        //        $variableExtraType = '|\\'.$targetEntity.'[] ';
-        //    }
-        //
-        //}
-
         $variableExtraType = null;
 
         if (\array_key_exists($fieldName,$metadata->associationMappings) || ($variableType === '\\'.\DateTime::class) ) {
@@ -552,18 +469,17 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
                 '}',
                 '',
                 '/**',
-                ' * @noinspection PhpDocMissingThrowsInspection',
                 ' * Get not-null '.$variableName.' or throw exception',
                 ' * '.$fieldComment,
                 ' *',
-                " * @param string|\\Exception|null $exceptionMessageVar a message for exception (or exception instance) that will raise if $fieldName is null",
+                " * @param string|\\Throwable|null $exceptionMessageVar a message for exception (or exception instance) that will raise if $fieldName is null",
                 ' * @return '.$variableType.$variableExtraType,
+                ' * @throws \\UnexpectedValueException',
                 ' */',
                 "public function {$methodName}OrFail($exceptionMessageVar = null): $variableType",
                 '{',
                 TAB."if (!\$this->$fieldName instanceof $variableType) {",
-                TAB.TAB."if ($exceptionMessageVar instanceof \\Exception) {",
-                TAB.TAB.TAB.'/** @noinspection PhpUnhandledExceptionInspection */',
+                TAB.TAB."if ($exceptionMessageVar instanceof \\Throwable) {",
                 TAB.TAB.TAB.'/** @var \RuntimeException '.$exceptionMessageVar.' */',
                 TAB.TAB.TAB."throw $exceptionMessageVar;",
                 TAB.TAB.'}',
@@ -572,15 +488,14 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
                 TAB.TAB.TAB."$exceptionMessageVar = '{$entityClassName}.{$fieldName} is null, but {$variableType} was expected.';",
                 TAB.TAB.'}',
                 '',
-                TAB.TAB.'/** @noinspection PhpUnhandledExceptionInspection */',
-                TAB.TAB."throw new \\".\DomainException::class."({$exceptionMessageVar});",
+                TAB.TAB."throw new \\".\UnexpectedValueException::class."({$exceptionMessageVar});",
                 TAB.'}',
                 TAB."return \$this->$fieldName;",
                 '}',
                 '',
             ];
 
-            if ($this->doctrineOrmSchema->generateAssociationIdGetters) {
+            if ($this->databaseFirstConfig->optionEntityTraitAssociationIdGettersGenerate) {
                 $idGetter = [
                     '/**',
                     ' * Get '.$variableName.' ID or null',
@@ -616,17 +531,6 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
         ];
 
         return TAB.implode("\n".TAB, $lines);
-
-        //$x = '/**
-        //* <description>
-        //* <fieldComment>
-        //*
-        //* @return <variableType><variableExtraType>
-        //*/
-        //public function <methodName>()
-        //{
-        //<spaces>return $this-><fieldName>;
-        //}';
     }
 
     private function generateSetMethod(ClassMetadataInfo $metadata, string $fieldName, $typeHint = null, $defaultValue = null)
@@ -637,19 +541,18 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
         $variableName = $this->inflector->camelize($fieldName);
 
         $methodTypeHint = null;
-        //$methodTypeHint = $typeHint;
-        //$types          = Type::getTypesMap();
+
         $variableType   = $typeHint ? $this->getType($typeHint) : null;
 
         // todo: refactor this dirty type-hinting code
         if ($typeHint) {
             // mapping file for another entity should be already exist, but model class can be absent yet
-            $mappingFile = $this->doctrineOrmSchema->getPathToMapping().'/'.str_replace( '\\', '.', $typeHint).'.php';
+            $mappingFile = $this->databaseFirstConfig->getPathToMapping().'/'.str_replace( '\\', '.', $typeHint).'.php';
             if (\class_exists($typeHint) || \file_exists($mappingFile)) {
                 $variableType   =  '\\' . ltrim($variableType, '\\');
                 $methodTypeHint =  '\\' . $typeHint . ' ';
-            } elseif (\array_key_exists($typeHint, $this->doctrineOrmSchema->dbToPhpType)) {
-                $methodTypeHint = $this->doctrineOrmSchema->dbToPhpType[$typeHint];
+            } elseif (\array_key_exists($typeHint, $this->databaseFirstConfig->dbToPhpType)) {
+                $methodTypeHint = $this->databaseFirstConfig->dbToPhpType[$typeHint];
             } elseif ($variableType) {
                 $methodTypeHint = $variableType;
             }
@@ -667,16 +570,6 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
             }
 
         }
-
-        //if ($typeHint && !isset($types[$typeHint])) {
-        //    $variableType   =  '\\' . ltrim($variableType, '\\');
-        //    $methodTypeHint =  '\\' . $typeHint . ' ';
-        //}
-
-        //$mappedBy = null;
-        //$inversedBy = null;
-        //$targetEntity = null;
-        //$sourceEntity = null;
 
         // association?
         if (array_key_exists($fieldName,$metadata->associationMappings)) {
@@ -734,10 +627,6 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
 
         }
 
-        //if (!array_key_exists($fieldName, $metadata->associationMappings)) {
-        //    logger()->error( 'Not properly configured mapping for '.$fieldName );
-        //}
-
         $isNullable = $defaultValue === 'null';
 
         $lines = [
@@ -775,35 +664,14 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
             $nullableField = $this->nullableFieldExpression($fieldMapping);
 
             // generating setter for field
-            if ((!$metadata->isEmbeddedClass)
-                && (!isset($fieldMapping['id']) || !$fieldMapping['id'] || $metadata->generatorType === ClassMetadataInfo::GENERATOR_TYPE_NONE)
+            if ((!$metadata->isEmbeddedClass) && (!isset($fieldMapping['id']) || !$fieldMapping['id'] || $metadata->generatorType === ClassMetadataInfo::GENERATOR_TYPE_NONE)
             ) {
                 $methods[] = $this->generateSetMethod($metadata, $fieldMapping['fieldName'], $fieldMapping['type'], $nullableField);
-                //$methods[] = $code;
             }
 
             // generating getter for field
             $methods[] = $this->generateGetMethod($metadata, $fieldMapping['fieldName'], $fieldMapping['type'], $nullableField);
-            //if ($code = $this->generateEntityStubMethod($metadata, 'get', $fieldMapping['fieldName'], $fieldMapping['type'], $nullableField)) {
-            //    $methods[] = $code;
-            //}
         }
-
-        //foreach ($metadata->embeddedClasses as $fieldName => $embeddedClass) {
-        //    if (isset($embeddedClass['declaredField'])) {
-        //        continue;
-        //    }
-        //
-        //    if ( ! $metadata->isEmbeddedClass || ! $this->embeddablesImmutable) {
-        //        if ($code = $this->generateEntityStubMethod($metadata, 'set', $fieldName, $embeddedClass['class'])) {
-        //            $methods[] = $code;
-        //        }
-        //    }
-        //
-        //    if ($code = $this->generateEntityStubMethod($metadata, 'get', $fieldName, $embeddedClass['class'])) {
-        //        $methods[] = $code;
-        //    }
-        //}
 
         foreach ($metadata->associationMappings as $associationMapping) {
             if ($associationMapping['type'] & ClassMetadataInfo::TO_ONE) {
@@ -813,29 +681,12 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
 
                 $methods[] = $this->generateSetMethod($metadata, $associationMapping['fieldName'], $associationMapping['targetEntity'], $nullable);
                 $methods[] = $this->generateGetMethod($metadata, $associationMapping['fieldName'], $associationMapping['targetEntity'], $nullable);
-
-                //if ($code = $this->generateEntityStubMethod($metadata, 'set', $associationMapping['fieldName'], $associationMapping['targetEntity'], $nullable)) {
-                //    $methods[] = $code;
-                //}
-                //if ($code = $this->generateEntityStubMethod($metadata, 'get', $associationMapping['fieldName'], $associationMapping['targetEntity'], $nullable)) {
-                //    $methods[] = $code;
-                //}
             } elseif ($associationMapping['type'] & ClassMetadataInfo::TO_MANY) {
                 // todo: not supported
-
-                //if ($code = $this->generateEntityStubMethod($metadata, 'add', $associationMapping['fieldName'], $associationMapping['targetEntity'])) {
-                //    $methods[] = $code;
-                //}
-                //if ($code = $this->generateEntityStubMethod($metadata, 'remove', $associationMapping['fieldName'], $associationMapping['targetEntity'])) {
-                //    $methods[] = $code;
-                //}
-                //if ($code = $this->generateEntityStubMethod($metadata, 'get', $associationMapping['fieldName'], Collection::class)) {
-                //    $methods[] = $code;
-                //}
             }
         }
 
-        return implode("\n\n", $methods);
+        return \implode("\n\n", $methods);
     }
 
     /**

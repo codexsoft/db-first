@@ -2,56 +2,32 @@
 
 namespace CodexSoft\DatabaseFirst;
 
-use CodexSoft\Code\Strings\Strings;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
-
 use Psr\Log\LoggerInterface;
-
 use Psr\Log\NullLogger;
 
 use function Stringy\create as str;
 
 class DatabaseFirstConfig
 {
-    private $namespaceRepositories;
-    private $namespaceRepositoriesTraits;
-    private $namespaceModels;
-    private $namespaceModelsTraits;
-    private $namespaceModelsBuilders;
+    private ?string $namespaceEntities = null;
+    private ?string $namespaceEntityTraits = null;
+    private ?string $namespaceEntityAwareTraits = null;
+    private ?string $namespaceRepositories = null;
+    private ?string $namespaceRepositoriesTraits = null;
+    private ?string $namespaceMapping = null;
 
-    /**
-     * @var string|null
-     * @deprecated
-     */
-    private $namespaceMigrations;
-    private $namespaceMapping;
-    private $namespaceMappingGenerated;
-    private $namespaceMappingExtra;
-    private $namespaceModelsAwareTraits;
-
-    /**
-     * @var string|null
-     * @deprecated
-     */
-    private ?string $migrationBaseClass = null;
-
-    /**
-     * @var string|null
-     * @deprecated
-     */
-    private ?string $pathToMigrations = null;
-    private ?string $pathToModels = null;
+    private ?string $pathToEntities = null;
+    private ?string $pathToEntityTraits = null;
+    private ?string $pathToEntityAwareTraits = null;
     private ?string $pathToRepositories = null;
     private ?string $pathToRepositoriesTraits = null;
-    private ?string $pathToModelsTraits = null;
     private ?string $pathToMapping = null;
 
     private EntityManager $entityManager;
-
-    private ?string $pathToModelAwareTraits;
 
     /**
      * @var string[]
@@ -106,28 +82,38 @@ class DatabaseFirstConfig
      */
     public array $skipColumns = [];
 
-    public bool $cascadePersistAllRelationships = true;
-    public bool $cascadeRefreshAllRelationships = true;
-    public bool $generateModelAwareTraits = true;
-    public bool $overwriteModelAwareTraits = false;
-    public bool $generateSetMethodForModelAwareTraits = false;
-    public bool $generateSetOrIdMethodForModelAwareTraits = true;
-    public bool $overwriteModelClasses = false;
+    //public const OPTION_CASCADE_PERSIST_ALL_RELATIONSHIPS = 1;
+    //public const OPTION_CASCADE_REFRESH_ALL_RELATIONSHIPS = 2;
+
+    public bool $optionMappingCascadePersistAllRelationships = false;
+    public bool $optionMappingRefreshAllRelationships = false;
+    public bool $optionEntityAwareTraitsGenerate = false;
+    public bool $optionEntityAwareTraitsOverwriteExisting = false;
+    public bool $optionEntityAwareTraitsGenerateSetMethod = false;
+    public bool $optionEntityAwareTraitsGenerateSetOrIdMethod = false;
+    public bool $optionEntityOverwriteExistingClasses = false;
+    public bool $optionEntityTraitAssociationIdGettersGenerate = false;
+    public bool $optionEntityTraitStaticDqlFieldNamesGenerate = false;
+    public bool $optionEntityTraitStaticSqlColumnNamesGenerate = false;
+    public bool $optionRepoTraitsGenerate = false;
+    public bool $optionRepoOverwriteClasses = false;
+    public bool $optionEntityTraitGenerateWithRepoAccess = false;
+    public bool $optionEntityTraitGenerateWithLockHelpers = false;
+
+    public ?string $knownEntityManagerContainerClass = null;
+    public ?string $knownEntityManagerRouterClass = null;
 
     /**
      * Visibility of the field in generated model traits
      */
     public string $modelTraitFieldVisibility = 'private';
 
-    public bool $generateModelWithRepoAccess = true;
-    public bool $generateModelWithLockHelpers = false;
-
     /** @var string|string[] A string pattern used to match entities that should be processed (IS WHITELIST). */
     public $metadataFilter;
 
-    /**
-     * OR \CodexSoft\DatabaseFirst\Orm\ModelMetadataInheritanceBuilder::class
-     */
+    /** @var string A parent class for repository. */
+    public string $parentRepositoryClass = EntityRepository::class;
+
     public string $metadataBuilderClass = ClassMetadataBuilder::class;
     public string $metaVar = '$metadata';
     public string $builderVar = '$mapper';
@@ -165,37 +151,8 @@ class DatabaseFirstConfig
         'time_immutable' => 'TIME_IMMUTABLE',
     ];
 
-    /** @var string A parent class for repository. */
-    public string $parentRepositoryClass = EntityRepository::class;
-
-    public bool $generateAssociationIdGetters = false;
-    public bool $generateRepoTraits = true;
-    public bool $overwriteRepoClasses = false;
-    public ?string $knownEntityManagerContainerClass = null;
-    public ?string $knownEntityManagerRouterClass = null;
-    //public string $dqlHelperClass = Dql::class;
-
-    /**
-     * @var string
-     * @deprecated
-     */
-    protected string $namespaceBase = 'App\\Domain';
-
-    /**
-     * @var string
-     * @deprecated
-     */
-    protected string $pathToPsrRoot = '/src';
-
     public array $singleTableInheritance = [];
     public ?InheritanceMap $inheritanceMap = null;
-
-    public function __construct(string $databaseNamespace = null)
-    {
-        if ($databaseNamespace) {
-            $this->namespaceBase = $databaseNamespace;
-        }
-    }
 
     /**
      * @param string $domainConfigFile
@@ -217,53 +174,13 @@ class DatabaseFirstConfig
     }
 
     /**
-     * @return string
-     * @deprecated
-     */
-    public function getPathToPsrRoot(): string
-    {
-        return $this->pathToPsrRoot;
-    }
-
-    /**
-     * @param string $pathToPsrRoot
-     *
-     * @return static
-     * @deprecated
-     */
-    public function setPathToPsrRoot(string $pathToPsrRoot): self
-    {
-        $this->pathToPsrRoot = $pathToPsrRoot;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getNamespaceBase(): string
-    {
-        return $this->namespaceBase;
-    }
-
-    /**
-     * @param string $namespaceBase
+     * @param bool $optionEntityAwareTraitsOverwriteExisting
      *
      * @return static
      */
-    public function setNamespaceBase(string $namespaceBase): self
+    public function setOptionEntityAwareTraitsOverwriteExisting(bool $optionEntityAwareTraitsOverwriteExisting): self
     {
-        $this->namespaceBase = $namespaceBase;
-        return $this;
-    }
-
-    /**
-     * @param bool $overwriteModelAwareTraits
-     *
-     * @return static
-     */
-    public function setOverwriteModelAwareTraits(bool $overwriteModelAwareTraits): self
-    {
-        $this->overwriteModelAwareTraits = $overwriteModelAwareTraits;
+        $this->optionEntityAwareTraitsOverwriteExisting = $optionEntityAwareTraitsOverwriteExisting;
         return $this;
     }
 
@@ -283,7 +200,7 @@ class DatabaseFirstConfig
      */
     public function getNamespaceRepositories(): string
     {
-        return $this->namespaceRepositories ?: $this->getNamespaceBase().'\\Repository';
+        return $this->namespaceRepositories;
     }
 
     /**
@@ -291,7 +208,7 @@ class DatabaseFirstConfig
      *
      * @return DatabaseFirstConfig
      */
-    public function setNamespaceRepositories(string $namespaceRepositories): DatabaseFirstConfig
+    protected function setNamespaceRepositories(string $namespaceRepositories): DatabaseFirstConfig
     {
         $this->namespaceRepositories = $namespaceRepositories;
         return $this;
@@ -310,7 +227,7 @@ class DatabaseFirstConfig
      *
      * @return DatabaseFirstConfig
      */
-    public function setNamespaceRepositoriesTraits(string $namespaceRepositoriesTraits): DatabaseFirstConfig
+    protected function setNamespaceRepositoriesTraits(string $namespaceRepositoriesTraits): DatabaseFirstConfig
     {
         $this->namespaceRepositoriesTraits = $namespaceRepositoriesTraits;
         return $this;
@@ -319,77 +236,38 @@ class DatabaseFirstConfig
     /**
      * @return string
      */
-    public function getNamespaceModels(): string
+    public function getNamespaceEntities(): string
     {
-        return $this->namespaceModels ?: $this->getNamespaceBase().'\\Model';
+        return $this->namespaceEntities;
     }
 
     /**
-     * @param string $namespaceModels
+     * @param string $namespaceEntities
      *
      * @return DatabaseFirstConfig
      */
-    public function setNamespaceModels(string $namespaceModels): DatabaseFirstConfig
+    protected function setNamespaceEntities(string $namespaceEntities): DatabaseFirstConfig
     {
-        $this->namespaceModels = $namespaceModels;
+        $this->namespaceEntities = $namespaceEntities;
         return $this;
     }
 
     /**
      * @return string
      */
-    public function getNamespaceModelsTraits(): string
+    public function getNamespaceEntityTraits(): string
     {
-        return $this->namespaceModelsTraits ?: $this->getNamespaceModels().'\\Generated';
+        return $this->namespaceEntityTraits ?: $this->getNamespaceEntities().'\\Generated';
     }
 
     /**
-     * @param string $namespaceModelsTraits
+     * @param string $namespaceEntityTraits
      *
      * @return DatabaseFirstConfig
      */
-    public function setNamespaceModelsTraits(string $namespaceModelsTraits): DatabaseFirstConfig
+    protected function setNamespaceEntityTraits(string $namespaceEntityTraits): DatabaseFirstConfig
     {
-        $this->namespaceModelsTraits = $namespaceModelsTraits;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getNamespaceModelsBuilders(): string
-    {
-        return $this->namespaceModelsBuilders ?: $this->getNamespaceModels().'\\Builders';
-    }
-
-    /**
-     * @param string $namespaceModelsBuilders
-     *
-     * @return DatabaseFirstConfig
-     */
-    public function setNamespaceModelsBuilders(string $namespaceModelsBuilders): DatabaseFirstConfig
-    {
-        $this->namespaceModelsBuilders = $namespaceModelsBuilders;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getNamespaceMigrations(): string
-    {
-        return $this->namespaceMigrations ?: $this->getNamespaceBase().'\\Migrations';
-    }
-
-    /**
-     * @param string $namespaceMigrations
-     *
-     * @return DatabaseFirstConfig
-     * @deprecated
-     */
-    public function setNamespaceMigrations(string $namespaceMigrations): DatabaseFirstConfig
-    {
-        $this->namespaceMigrations = $namespaceMigrations;
+        $this->namespaceEntityTraits = $namespaceEntityTraits;
         return $this;
     }
 
@@ -398,7 +276,7 @@ class DatabaseFirstConfig
      */
     public function getNamespaceMapping(): string
     {
-        return $this->namespaceMapping ?: $this->getNamespaceBase().'\\Mapping';
+        return $this->namespaceMapping;
     }
 
     /**
@@ -406,47 +284,9 @@ class DatabaseFirstConfig
      *
      * @return DatabaseFirstConfig
      */
-    public function setNamespaceMapping(string $namespaceMapping): DatabaseFirstConfig
+    protected function setNamespaceMapping(string $namespaceMapping): DatabaseFirstConfig
     {
         $this->namespaceMapping = $namespaceMapping;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getNamespaceMappingGenerated(): string
-    {
-        return $this->namespaceMappingGenerated ?: $this->getNamespaceMapping().'\\Generated';
-    }
-
-    /**
-     * @param string $namespaceMappingGenerated
-     *
-     * @return DatabaseFirstConfig
-     */
-    public function setNamespaceMappingGenerated(string $namespaceMappingGenerated): DatabaseFirstConfig
-    {
-        $this->namespaceMappingGenerated = $namespaceMappingGenerated;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getNamespaceMappingExtra(): string
-    {
-        return $this->namespaceMappingExtra ?: $this->getNamespaceMapping().'\\Extra';
-    }
-
-    /**
-     * @param string $namespaceMappingExtra
-     *
-     * @return DatabaseFirstConfig
-     */
-    public function setNamespaceMappingExtra(string $namespaceMappingExtra): DatabaseFirstConfig
-    {
-        $this->namespaceMappingExtra = $namespaceMappingExtra;
         return $this;
     }
 
@@ -470,61 +310,41 @@ class DatabaseFirstConfig
     }
 
     /**
-     * @param string $pathToMigrations
-     *
-     * @return DatabaseFirstConfig
-     * @deprecated
-     */
-    public function setPathToMigrations(string $pathToMigrations): DatabaseFirstConfig
-    {
-        $this->pathToMigrations = $pathToMigrations;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPathToMigrations(): string
-    {
-        return $this->pathToMigrations;
-    }
-
-    /**
-     * @param mixed $pathToModels
+     * @param mixed $pathToEntities
      *
      * @return DatabaseFirstConfig
      */
-    public function setPathToModels($pathToModels)
+    protected function setPathToEntities($pathToEntities)
     {
-        $this->pathToModels = $pathToModels;
+        $this->pathToEntities = $pathToEntities;
         return $this;
     }
 
     /**
      * @return mixed
      */
-    public function getPathToModels()
+    public function getPathToEntities()
     {
-        return $this->pathToModels ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceModels());
+        return $this->pathToEntities;
     }
 
     /**
-     * @param string $pathToModelsTraits
+     * @param string $pathToEntityTraits
      *
      * @return DatabaseFirstConfig
      */
-    public function setPathToModelsTraits(string $pathToModelsTraits): DatabaseFirstConfig
+    protected function setPathToEntityTraits(string $pathToEntityTraits): DatabaseFirstConfig
     {
-        $this->pathToModelsTraits = $pathToModelsTraits;
+        $this->pathToEntityTraits = $pathToEntityTraits;
         return $this;
     }
 
     /**
      * @return string
      */
-    public function getPathToModelsTraits(): string
+    public function getPathToEntityTraits(): string
     {
-        return $this->pathToModelsTraits ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceModelsTraits());
+        return $this->pathToEntityTraits;
     }
 
     /**
@@ -532,7 +352,7 @@ class DatabaseFirstConfig
      *
      * @return DatabaseFirstConfig
      */
-    public function setPathToRepositories($pathToRepositories)
+    protected function setPathToRepositories($pathToRepositories)
     {
         $this->pathToRepositories = $pathToRepositories;
         return $this;
@@ -543,7 +363,7 @@ class DatabaseFirstConfig
      */
     public function getPathToRepositories(): string
     {
-        return $this->pathToRepositories ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceRepositories());
+        return $this->pathToRepositories;
     }
 
     /**
@@ -551,7 +371,7 @@ class DatabaseFirstConfig
      *
      * @return DatabaseFirstConfig
      */
-    public function setPathToMapping(string $pathToMapping): DatabaseFirstConfig
+    protected function setPathToMapping(string $pathToMapping): DatabaseFirstConfig
     {
         $this->pathToMapping = $pathToMapping;
         return $this;
@@ -562,7 +382,7 @@ class DatabaseFirstConfig
      */
     public function getPathToMapping(): string
     {
-        return $this->pathToMapping ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceMapping());
+        return $this->pathToMapping;
     }
 
     /**
@@ -577,62 +397,62 @@ class DatabaseFirstConfig
     }
 
     /**
-     * @param mixed $namespaceModelsAwareTraits
+     * @param mixed $namespaceEntityAwareTraits
      *
      * @return DatabaseFirstConfig
      */
-    public function setNamespaceModelsAwareTraits($namespaceModelsAwareTraits)
+    protected function setNamespaceEntityAwareTraits($namespaceEntityAwareTraits)
     {
-        $this->namespaceModelsAwareTraits = $namespaceModelsAwareTraits;
+        $this->namespaceEntityAwareTraits = $namespaceEntityAwareTraits;
         return $this;
     }
 
     /**
      * @return mixed
      */
-    public function getNamespaceModelsAwareTraits()
+    public function getNamespaceEntityAwareTraits()
     {
-        return $this->namespaceModelsAwareTraits ?: $this->getNamespaceModels().'\\AwareTraits';
+        return $this->namespaceEntityAwareTraits ?: $this->getNamespaceEntities().'\\AwareTraits';
     }
 
     /**
-     * @param string $pathToModelAwareTraits
+     * @param string $pathToEntityAwareTraits
      *
      * @return DatabaseFirstConfig
      */
-    public function setPathToModelAwareTraits(string $pathToModelAwareTraits): DatabaseFirstConfig
+    protected function setPathToEntityAwareTraits(string $pathToEntityAwareTraits): DatabaseFirstConfig
     {
-        $this->pathToModelAwareTraits = $pathToModelAwareTraits;
+        $this->pathToEntityAwareTraits = $pathToEntityAwareTraits;
         return $this;
     }
 
     /**
      * @return string
      */
-    public function getPathToModelAwareTraits(): string
+    public function getPathToEntityAwareTraits(): string
     {
-        return $this->pathToModelAwareTraits ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceModelsAwareTraits());
+        return $this->pathToEntityAwareTraits;
     }
 
     /**
-     * @param bool $generateModelAwareTraits
+     * @param bool $optionEntityAwareTraitsGenerate
      *
      * @return static
      */
-    public function setGenerateModelAwareTraits(bool $generateModelAwareTraits): self
+    public function setOptionEntityAwareTraitsGenerate(bool $optionEntityAwareTraitsGenerate): self
     {
-        $this->generateModelAwareTraits = $generateModelAwareTraits;
+        $this->optionEntityAwareTraitsGenerate = $optionEntityAwareTraitsGenerate;
         return $this;
     }
 
     /**
-     * @param bool $overwriteModelClasses
+     * @param bool $optionEntityOverwriteExistingClasses
      *
      * @return static
      */
-    public function setOverwriteModelClasses(bool $overwriteModelClasses): self
+    public function setOptionEntityOverwriteExistingClasses(bool $optionEntityOverwriteExistingClasses): self
     {
-        $this->overwriteModelClasses = $overwriteModelClasses;
+        $this->optionEntityOverwriteExistingClasses = $optionEntityOverwriteExistingClasses;
         return $this;
     }
 
@@ -648,13 +468,13 @@ class DatabaseFirstConfig
     }
 
     /**
-     * @param bool $generateModelWithRepoAccess
+     * @param bool $optionEntityTraitGenerateWithRepoAccess
      *
      * @return DatabaseFirstConfig
      */
-    public function setGenerateModelWithRepoAccess(bool $generateModelWithRepoAccess): DatabaseFirstConfig
+    public function setOptionEntityTraitGenerateWithRepoAccess(bool $optionEntityTraitGenerateWithRepoAccess): DatabaseFirstConfig
     {
-        $this->generateModelWithRepoAccess = $generateModelWithRepoAccess;
+        $this->optionEntityTraitGenerateWithRepoAccess = $optionEntityTraitGenerateWithRepoAccess;
         return $this;
     }
 
@@ -725,24 +545,24 @@ class DatabaseFirstConfig
     }
 
     /**
-     * @param bool $cascadePersistAllRelationships
+     * @param bool $optionMappingCascadePersistAllRelationships
      *
      * @return DatabaseFirstConfig
      */
-    public function setCascadePersistAllRelationships(bool $cascadePersistAllRelationships): DatabaseFirstConfig
+    public function setOptionMappingCascadePersistAllRelationships(bool $optionMappingCascadePersistAllRelationships): DatabaseFirstConfig
     {
-        $this->cascadePersistAllRelationships = $cascadePersistAllRelationships;
+        $this->optionMappingCascadePersistAllRelationships = $optionMappingCascadePersistAllRelationships;
         return $this;
     }
 
     /**
-     * @param bool $cascadeRefreshAllRelationships
+     * @param bool $optionMappingRefreshAllRelationships
      *
      * @return DatabaseFirstConfig
      */
-    public function setCascadeRefreshAllRelationships(bool $cascadeRefreshAllRelationships): DatabaseFirstConfig
+    public function setOptionMappingRefreshAllRelationships(bool $optionMappingRefreshAllRelationships): DatabaseFirstConfig
     {
-        $this->cascadeRefreshAllRelationships = $cascadeRefreshAllRelationships;
+        $this->optionMappingRefreshAllRelationships = $optionMappingRefreshAllRelationships;
         return $this;
     }
 
@@ -758,35 +578,35 @@ class DatabaseFirstConfig
     }
 
     /**
-     * @param bool $overwriteRepoClasses
+     * @param bool $optionRepoOverwriteClasses
      *
      * @return DatabaseFirstConfig
      */
-    public function setOverwriteRepoClasses(bool $overwriteRepoClasses): DatabaseFirstConfig
+    public function setOptionRepoOverwriteClasses(bool $optionRepoOverwriteClasses): DatabaseFirstConfig
     {
-        $this->overwriteRepoClasses = $overwriteRepoClasses;
+        $this->optionRepoOverwriteClasses = $optionRepoOverwriteClasses;
         return $this;
     }
 
     /**
-     * @param bool $generateRepoTraits
+     * @param bool $optionRepoTraitsGenerate
      *
      * @return DatabaseFirstConfig
      */
-    public function setGenerateRepoTraits(bool $generateRepoTraits): DatabaseFirstConfig
+    public function setOptionRepoTraitsGenerate(bool $optionRepoTraitsGenerate): DatabaseFirstConfig
     {
-        $this->generateRepoTraits = $generateRepoTraits;
+        $this->optionRepoTraitsGenerate = $optionRepoTraitsGenerate;
         return $this;
     }
 
     /**
-     * @param bool $generateModelWithLockHelpers
+     * @param bool $optionEntityTraitGenerateWithLockHelpers
      *
      * @return DatabaseFirstConfig
      */
-    public function setGenerateModelWithLockHelpers(bool $generateModelWithLockHelpers): DatabaseFirstConfig
+    public function setOptionEntityTraitGenerateWithLockHelpers(bool $optionEntityTraitGenerateWithLockHelpers): DatabaseFirstConfig
     {
-        $this->generateModelWithLockHelpers = $generateModelWithLockHelpers;
+        $this->optionEntityTraitGenerateWithLockHelpers = $optionEntityTraitGenerateWithLockHelpers;
         return $this;
     }
 
@@ -813,24 +633,24 @@ class DatabaseFirstConfig
     }
 
     /**
-     * @param bool $generateSetOrIdMethodForModelAwareTraits
+     * @param bool $optionEntityAwareTraitsGenerateSetOrIdMethod
      *
      * @return DatabaseFirstConfig
      */
-    public function setGenerateSetOrIdMethodForModelAwareTraits(bool $generateSetOrIdMethodForModelAwareTraits): DatabaseFirstConfig
+    public function setOptionEntityAwareTraitsGenerateSetOrIdMethod(bool $optionEntityAwareTraitsGenerateSetOrIdMethod): DatabaseFirstConfig
     {
-        $this->generateSetOrIdMethodForModelAwareTraits = $generateSetOrIdMethodForModelAwareTraits;
+        $this->optionEntityAwareTraitsGenerateSetOrIdMethod = $optionEntityAwareTraitsGenerateSetOrIdMethod;
         return $this;
     }
 
     /**
-     * @param bool $generateSetMethodForModelAwareTraits
+     * @param bool $optionEntityAwareTraitsGenerateSetMethod
      *
      * @return DatabaseFirstConfig
      */
-    public function setGenerateSetMethodForModelAwareTraits(bool $generateSetMethodForModelAwareTraits): DatabaseFirstConfig
+    public function setOptionEntityAwareTraitsGenerateSetMethod(bool $optionEntityAwareTraitsGenerateSetMethod): DatabaseFirstConfig
     {
-        $this->generateSetMethodForModelAwareTraits = $generateSetMethodForModelAwareTraits;
+        $this->optionEntityAwareTraitsGenerateSetMethod = $optionEntityAwareTraitsGenerateSetMethod;
         return $this;
     }
 
@@ -859,9 +679,7 @@ class DatabaseFirstConfig
 
     public static function tableShouldBeSkipped(string $tableName, array $skipTables, ?LoggerInterface $logger = null): bool
     {
-        if ($logger === null) {
-            $logger = new NullLogger();
-        }
+        $logger = $logger ?: new NullLogger();
 
         if (\in_array($tableName, $skipTables, true)) {
             $logger->debug(\sprintf('Skipping table "%s"', $tableName));
@@ -878,20 +696,6 @@ class DatabaseFirstConfig
         return false;
     }
 
-    /**
-     * @param string $namespace
-     * @param string $path
-     *
-     * @return $this
-     * @deprecated
-     */
-    public function configureMigrations(string $namespace, string $path): self
-    {
-        $this->setNamespaceMigrations($namespace);
-        $this->setPathToMigrations($path);
-        return $this;
-    }
-
     public function configureMapping(string $namespace, string $path): self
     {
         $this->setNamespaceMapping($namespace);
@@ -899,24 +703,24 @@ class DatabaseFirstConfig
         return $this;
     }
 
-    public function configureModels(string $namespace, string $path): self
+    public function configureEntities(string $namespace, string $path): self
     {
-        $this->setNamespaceModels($namespace);
-        $this->setPathToModels($path);
+        $this->setNamespaceEntities($namespace);
+        $this->setPathToEntities($path);
         return $this;
     }
 
     public function configureModelsTraits(string $namespace, string $path): self
     {
-        $this->setNamespaceModelsTraits($namespace);
-        $this->setPathToModelsTraits($path);
+        $this->setNamespaceEntityTraits($namespace);
+        $this->setPathToEntityTraits($path);
         return $this;
     }
 
     public function configureModelsAwareTraits(string $namespace, string $path): self
     {
-        $this->setNamespaceModelsAwareTraits($namespace);
-        $this->setPathToModelAwareTraits($path);
+        $this->setNamespaceEntityAwareTraits($namespace);
+        $this->setPathToEntityAwareTraits($path);
         return $this;
     }
 
@@ -939,7 +743,7 @@ class DatabaseFirstConfig
      *
      * @return DatabaseFirstConfig
      */
-    public function setPathToRepositoriesTraits(?string $pathToRepositoriesTraits): DatabaseFirstConfig
+    protected function setPathToRepositoriesTraits(?string $pathToRepositoriesTraits): DatabaseFirstConfig
     {
         $this->pathToRepositoriesTraits = $pathToRepositoriesTraits;
         return $this;
@@ -950,17 +754,41 @@ class DatabaseFirstConfig
      */
     public function getPathToRepositoriesTraits(): string
     {
-        return $this->pathToRepositoriesTraits ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceRepositoriesTraits());
+        return $this->pathToRepositoriesTraits;
     }
 
     /**
-     * @param bool $generateAssociationIdGetters
+     * @param bool $optionEntityTraitAssociationIdGettersGenerate
      *
      * @return static
      */
-    public function setGenerateAssociationIdGetters(bool $generateAssociationIdGetters): self
+    public function setOptionEntityTraitAssociationIdGettersGenerate(bool $optionEntityTraitAssociationIdGettersGenerate): self
     {
-        $this->generateAssociationIdGetters = $generateAssociationIdGetters;
+        $this->optionEntityTraitAssociationIdGettersGenerate = $optionEntityTraitAssociationIdGettersGenerate;
+        return $this;
+    }
+
+    /**
+     * @param bool $optionEntityTraitStaticDqlFieldNamesGenerate
+     *
+     * @return DatabaseFirstConfig
+     */
+    public function setOptionEntityTraitStaticDqlFieldNamesGenerate(
+        bool $optionEntityTraitStaticDqlFieldNamesGenerate
+    ): DatabaseFirstConfig {
+        $this->optionEntityTraitStaticDqlFieldNamesGenerate = $optionEntityTraitStaticDqlFieldNamesGenerate;
+        return $this;
+    }
+
+    /**
+     * @param bool $optionEntityTraitStaticSqlColumnNamesGenerate
+     *
+     * @return DatabaseFirstConfig
+     */
+    public function setOptionEntityTraitStaticSqlColumnNamesGenerate(
+        bool $optionEntityTraitStaticSqlColumnNamesGenerate
+    ): DatabaseFirstConfig {
+        $this->optionEntityTraitStaticSqlColumnNamesGenerate = $optionEntityTraitStaticSqlColumnNamesGenerate;
         return $this;
     }
 

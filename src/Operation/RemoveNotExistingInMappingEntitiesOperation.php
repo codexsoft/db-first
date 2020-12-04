@@ -19,25 +19,25 @@ class RemoveNotExistingInMappingEntitiesOperation extends AbstractBaseOperation
 
     public function execute(): void
     {
-        if (!isset($this->doctrineOrmSchema)) {
+        if (!isset($this->databaseFirstConfig)) {
             throw new \InvalidArgumentException('Required doctrineOrmSchema is not provided');
         }
 
-        $this->em = $this->doctrineOrmSchema->getEntityManager();
+        $this->em = $this->databaseFirstConfig->getEntityManager();
 
         $cmf = new DisconnectedClassMetadataFactory();
         $cmf->setEntityManager($this->em);
         $metadatas = $cmf->getAllMetadata();
 
-        if ($this->doctrineOrmSchema->metadataFilter) {
-            $metadatas = MetadataFilter::filter($metadatas, $this->doctrineOrmSchema->metadataFilter);
+        if ($this->databaseFirstConfig->metadataFilter) {
+            $metadatas = MetadataFilter::filter($metadatas, $this->databaseFirstConfig->metadataFilter);
         }
 
         if (!\count($metadatas)) {
             throw new \InvalidArgumentException('No Metadata Classes to process.');
         }
 
-        $ds = $this->doctrineOrmSchema;
+        $ds = $this->databaseFirstConfig;
 
         $fs = new Filesystem;
         $mappingFiles = Files::listFilesWithPath($ds->getPathToMapping());
@@ -56,9 +56,9 @@ class RemoveNotExistingInMappingEntitiesOperation extends AbstractBaseOperation
 
             $filesToDelete = [
                 $ds->getPathToMapping().'/'.str_replace('\\', '.', $metadata->name).'.php',
-                $ds->getPathToModelsTraits().'/'.$this->getClassName($metadata).'Trait.php',
-                $ds->getPathToModels().'/'.$this->getClassName($metadata).'.php',
-                $ds->getPathToModelAwareTraits().'/'.$this->getClassName($metadata).'AwareTrait.php',
+                $ds->getPathToEntityTraits().'/'.$this->getClassName($metadata).'Trait.php',
+                $ds->getPathToEntities().'/'.$this->getClassName($metadata).'.php',
+                $ds->getPathToEntityAwareTraits().'/'.$this->getClassName($metadata).'AwareTrait.php',
                 $ds->getPathToRepositories().'/'.$this->getClassName($metadata).'Repository.php',
                 $ds->getPathToRepositories().'/'.$this->getClassName($metadata).'Interface.php',
                 $ds->getPathToRepositories().'/Generated/'.$this->getClassName($metadata).'RepositoryTrait.php',

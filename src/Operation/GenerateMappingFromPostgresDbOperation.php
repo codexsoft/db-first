@@ -3,7 +3,7 @@ namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Classes\Classes;
 use CodexSoft\DatabaseFirst\DatabaseFirstConfig;
-use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Mapping\Driver\DatabaseDriver;
@@ -27,40 +27,39 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
 
     public function execute(): void
     {
-        if (!isset($this->doctrineOrmSchema)) {
+        if (!isset($this->databaseFirstConfig)) {
             throw new \InvalidArgumentException('Required doctrineOrmSchema is not provided');
         }
 
-        $this->builderVar = $this->doctrineOrmSchema->builderVar;
-        $this->metaVar = $this->doctrineOrmSchema->metaVar;
+        $this->builderVar = $this->databaseFirstConfig->builderVar;
+        $this->metaVar = $this->databaseFirstConfig->metaVar;
 
-        $em = $this->doctrineOrmSchema->getEntityManager();
+        $em = $this->databaseFirstConfig->getEntityManager();
         // trying to provide filtering while reverse engineering
         $em->getConnection()->getConfiguration()->setSchemaAssetsFilter(
             function($tableName) {
                 return false === DatabaseFirstConfig::tableShouldBeSkipped(
-                    $tableName, $this->doctrineOrmSchema->skipTables
+                    $tableName, $this->databaseFirstConfig->skipTables
                 );
             }
         );
         $databaseDriver = new DatabaseDriver($em->getConnection()->getSchemaManager());
 
         $em->getConfiguration()->setMetadataDriverImpl($databaseDriver);
-        $databaseDriver->setNamespace($this->doctrineOrmSchema->getNamespaceModels().'\\');
+        $databaseDriver->setNamespace($this->databaseFirstConfig->getNamespaceEntities().'\\');
 
         $allMetadata = $this->getMetadata($em);
 
         $fs = new Filesystem;
-        $fs->mkdir($this->doctrineOrmSchema->getPathToMapping());
+        $fs->mkdir($this->databaseFirstConfig->getPathToMapping());
 
-        /** @var ClassMetadata $metadata */
         foreach ($allMetadata as $metadata) {
             $singularizedModelClass = $this->singularize($metadata->name);
             $tableName = $metadata->table['name'];
 
             $this->logger->info(\sprintf('Processing table "%s"', $tableName));
 
-            if (DatabaseFirstConfig::tableShouldBeSkipped($tableName, $this->doctrineOrmSchema->skipTables, $this->logger)) {
+            if (DatabaseFirstConfig::tableShouldBeSkipped($tableName, $this->databaseFirstConfig->skipTables, $this->logger)) {
                 continue;
             }
 
@@ -68,7 +67,7 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
             $file = $this->generateOutputFilePath($metadata);
             $this->logger->debug(\sprintf('Mapping file "%s"', $file));
 
-            $customRepoClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.Classes::short($singularizedModelClass).'Repository';
+            $customRepoClass = $this->databaseFirstConfig->getNamespaceRepositories().'\\'.Classes::short($singularizedModelClass).'Repository';
             $metadata->customRepositoryClassName = $customRepoClass;
 
             //if ($metadata->customRepositoryClassName) {
@@ -85,27 +84,27 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
                 $code[] = $this->metaVar.'->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_' . $generatorType . ');';
             }
 
-            $builderShortClass = Classes::short($this->doctrineOrmSchema->metadataBuilderClass);
+            $builderShortClass = Classes::short($this->databaseFirstConfig->metadataBuilderClass);
 
             $singleTableInheritanceData = null;
             $singleTableInheritanceChildrenColumns = [];
             $singleTableInheritanceChildrenCodes = [];
 
             $inheritanceType = 'INHERITANCE_TYPE_NONE';
-            if (isset($this->doctrineOrmSchema->singleTableInheritance[$tableName])) {
+            if (isset($this->databaseFirstConfig->singleTableInheritance[$tableName])) {
                 $inheritanceType = 'INHERITANCE_TYPE_SINGLE_TABLE';
-                $singleTableInheritanceData = $this->doctrineOrmSchema->singleTableInheritance[$tableName];
+                $singleTableInheritanceData = $this->databaseFirstConfig->singleTableInheritance[$tableName];
             }
 
-            $modelsNamespace = $this->doctrineOrmSchema->getNamespaceModels();
+            $modelsNamespace = $this->databaseFirstConfig->getNamespaceEntities();
             $code = [
                 '<?php',
                 '',
-                'use '.\Doctrine\DBAL\Types\Type::class.';',
-                'use '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.';',
-                "use \\{$this->doctrineOrmSchema->metadataBuilderClass};",
+                'use '.Types::class.';',
+                'use '.ClassMetadataInfo::class.';',
+                "use \\{$this->databaseFirstConfig->metadataBuilderClass};",
                 '',
-                '/** @var '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.' '.$this->metaVar.' */',
+                '/** @var '.ClassMetadataInfo::class.' '.$this->metaVar.' */',
                 '',
                 '/** @noinspection PhpUnhandledExceptionInspection */',
                 "{$this->metaVar}->setInheritanceType(ClassMetadataInfo::$inheritanceType);",
@@ -122,16 +121,16 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
                 $code[] = "{$this->builderVar}->setDiscriminatorColumn('$descriminatorColumnName', '$descriminatorColumnType');";
                 foreach ($childrenColumnsMap as [$childModelName, $childDiscriminatorValue, $childColumns]) {
 
-                    $childRepoClass = $this->doctrineOrmSchema->getNamespaceRepositories().'\\'.$childModelName.'Repository';
+                    $childRepoClass = $this->databaseFirstConfig->getNamespaceRepositories().'\\'.$childModelName.'Repository';
 
                     $subEntityCode = [
                         '<?php',
                         '',
-                        'use '.\Doctrine\DBAL\Types\Type::class.';',
-                        'use '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.';',
-                        "use \\{$this->doctrineOrmSchema->metadataBuilderClass};",
+                        'use '.Types::class.';',
+                        'use '.ClassMetadataInfo::class.';',
+                        "use \\{$this->databaseFirstConfig->metadataBuilderClass};",
                         '',
-                        '/** @var '.\Doctrine\ORM\Mapping\ClassMetadataInfo::class.' '.$this->metaVar.' */',
+                        '/** @var '.ClassMetadataInfo::class.' '.$this->metaVar.' */',
                         '',
                         //'/** @noinspection PhpUnhandledExceptionInspection */',
                         //"{$this->metaVar}->setInheritanceType(ClassMetadataInfo::INHERITANCE_TYPE_NONE);",
@@ -162,14 +161,14 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
                     $childModelClass = "{$modelsNamespace}\\{$childModelName}";
                     $stubModelFile = "/../ModelStub/{$childModelName}.php";
                     if (!\class_exists($childModelClass)) {
-                        $fs->dumpFile($this->doctrineOrmSchema->getPathToRepositories().$stubModelFile, implode("\n", [
+                        $fs->dumpFile($this->databaseFirstConfig->getPathToRepositories().$stubModelFile, implode("\n", [
                             '<?php',
-                            'namespace '.$this->doctrineOrmSchema->getNamespaceModels().';',
+                            'namespace '.$this->databaseFirstConfig->getNamespaceEntities().';',
                             "class $childModelName {}",
                         ]));
                         $code[] = "include_once __DIR__.'{$stubModelFile}';";
-                    } elseif ($fs->exists($this->doctrineOrmSchema->getPathToRepositories().$stubModelFile)) {
-                        $fs->remove($this->doctrineOrmSchema->getPathToRepositories().$stubModelFile);
+                    } elseif ($fs->exists($this->databaseFirstConfig->getPathToRepositories().$stubModelFile)) {
+                        $fs->remove($this->databaseFirstConfig->getPathToRepositories().$stubModelFile);
                     }
                     $code[] = "{$this->builderVar}->addDiscriminatorMapClass($childDiscriminatorValue, \\{$childModelClass}::class);";
                 }
@@ -194,7 +193,7 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
             foreach ($metadata->fieldMappings as $field) {
 
                 $fieldColumnName = $metadata->getColumnName($field['fieldName']);
-                if (\in_array($tableName.'.'.$fieldColumnName, $this->doctrineOrmSchema->skipColumns, true)) {
+                if (\in_array($tableName.'.'.$fieldColumnName, $this->databaseFirstConfig->skipColumns, true)) {
                     continue;
                 }
 
@@ -214,7 +213,7 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
 
                 $this->logger->debug("found $associationMappingName");
 
-                if (\in_array($tableName.'.'.$associationMappingName, $this->doctrineOrmSchema->skipColumns, true)) {
+                if (\in_array($tableName.'.'.$associationMappingName, $this->databaseFirstConfig->skipColumns, true)) {
                     $this->logger->debug("skipped $tableName.$associationMappingName");
                     continue;
                 }
@@ -222,7 +221,7 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
                 if ($associationMapping['type'] & ClassMetadataInfo::TO_ONE) {
                     try {
                         $associationColumnName = $metadata->getSingleAssociationJoinColumnName($associationMappingName);
-                        if (\in_array($tableName.'.'.$associationColumnName, $this->doctrineOrmSchema->skipColumns, true)) {
+                        if (\in_array($tableName.'.'.$associationColumnName, $this->databaseFirstConfig->skipColumns, true)) {
                             $this->logger->debug("skipped $tableName.$associationMappingName because $tableName.$associationColumnName is configured as skipped");
                             continue;
                         }
@@ -247,15 +246,17 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
 
             $overridenFileSearchCode = [
                 '',
-                "if (file_exists(\$_extraMappingInfoFile = __DIR__.'/../MappingOverride/'.basename(__FILE__))) {",
-                '    /** @noinspection PhpIncludeInspection */ include $_extraMappingInfoFile;',
+                "if (\\file_exists(\$_mappingOverrideFile = __DIR__.'/../MappingOverride/'.basename(__FILE__))) {",
+                '    /** @noinspection PhpIncludeInspection */',
+                '    include $_mappingOverrideFile;',
+                '    return;',
                 '}',
             ];
 
             // generating STI child entities mapping
             foreach (\array_keys($singleTableInheritanceChildrenCodes) as $childEntityName) {
                 array_push($singleTableInheritanceChildrenCodes[$childEntityName], ...$overridenFileSearchCode);
-                $fs->dumpFile($this->generateOutputFilePath(new ClassMetadataInfo($this->doctrineOrmSchema->getNamespaceModels().'\\'.$childEntityName)), implode("\n", $singleTableInheritanceChildrenCodes[$childEntityName]));
+                $fs->dumpFile($this->generateOutputFilePath(new ClassMetadataInfo($this->databaseFirstConfig->getNamespaceEntities().'\\'.$childEntityName)), implode("\n", $singleTableInheritanceChildrenCodes[$childEntityName]));
             }
 
             array_push($code, ...$overridenFileSearchCode);
@@ -313,25 +314,25 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
 
                     switch( $field['type'] ) {
 
-                        case Type::SMALLINT:
-                        case Type::INTEGER:
-                        case Type::BIGINT:
+                        case Types::SMALLINT:
+                        case Types::INTEGER:
+                        case Types::BIGINT:
                             $code[] = TAB."->option('".$option."',".( (int) $value ).')';
                             break;
 
-                        case Type::DATE:
-                        case Type::DATETIME:
+                        case Types::DATE_MUTABLE:
+                        case Types::DATETIME_MUTABLE:
                             //$fieldLines[] = TAB."->option('".$option."',".( (int) $value ).')';
                             break;
 
-                        case Type::FLOAT:
+                        case Types::FLOAT:
                             $code[] = TAB."->option('".$option."',".var_export((float) $value,true).')';
                             break;
 
-                        case Type::JSON:
-                        case Type::JSON_ARRAY:
-                        case Type::SIMPLE_ARRAY:
-                        case Type::TARRAY:
+                        case Types::JSON:
+                        case Types::JSON_ARRAY:
+                        case Types::SIMPLE_ARRAY:
+                        case Types::ARRAY:
                         case 'bigint[]': // MartinGeorgievTypes\BigIntArray::TYPE_NAME
                         case 'smallint[]': // MartinGeorgievTypes\SmallIntArray::TYPE_NAME
                         case 'integer[]': // MartinGeorgievTypes\IntegerArray::TYPE_NAME
@@ -370,12 +371,12 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
         //$fieldTableName = $metadata->getTableName();
 
         // is cascading persist by default?
-        if ($this->doctrineOrmSchema->cascadePersistAllRelationships) {
+        if ($this->databaseFirstConfig->optionMappingCascadePersistAllRelationships) {
             $associationMapping['isCascadePersist'] = true;
         }
 
         // is cascading refresh by default?
-        if ($this->doctrineOrmSchema->cascadeRefreshAllRelationships) {
+        if ($this->databaseFirstConfig->optionMappingRefreshAllRelationships) {
             $associationMapping['isCascadeRefresh'] = true;
         }
 
@@ -554,8 +555,8 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
     protected function generateType(string $type)
     {
 
-        if (\array_key_exists($type, $this->doctrineOrmSchema->doctrineTypesMap)) {
-            return 'Type::'.$this->doctrineOrmSchema->doctrineTypesMap[$type];
+        if (\array_key_exists($type, $this->databaseFirstConfig->doctrineTypesMap)) {
+            return 'Types::'.$this->databaseFirstConfig->doctrineTypesMap[$type];
         }
 
         //if (\array_key_exists($type, self::DOCTRINE_TYPES_MAP)) {
@@ -567,7 +568,7 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
 
     protected function generateOutputFilePath(ClassMetadataInfo $metadata)
     {
-        return $this->doctrineOrmSchema->getPathToMapping().'/'.str_replace('\\', '.', $this->singularize($metadata->name)).'.php';
+        return $this->databaseFirstConfig->getPathToMapping().'/'.str_replace('\\', '.', $this->singularize($metadata->name)).'.php';
     }
 
     protected function singularize($plural) {

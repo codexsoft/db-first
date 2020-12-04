@@ -17,7 +17,7 @@ trait RepoStaticAccessTrait
     use KnownEntityManagerTrait;
 
     /**
-     * @param EntityManagerInterface $em
+     * @param EntityManagerInterface|null $em
      *
      * @return \Doctrine\ORM\EntityRepository
      */
@@ -29,7 +29,7 @@ trait RepoStaticAccessTrait
     /**
      * @param int|string|static $id
      *
-     * @param EntityManagerInterface $em
+     * @param EntityManagerInterface|null $em
      *
      * @return static
      */
@@ -46,7 +46,7 @@ trait RepoStaticAccessTrait
     /**
      * @param int[] $ids
      *
-     * @param EntityManagerInterface $em
+     * @param EntityManagerInterface|null $em
      *
      * @return static[]
      */
@@ -78,7 +78,7 @@ trait RepoStaticAccessTrait
     /**
      * @param int|string|static $id
      *
-     * @param EntityManagerInterface $em
+     * @param EntityManagerInterface|null $em
      *
      * @return static|null
      */
