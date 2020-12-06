@@ -5,10 +5,8 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
-        "php": "^7.4.0",
-        "ext-json": "*",
+        "php": "^7.4.0 || ^8.0",
         "ext-mbstring": "*",
-        "codexsoft/code-arrays": "^1.0",
         "codexsoft/code-classes": "^1.0",
         "codexsoft/code-files": "^1.0",
         "codexsoft/shortcut-tab-constant": "^1.0",

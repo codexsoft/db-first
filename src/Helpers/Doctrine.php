@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\QueryBuilder;
-use CodexSoft\Code\Arrays\Arrays;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -394,13 +393,16 @@ class Doctrine
      * @param array $entities
      *
      * @return array
+     * @noinspection PhpUnused
      */
-    public static function indexByIdArrayOfEntities(array $entities)
+    public static function indexByIdArrayOfEntities(array $entities): array
     {
-        return Arrays::indexByClosure($entities, function ($item) {
-            /** @noinspection PhpUndefinedMethodInspection */
-            return $item->getId();
-        });
+        $indexedArray = [];
+        foreach ($entities as $entity) {
+            $indexedArray[$entity->getId()] = $entity;
+        }
+
+        return $indexedArray;
     }
 
     /**
