@@ -162,6 +162,10 @@ class DatabaseFirstConfig
      */
     public static function getFromConfigFile(string $domainConfigFile): self
     {
+        if (!\file_exists($domainConfigFile)) {
+            throw new \Exception("Provided config File $domainConfigFile not exists!");
+        }
+
         ob_start();
         $domainSchema = include $domainConfigFile;
         ob_end_clean();

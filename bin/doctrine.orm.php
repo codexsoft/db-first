@@ -1,13 +1,17 @@
 <?php
 
-use CodexSoft\Cli\Cli;
 use CodexSoft\DatabaseFirst\DatabaseFirstConfig;
 use Doctrine\ORM\Tools\Console\ConsoleRunner;
+use Symfony\Component\Console\Input\ArgvInput;
 
 require_once __DIR__.'/findautoloader.php';
-$dfConfigFile = Cli::getFirstArgumentOrDie();
-$dfConfig = DatabaseFirstConfig::getFromConfigFile($dfConfigFile);
+
+//$input = new ArgvInput();
+//$configFile = $input->getFirstArgument();
+//$configFile = (new ArgvInput())->getFirstArgument();
+//$config = DatabaseFirstConfig::getFromConfigFile($configFile);
+$config = DatabaseFirstConfig::getFromConfigFile((new ArgvInput())->getFirstArgument());
 
 ConsoleRunner::createApplication(
-    ConsoleRunner::createHelperSet($dfConfig->getEntityManager())
+    ConsoleRunner::createHelperSet($config->getEntityManager())
 )->run();

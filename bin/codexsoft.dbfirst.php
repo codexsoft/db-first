@@ -1,8 +1,10 @@
 <?php
 
-use CodexSoft\Cli\Cli;
 use CodexSoft\DatabaseFirst\DatabaseFirst;
+use Symfony\Component\Console\Input\ArgvInput;
 
 require_once __DIR__.'/findautoloader.php';
-$ormConfigFile = Cli::getFirstArgumentOrDie();
-DatabaseFirst::createApplication($ormConfigFile, __FILE__)->run();
+//$input = new ArgvInput();
+//$configFile = $input->getFirstArgument();
+$configFile = (new ArgvInput())->getFirstArgument();
+DatabaseFirst::createApplication($configFile, __FILE__)->run();
