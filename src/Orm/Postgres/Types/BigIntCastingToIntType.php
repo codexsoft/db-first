@@ -23,7 +23,7 @@ use Doctrine\DBAL\Types\IntegerType;
 use Doctrine\DBAL\Types\Types;
 
 /**
- * Type that maps a database BIGINT to a PHP string.
+ * Type that maps a database BIGINT to a PHP integer. This required x64.
  *
  * @author robo
  * @since 2.0

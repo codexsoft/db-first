@@ -227,16 +227,26 @@ abstract class AbstractPgSqlEntityManagerBuilder
      */
     protected static function defaultTypesToInstall(): array
     {
-        return [
+        $defaultTypes = [
             Types::BIGINT => BigIntCastingToIntType::class,
-            'smallint[]' => \MartinGeorgiev\Doctrine\DBAL\Types\SmallIntArray::class,
-            'integer[]' => \MartinGeorgiev\Doctrine\DBAL\Types\IntegerArray::class,
-            'bigint[]' => \MartinGeorgiev\Doctrine\DBAL\Types\BigIntArray::class,
-            'jsonb[]' => \MartinGeorgiev\Doctrine\DBAL\Types\JsonbArray::class,
-            'text[]' => \MartinGeorgiev\Doctrine\DBAL\Types\TextArray::class,
-            'varchar[]' => \MartinGeorgiev\Doctrine\DBAL\Types\TextArray::class,
-            \Ramsey\Uuid\Doctrine\UuidType::NAME => \Ramsey\Uuid\Doctrine\UuidType::class,
         ];
+
+        if (\class_exists(\MartinGeorgiev\Doctrine\DBAL\Types\SmallIntArray::class)) {
+            \array_merge($defaultTypes, [
+                'smallint[]' => \MartinGeorgiev\Doctrine\DBAL\Types\SmallIntArray::class,
+                'integer[]' => \MartinGeorgiev\Doctrine\DBAL\Types\IntegerArray::class,
+                'bigint[]' => \MartinGeorgiev\Doctrine\DBAL\Types\BigIntArray::class,
+                'jsonb[]' => \MartinGeorgiev\Doctrine\DBAL\Types\JsonbArray::class,
+                'text[]' => \MartinGeorgiev\Doctrine\DBAL\Types\TextArray::class,
+                'varchar[]' => \MartinGeorgiev\Doctrine\DBAL\Types\TextArray::class,
+            ]);
+        }
+
+        if (\class_exists(\Ramsey\Uuid\Doctrine\UuidType::class)) {
+            \array_merge($defaultTypes, [
+                'uuid' => \Ramsey\Uuid\Doctrine\UuidType::class,
+            ]);
+        }
     }
 
     /**

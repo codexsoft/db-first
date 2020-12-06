@@ -44,10 +44,20 @@ class DatabaseFirst
         $cliDir = $cliDir ?: dirname($cliFile);
         $console = new Application('CodexSoft Database-first CLI');
 
-        $console->add(new GenerateMappingCommand($ormSchema, 'mapping'));
-        $console->add(new GenerateModelsCommand($ormSchema, 'models'));
-        $console->add(new GenerateReposCommand($ormSchema, 'repos'));
-        $console->add(new RemoveNotMappedCommand($ormSchema, 'remove-not-mapped'));
+        $console->addCommands([
+            new GenerateMappingCommand($ormSchema, 'mapping'),
+            new GenerateModelsCommand($ormSchema, 'models'),
+            new GenerateReposCommand($ormSchema, 'repos'),
+            new RemoveNotMappedCommand($ormSchema, 'remove-not-mapped'),
+        ]);
+        //$console->add(new GenerateMappingCommand($ormSchema, 'mapping'));
+        //$console->add(new GenerateModelsCommand($ormSchema, 'models'));
+        //$console->add(new GenerateReposCommand($ormSchema, 'repos'));
+        //$console->add(new RemoveNotMappedCommand($ormSchema, 'remove-not-mapped'));
+
+        /**
+         * todo: write concrete commands for this
+         */
 
         $commandList = [
             'check' => (new ExecuteShellCommand([

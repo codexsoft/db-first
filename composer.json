@@ -17,12 +17,15 @@
         "ramsey/uuid-doctrine": "^1.4",
         "symfony/console": "^5.2",
         "symfony/filesystem": "~3.4|~4.0|~5.0",
-        "symfony/string": "^5.2",
         "voku/stringy": "^6.2"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",
         "symfony/dotenv": "^4.0|^5.0"
+    },
+    "suggest": {
+        "ramsey/uuid-doctrine": "Allows the use of Ramsey\\Uuid\\Uuid as Doctrine field type.",
+        "martin-georgiev/postgresql-for-doctrine": "Provides Doctrine support for some specific PostgreSQL 9.4+ features"
     },
     "autoload": {
         "psr-4": {

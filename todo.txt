@@ -1,3 +1,7 @@
 id getters generator should skip DateTime
 allow multiple sql files to run
 allow parameters in sql files
+
+symfony/string? removeEnd() method missing
+immutable datetime
+write commands for CodexSoft\DatabaseFirst\DatabaseFirst
