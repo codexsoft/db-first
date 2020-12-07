@@ -3,6 +3,8 @@
 namespace CodexSoft\DatabaseFirst\Orm\Postgres;
 
 use CodexSoft\DatabaseFirst\Orm\DoctrineEntityLifecycleEventSubscriber;
+use CodexSoft\DatabaseFirst\TypeData;
+use CodexSoft\DatabaseFirst\TypesManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Types;
@@ -16,7 +18,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Setup;
 
-class AbstractPgSqlEntityManagerBuilder
+abstract class AbstractEntityManagerBuilder
 {
     protected bool $isDevMode = true;
 
@@ -88,7 +90,7 @@ class AbstractPgSqlEntityManagerBuilder
         if ($this->configuration instanceof Configuration) {
             $config = $this->configuration;
         } else {
-            $config = Setup::createConfiguration($this->isDevMode, $this->proxyDir, $this->cache);;
+            $config = Setup::createConfiguration($this->isDevMode, $this->proxyDir, $this->cache);
         }
 
         $connection = ($this->connection instanceof Connection)

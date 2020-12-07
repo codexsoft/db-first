@@ -6,32 +6,35 @@ namespace CodexSoft\DatabaseFirst;
 
 class TypeData
 {
-    private string $doctrineType;
+    private string $doctrineTypeName;
     private string $typeClass;
     private string $hint;
+    private string $phpDocTypehint;
 
     /** @var string[] */
-    private array $aliases;
+    private array $dbTypes;
 
     public function __construct(
         string $doctrineType,
         string $typeClass,
         string $hint,
+        string $phpDocTypehint = '',
         array $aliases = []
     )
     {
-        $this->doctrineType = $doctrineType;
+        $this->doctrineTypeName = $doctrineType;
         $this->typeClass = $typeClass;
         $this->hint = $hint;
-        $this->aliases = $aliases;
+        $this->phpDocTypehint = $phpDocTypehint;
+        $this->dbTypes = $aliases;
     }
 
     /**
      * @return string
      */
-    public function getDoctrineType(): string
+    public function getDoctrineTypeName(): string
     {
-        return $this->doctrineType;
+        return $this->doctrineTypeName;
     }
 
     /**
@@ -48,5 +51,21 @@ class TypeData
     public function getHint(): string
     {
         return $this->hint;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getDbTypes(): array
+    {
+        return $this->dbTypes;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPhpDocTypehint(): string
+    {
+        return $this->phpDocTypehint;
     }
 }

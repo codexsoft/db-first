@@ -554,6 +554,9 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
 
     protected function generateType(string $type)
     {
+        /**
+         * todo: use default DateTimeImmutable for datetime
+         */
 
         if (\array_key_exists($type, $this->databaseFirstConfig->doctrineTypesMap)) {
             return 'Types::'.$this->databaseFirstConfig->doctrineTypesMap[$type];
