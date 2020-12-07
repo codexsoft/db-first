@@ -59,41 +59,41 @@ class DatabaseFirst
          * todo: write concrete commands for this
          */
 
-        $commandList = [
-            'check' => (new ExecuteShellCommand([
-                'php '.$cliDir.'/doctrine.orm.php '.$dfConfigFile.' orm:validate-schema --skip-sync',
-            ]))->setDescription('Validate doctrine schema'),
-
-            'review' => (new ExecuteShellCommand([
-                'php '.$cliFile.' '.$dfConfigFile.' mapping',
-                'php '.$cliFile.' '.$dfConfigFile.' models',
-                'php '.$cliFile.' '.$dfConfigFile.' repos',
-            ]))->setDescription('Execute commands mapping, models, repos'),
-
-            'db-clean' => (new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
-                Database::deleteAllUserTables($ormSchema->getEntityManager()->getConnection());
-            }))->setDescription('Delete all not system tables'),
-
-            'db-truncate' => (new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
-                Database::truncateAllUserTables($ormSchema->getEntityManager()->getConnection());
-            }))->setDescription('Truncate all not system tables'),
-        ];
-
-        foreach ($commandList as $command => $commandClass) {
-            try {
-
-                if ($commandClass instanceof Command) {
-                    $commandInstance = $commandClass;
-                } else {
-                    $commandInstance = new $commandClass($command);
-                }
-                $console->add($commandInstance->setName($command));
-
-            } catch ( \Throwable $e ) {
-                echo "\nSomething went wrong: ".$e->getMessage();
-            };
-
-        }
+        //$commandList = [
+        //    'check' => (new ExecuteShellCommand([
+        //        'php '.$cliDir.'/doctrine.orm.php '.$dfConfigFile.' orm:validate-schema --skip-sync',
+        //    ]))->setDescription('Validate doctrine schema'),
+        //
+        //    'review' => (new ExecuteShellCommand([
+        //        'php '.$cliFile.' '.$dfConfigFile.' mapping',
+        //        'php '.$cliFile.' '.$dfConfigFile.' models',
+        //        'php '.$cliFile.' '.$dfConfigFile.' repos',
+        //    ]))->setDescription('Execute commands mapping, models, repos'),
+        //
+        //    'db-clean' => (new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+        //        Database::deleteAllUserTables($ormSchema->getEntityManager()->getConnection());
+        //    }))->setDescription('Delete all not system tables'),
+        //
+        //    'db-truncate' => (new ExecuteClosureCommand(function(Command $cmd, InputInterface $input, OutputInterface $output) use ($ormSchema) {
+        //        Database::truncateAllUserTables($ormSchema->getEntityManager()->getConnection());
+        //    }))->setDescription('Truncate all not system tables'),
+        //];
+        //
+        //foreach ($commandList as $command => $commandClass) {
+        //    try {
+        //
+        //        if ($commandClass instanceof Command) {
+        //            $commandInstance = $commandClass;
+        //        } else {
+        //            $commandInstance = new $commandClass($command);
+        //        }
+        //        $console->add($commandInstance->setName($command));
+        //
+        //    } catch ( \Throwable $e ) {
+        //        echo "\nSomething went wrong: ".$e->getMessage();
+        //    };
+        //
+        //}
 
         return $console;
     }
