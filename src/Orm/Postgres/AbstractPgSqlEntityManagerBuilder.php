@@ -247,6 +247,8 @@ class AbstractPgSqlEntityManagerBuilder
                 'uuid' => \Ramsey\Uuid\Doctrine\UuidType::class,
             ]);
         }
+
+        return $defaultTypes;
     }
 
     /**
