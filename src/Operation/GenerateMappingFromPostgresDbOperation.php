@@ -261,7 +261,7 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
 
             array_push($code, ...$overridenFileSearchCode);
 
-            $fs->dumpFile($file, implode("\n", $code));
+            $fs->dumpFile($file, implode("\n", $code)."\n");
         }
 
         //if (($namespace = $input->getOption('namespace')) !== null) {
