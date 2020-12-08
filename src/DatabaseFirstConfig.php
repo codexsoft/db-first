@@ -4,6 +4,7 @@ namespace CodexSoft\DatabaseFirst;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 use Psr\Log\LoggerInterface;
@@ -27,7 +28,8 @@ class DatabaseFirstConfig
     private ?string $pathToRepositoriesTraits = null;
     private ?string $pathToMapping = null;
 
-    private EntityManager $entityManager;
+    private EntityManagerInterface $entityManager;
+    private TypesManager $typesManager;
 
     /**
      * @var string[]
@@ -62,6 +64,12 @@ class DatabaseFirstConfig
         Types::GUID                 => 'string',
         'ltree'                     => 'array',
     ];
+
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
+        $this->typesManager = new TypesManager($entityManager->getConnection()->getDatabasePlatform());
+    }
 
     /**
      * @var string[] while generating entities, entities for these tables should be skipped
@@ -714,14 +722,38 @@ class DatabaseFirstConfig
         return $this;
     }
 
+    /**
+     * @deprecated use configureEntitiesTraits()
+     * @param string $namespace
+     * @param string $path
+     *
+     * @return $this
+     */
     public function configureModelsTraits(string $namespace, string $path): self
+    {
+        return $this->configureEntitiesTraits($namespace, $path);
+    }
+
+    public function configureEntitiesTraits(string $namespace, string $path): self
     {
         $this->setNamespaceEntityTraits($namespace);
         $this->setPathToEntityTraits($path);
         return $this;
     }
 
+    /**
+     * @deprecated use configureEntityAwareTraits()
+     * @param string $namespace
+     * @param string $path
+     *
+     * @return $this
+     */
     public function configureModelsAwareTraits(string $namespace, string $path): self
+    {
+        return $this->configureEntitiesAwareTraits($namespace, $path);
+    }
+
+    public function configureEntitiesAwareTraits(string $namespace, string $path): self
     {
         $this->setNamespaceEntityAwareTraits($namespace);
         $this->setPathToEntityAwareTraits($path);
@@ -794,6 +826,14 @@ class DatabaseFirstConfig
     ): DatabaseFirstConfig {
         $this->optionEntityTraitStaticSqlColumnNamesGenerate = $optionEntityTraitStaticSqlColumnNamesGenerate;
         return $this;
+    }
+
+    /**
+     * @return TypesManager
+     */
+    public function getTypesManager(): TypesManager
+    {
+        return $this->typesManager;
     }
 
 }
