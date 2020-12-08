@@ -9,6 +9,45 @@ use Doctrine\DBAL\Types\Type;
 
 class TypesManager
 {
+    private const DBAL_TYPES_CONSTANTS = [
+        'array' => 'ARRAY',
+        'bigint' => 'BIGINT',
+        'binary' => 'BINARY',
+        'blob' => 'BLOB',
+        'boolean' => 'BOOLEAN',
+        'date' => 'DATE_MUTABLE',
+        'date_immutable' => 'DATE_IMMUTABLE',
+        'dateinterval' => 'DATEINTERVAL',
+        'datetime' => 'DATETIME_MUTABLE',
+        'datetime_immutable' => 'DATETIME_IMMUTABLE',
+        'datetimetz' => 'DATETIMETZ_MUTABLE',
+        'datetimetz_immutable' => 'DATETIMETZ_IMMUTABLE',
+        'decimal' => 'DECIMAL',
+        'float' => 'FLOAT',
+        'guid' => 'GUID',
+        'integer' => 'INTEGER',
+        'json' => 'JSON',
+        'json_array' => 'JSON',
+        'object' => 'OBJECT',
+        'simple_array' => 'SIMPLE_ARRAY',
+        'smallint' => 'SMALLINT',
+        'string' => 'STRING',
+        'text' => 'TEXT',
+        'time' => 'TIME_MUTABLE',
+        'time_immutable' => 'TIME_IMMUTABLE',
+        //'array' => 'TARRAY',
+        //'date' => 'DATE',
+        //'datetime' => 'DATETIME',
+        //'datetimetz' => 'DATETIMETZ',
+        //'json_array' => 'JSON_ARRAY',
+        //'time' => 'TIME',
+    ];
+
+    public function getTypesConstantName(string $typeName): ?string
+    {
+        return self::DBAL_TYPES_CONSTANTS[$typeName] ?? null;
+    }
+
     /** @var TypeData[] */
     private array $types = [];
 
@@ -19,9 +58,24 @@ class TypesManager
         $this->platform = $platform;
     }
 
-    public function addType(TypeData $typeData)
+    public function hasType(string $typeName): bool
+    {
+        return \array_key_exists($typeName, $this->types);
+    }
+
+    public function getType(string $typeName): ?TypeData
+    {
+        if ($this->hasType($typeName)) {
+            return $this->types[$typeName];
+        }
+
+        return null;
+    }
+
+    public function addType(TypeData $typeData): self
     {
         $this->types[$typeData->getDoctrineTypeName()] = $typeData;
+        return $this;
     }
 
     /**
@@ -36,11 +90,17 @@ class TypesManager
         }
     }
 
+    /**
+     * @param TypeData $typeData
+     *
+     * @throws \Doctrine\DBAL\Exception
+     */
     public function installTypeData(TypeData $typeData): void
     {
         //self::installType($typeData->getDoctrineTypeName(), $typeData->getTypeClass());
 
         $typeName = $typeData->getDoctrineTypeName();
+        $this->types[$typeName] = $typeData;
 
         if (!Type::hasType($typeName)) {
             Type::addType($typeName, $typeData->getTypeClass());

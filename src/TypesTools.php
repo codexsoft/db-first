@@ -35,21 +35,22 @@ use Doctrine\DBAL\Types\Types;
 
 class TypesTools
 {
+
+    /**
+     * typeName to Types constant name
+     * @var array|string[]
+     */
     public array $doctrineTypesMap = [
-        //'array' => 'TARRAY',
         'array' => 'ARRAY',
         'bigint' => 'BIGINT',
         'binary' => 'BINARY',
         'blob' => 'BLOB',
         'boolean' => 'BOOLEAN',
-        //'date' => 'DATE',
         'date' => 'DATE_MUTABLE',
         'date_immutable' => 'DATE_IMMUTABLE',
         'dateinterval' => 'DATEINTERVAL',
-        //'datetime' => 'DATETIME',
         'datetime' => 'DATETIME_MUTABLE',
         'datetime_immutable' => 'DATETIME_IMMUTABLE',
-        //'datetimetz' => 'DATETIMETZ',
         'datetimetz' => 'DATETIMETZ_MUTABLE',
         'datetimetz_immutable' => 'DATETIMETZ_IMMUTABLE',
         'decimal' => 'DECIMAL',
@@ -58,15 +59,19 @@ class TypesTools
         'integer' => 'INTEGER',
         'json' => 'JSON',
         'json_array' => 'JSON',
-        //'json_array' => 'JSON_ARRAY',
         'object' => 'OBJECT',
         'simple_array' => 'SIMPLE_ARRAY',
         'smallint' => 'SMALLINT',
         'string' => 'STRING',
         'text' => 'TEXT',
         'time' => 'TIME_MUTABLE',
-        //'time' => 'TIME',
         'time_immutable' => 'TIME_IMMUTABLE',
+        //'array' => 'TARRAY',
+        //'date' => 'DATE',
+        //'datetime' => 'DATETIME',
+        //'datetimetz' => 'DATETIMETZ',
+        //'json_array' => 'JSON_ARRAY',
+        //'time' => 'TIME',
     ];
 
     /**

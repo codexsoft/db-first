@@ -552,21 +552,32 @@ class GenerateMappingFromPostgresDbOperation extends AbstractBaseOperation
         return $fieldLines;
     }
 
-    protected function generateType(string $type)
+    protected function generateType(string $typeName)
     {
         /**
          * todo: use default DateTimeImmutable for datetime
          */
 
-        if (\array_key_exists($type, $this->databaseFirstConfig->doctrineTypesMap)) {
-            return 'Types::'.$this->databaseFirstConfig->doctrineTypesMap[$type];
+        $tm = $this->databaseFirstConfig->getTypesManager();
+
+        $constantName = $tm->getTypesConstantName($typeName);
+        if ($constantName) {
+            return 'Types::'.$constantName;
         }
+
+        //if ($tm->hasType($typeName)) {
+        //
+        //}
+
+        //if (\array_key_exists($typeName, $this->databaseFirstConfig->doctrineTypesMap)) {
+        //    return 'Types::'.$this->databaseFirstConfig->doctrineTypesMap[$typeName];
+        //}
 
         //if (\array_key_exists($type, self::DOCTRINE_TYPES_MAP)) {
         //    return 'Type::'.self::DOCTRINE_TYPES_MAP[$type];
         //}
 
-        return var_export($type,true);
+        return var_export($typeName,true);
     }
 
     protected function generateOutputFilePath(ClassMetadataInfo $metadata)
