@@ -8,7 +8,6 @@ use CodexSoft\DatabaseFirst\Helpers\Doctrine;
 use CodexSoft\DatabaseFirst\Orm\LockableEntityTrait;
 use CodexSoft\DatabaseFirst\Orm\RepoStaticAccessTrait;
 use Doctrine\DBAL\Types\Type;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
@@ -24,7 +23,7 @@ class GenerateEntitiesOperation extends AbstractBaseOperation
     /** @var array comments for all columns in db, in format [ <table>.<column> => <comment> ] */
     protected array $columnComments = [];
 
-    protected EntityManager $em;
+    protected EntityManagerInterface $em;
 
     public function execute(): void
     {

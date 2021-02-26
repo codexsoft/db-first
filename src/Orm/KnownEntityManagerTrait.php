@@ -2,7 +2,6 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 
 trait KnownEntityManagerTrait
@@ -10,11 +9,11 @@ trait KnownEntityManagerTrait
     /**
      * @param EntityManagerInterface|null $em
      *
-     * @return EntityManager
+     * @return EntityManagerInterface
      */
-    private static function knownEntityManager(EntityManagerInterface $em = null): EntityManager
+    private static function knownEntityManager(EntityManagerInterface $em = null): EntityManagerInterface
     {
-        if ($em instanceof EntityManager) {
+        if ($em instanceof EntityManagerInterface) {
             return $em;
         }
 
@@ -25,7 +24,7 @@ trait KnownEntityManagerTrait
             /** @var KnownEntityManagerContainerInterface $emContainerClass */
             $knownEm = $emContainerClass::getEntityManager();
 
-            if ($knownEm instanceof EntityManager) {
+            if ($knownEm instanceof EntityManagerInterface) {
                 return $knownEm;
             }
         }
@@ -36,7 +35,7 @@ trait KnownEntityManagerTrait
             /** @var KnownEntityManagerRouterInterface $emRouterClass */
             $knownEm = $emRouterClass::getEntityManagerFor(static::class);
 
-            if ($knownEm instanceof EntityManager) {
+            if ($knownEm instanceof EntityManagerInterface) {
                 return $knownEm;
             }
         }

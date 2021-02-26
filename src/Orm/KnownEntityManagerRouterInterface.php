@@ -2,9 +2,9 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 
 interface KnownEntityManagerRouterInterface
 {
-    public static function getEntityManagerFor(string $entityClass): ?EntityManager;
+    public static function getEntityManagerFor(string $entityClass): ?EntityManagerInterface;
 }

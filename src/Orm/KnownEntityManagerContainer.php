@@ -2,7 +2,7 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * This class can be used to provide entity know its default entityManager
@@ -10,14 +10,14 @@ use Doctrine\ORM\EntityManager;
  */
 abstract class KnownEntityManagerContainer implements KnownEntityManagerContainerInterface
 {
-    protected static ?EntityManager $entityManager = null;
+    protected static ?EntityManagerInterface $entityManager = null;
 
-    public static function getEntityManager(): ?EntityManager
+    public static function getEntityManager(): ?EntityManagerInterface
     {
         return static::$entityManager;
     }
 
-    public static function setEntityManager(EntityManager $entityManager): void
+    public static function setEntityManager(EntityManagerInterface $entityManager): void
     {
         static::$entityManager = $entityManager;
     }

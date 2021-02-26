@@ -3,8 +3,6 @@
 namespace CodexSoft\DatabaseFirst\Orm\Postgres;
 
 use CodexSoft\DatabaseFirst\Orm\DoctrineEntityLifecycleEventSubscriber;
-use CodexSoft\DatabaseFirst\TypeData;
-use CodexSoft\DatabaseFirst\TypesManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Types;
@@ -14,7 +12,6 @@ use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\Common\Cache\VoidCache;
 use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Types\Type;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Setup;
 
@@ -81,7 +78,7 @@ abstract class AbstractEntityManagerBuilder
     }
 
     /**
-     * @return EntityManagerInterface|EntityManager
+     * @return EntityManagerInterface
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
@@ -130,7 +127,7 @@ abstract class AbstractEntityManagerBuilder
 
         $eventManager->addEventSubscriber(new DoctrineEntityLifecycleEventSubscriber());
 
-        $entityManager = EntityManager::create($connection, $config, $eventManager);
+        $entityManager = \Doctrine\ORM\EntityManager::create($connection, $config, $eventManager);
 
         /**
          * Registering types

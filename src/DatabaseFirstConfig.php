@@ -3,7 +3,6 @@
 namespace CodexSoft\DatabaseFirst;
 
 use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
@@ -303,20 +302,20 @@ class DatabaseFirstConfig
     }
 
     /**
-     * @param EntityManager $entityManager
+     * @param EntityManagerInterface $entityManager
      *
      * @return DatabaseFirstConfig
      */
-    public function setEntityManager(EntityManager $entityManager): DatabaseFirstConfig
+    public function setEntityManager(EntityManagerInterface $entityManager): DatabaseFirstConfig
     {
         $this->entityManager = $entityManager;
         return $this;
     }
 
     /**
-     * @return EntityManager
+     * @return EntityManagerInterface
      */
-    public function getEntityManager(): EntityManager
+    public function getEntityManager(): EntityManagerInterface
     {
         return $this->entityManager;
     }

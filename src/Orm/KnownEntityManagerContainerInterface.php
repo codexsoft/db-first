@@ -2,10 +2,10 @@
 
 namespace CodexSoft\DatabaseFirst\Orm;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 
 interface KnownEntityManagerContainerInterface
 {
-    public static function getEntityManager(): ?EntityManager;
-    public static function setEntityManager(EntityManager $entityManager): void;
+    public static function getEntityManager(): ?EntityManagerInterface;
+    public static function setEntityManager(EntityManagerInterface $entityManager): void;
 }

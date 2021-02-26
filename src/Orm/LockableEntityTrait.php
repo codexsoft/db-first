@@ -4,7 +4,6 @@ namespace CodexSoft\DatabaseFirst\Orm;
 
 use CodexSoft\DatabaseFirst\Exceptions\UnableToLockEntityException;
 use Doctrine\DBAL\LockMode;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -34,13 +33,13 @@ trait LockableEntityTrait
     }
 
     /**
-     * @param EntityManagerInterface $em
+     * @param EntityManagerInterface|null $em
      *
      * @return static
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\PessimisticLockException
      */
-    public function lockForUpdateViaLock(EntityManagerInterface $em = null)
+    public function lockForUpdateViaLock(?EntityManagerInterface $em = null)
     {
         /** @noinspection PhpUnhandledExceptionInspection */
         static::knownEntityManager($em)->lock($this, LockMode::PESSIMISTIC_WRITE);
@@ -48,21 +47,23 @@ trait LockableEntityTrait
     }
 
     /**
-     * @param EntityManagerInterface|EntityManager $em
+     * todo: IS IT REALLY ALWAYS REFRESH ENTITY? It seems to be conditional: vendor/doctrine/orm/lib/Doctrine/ORM/EntityManager.php:424
+     * todo: models should have method getId()
+     * @param EntityManagerInterface|null $em
      *
      * @return static|object locked entity
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\TransactionRequiredException
-     *
-     * todo: IS IT REALLY ALWAYS REFRESH ENTITY? It seems to be conditional: vendor/doctrine/orm/lib/Doctrine/ORM/EntityManager.php:424
-     * todo: models should have method getId()
      */
     public function lockForUpdateViaFind(EntityManagerInterface $em = null)
     {
-        /** @noinspection PhpUndefinedMethodInspection */
-        $locked = static::knownEntityManager($em)
-            ->find(static::class, $this->getId(), LockMode::PESSIMISTIC_WRITE);
+        if (!\method_exists($this, 'getId')) {
+            throw new \RuntimeException('Entity '.\get_class($this).' has no method getId. Called in LockableEntityTrait.lockForUpdateViaFind.');
+        }
+        $locked = static::knownEntityManager($em);
+        /** @var \Doctrine\ORM\EntityManager $locked */
+        $locked->find(static::class, $this->getId(), LockMode::PESSIMISTIC_WRITE);
 
         return $locked;
     }

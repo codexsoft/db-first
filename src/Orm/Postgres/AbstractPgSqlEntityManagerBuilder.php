@@ -12,7 +12,6 @@ use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\Common\Cache\VoidCache;
 use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Types\Type;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Setup;
 
@@ -79,7 +78,7 @@ class AbstractPgSqlEntityManagerBuilder
     }
 
     /**
-     * @return EntityManagerInterface|EntityManager
+     * @return EntityManagerInterface
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
@@ -128,7 +127,7 @@ class AbstractPgSqlEntityManagerBuilder
 
         $eventManager->addEventSubscriber(new DoctrineEntityLifecycleEventSubscriber());
 
-        $entityManager = EntityManager::create($connection, $config, $eventManager);
+        $entityManager = \Doctrine\ORM\EntityManager::create($connection, $config, $eventManager);
 
         /**
          * Registering types

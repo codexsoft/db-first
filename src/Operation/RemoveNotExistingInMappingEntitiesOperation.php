@@ -4,7 +4,7 @@
 namespace CodexSoft\DatabaseFirst\Operation;
 
 use CodexSoft\Code\Files\Files;
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Tools\Console\MetadataFilter;
 use Doctrine\ORM\Tools\DisconnectedClassMetadataFactory;
@@ -15,7 +15,7 @@ use function Stringy\create as str;
 
 class RemoveNotExistingInMappingEntitiesOperation extends AbstractBaseOperation
 {
-    protected EntityManager $em;
+    protected EntityManagerInterface $em;
 
     public function execute(): void
     {

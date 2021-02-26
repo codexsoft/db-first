@@ -8,7 +8,7 @@ use CodexSoft\DatabaseFirst\DatabaseFirstConfigAwareTrait;
 use Doctrine\Inflector\Inflector;
 use Doctrine\Inflector\InflectorFactory;
 use Doctrine\Inflector\Language;
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Tools\Console\MetadataFilter;
 use Doctrine\ORM\Tools\DisconnectedClassMetadataFactory;
@@ -40,11 +40,11 @@ abstract class AbstractBaseOperation implements LoggerAwareInterface
     }
 
     /**
-     * @param EntityManager $em
+     * @param EntityManagerInterface $em
      *
      * @return ClassMetadata[]
      */
-    protected function getMetadata(EntityManager $em): array
+    protected function getMetadata(EntityManagerInterface $em): array
     {
         $cmf = new DisconnectedClassMetadataFactory();
         $cmf->setEntityManager( $em );
